@@ -1,0 +1,10 @@
+name: HaoHanLunar
+version: '1.0.0'
+main: vn.haohan.lunar.HaoHanLunarPlugin
+api-version: '1.21'
+description: Lunar Dimension mechanics and custom items for HaoHan SMP
+dependencies:
+  server:
+    HaoHanItemManager:
+      load: BEFORE
+      required: true
