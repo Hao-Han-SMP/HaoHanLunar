@@ -33,42 +33,53 @@ public class MiningMechanic implements Listener {
     }
 
     private void tickPlayerMining(Player player) {
-        Block target = player.getTargetBlockExact(5);
-        boolean lookingAtOre = false;
+        boolean lookingAtOre = isLookingAtAnorthositeOre(player);
+        updateMiningAttributes(player, lookingAtOre);
+    }
 
+    private boolean isLookingAtAnorthositeOre(Player player) {
+        Block target = player.getTargetBlockExact(5);
         if (target != null && target.getType() == Material.NOTE_BLOCK) {
             if (target.getBlockData() instanceof NoteBlock noteBlock) {
-                if (noteBlock.getNote().getId() == 24) {
-                    lookingAtOre = true;
-                }
+                return noteBlock.getNote().getId() == 24 &&
+                        noteBlock.getInstrument() == org.bukkit.Instrument.PLING;
             }
         }
+        return false;
+    }
 
+    private void updateMiningAttributes(Player player, boolean lookingAtOre) {
         var instance = player.getAttribute(Attribute.BLOCK_BREAK_SPEED);
-        if (instance == null) return;
+        if (instance == null)
+            return;
 
         if (lookingAtOre) {
             boolean hasNetherite = player.getInventory().getItemInMainHand().getType() == Material.NETHERITE_PICKAXE;
-
-            if (hasNetherite) {
-                // Apply slow mining
-                if (instance.getModifiers().stream().noneMatch(m -> m.getKey().equals(slowMiningKey))) {
-                    instance.removeModifier(noMiningKey);
-                    AttributeModifier modifier = new AttributeModifier(slowMiningKey, -0.974, AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
-                    instance.addModifier(modifier);
-                }
-            } else {
-                // Apply no mining
-                if (instance.getModifiers().stream().noneMatch(m -> m.getKey().equals(noMiningKey))) {
-                    instance.removeModifier(slowMiningKey);
-                    AttributeModifier modifier = new AttributeModifier(noMiningKey, -1.0, AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
-                    instance.addModifier(modifier);
-                }
-            }
+            applyOreMiningModifier(instance, hasNetherite);
         } else {
             // Remove modifiers
             instance.removeModifier(slowMiningKey);
             instance.removeModifier(noMiningKey);
+        }
+    }
+
+    private void applyOreMiningModifier(org.bukkit.attribute.AttributeInstance instance, boolean hasNetherite) {
+        if (hasNetherite) {
+            // Apply slow mining
+            if (instance.getModifiers().stream().noneMatch(m -> m.getKey().equals(slowMiningKey))) {
+                instance.removeModifier(noMiningKey);
+                AttributeModifier modifier = new AttributeModifier(slowMiningKey, -0.974,
+                        AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
+                instance.addModifier(modifier);
+            }
+        } else {
+            // Apply no mining
+            if (instance.getModifiers().stream().noneMatch(m -> m.getKey().equals(noMiningKey))) {
+                instance.removeModifier(slowMiningKey);
+                AttributeModifier modifier = new AttributeModifier(noMiningKey, -1.0,
+                        AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
+                instance.addModifier(modifier);
+            }
         }
     }
 
