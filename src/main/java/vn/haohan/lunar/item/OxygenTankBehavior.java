@@ -7,12 +7,13 @@ import vn.haohan.lunar.data.PlayerLunarData;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+
+import java.util.Map;
 
 public class OxygenTankBehavior implements ItemBehavior {
 
@@ -30,7 +31,7 @@ public class OxygenTankBehavior implements ItemBehavior {
         HaoHanLunarPlugin plugin = HaoHanLunarPlugin.getInstance();
         PlayerLunarData data = plugin.getLunarDataManager().get(player);
 
-        // 2. Must wears full spacesuit
+        // 2. Must wear full spacesuit
         if (!plugin.getGravityMechanic().wearsSpacesuit(player)) {
             player.showTitle(net.kyori.adventure.title.Title.title(
                 Component.text("⚠"),
@@ -46,22 +47,16 @@ public class OxygenTankBehavior implements ItemBehavior {
             return;
         }
 
-        // Determine capacity and tier
-        String id = context.definition().getId();
-        int capacity = 0;
-        int tier = 0;
-        if (id.equals("haohan:oxygen_tank_small")) {
-            capacity = 1500;
-            tier = 1;
-        } else if (id.equals("haohan:oxygen_tank_medium")) {
-            capacity = 3000;
-            tier = 2;
-        } else if (id.equals("haohan:oxygen_tank_large")) {
-            capacity = 6800;
-            tier = 3;
+        // Determine capacity and tier from definition properties
+        Map<String, Object> properties = context.definition().getProperties();
+        if (properties == null || !Boolean.TRUE.equals(properties.get("oxygen_tank"))) {
+            return;
         }
 
-        if (tier == 0) return;
+        int capacity = ((Number) properties.getOrDefault("oxygen_tank_capacity", 0)).intValue();
+        int tier = ((Number) properties.getOrDefault("oxygen_tank_tier", 0)).intValue();
+
+        if (tier == 0 || capacity == 0) return;
 
         // Read current damage/durability
         int damage = 0;

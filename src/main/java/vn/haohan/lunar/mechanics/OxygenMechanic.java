@@ -2,14 +2,12 @@ package vn.haohan.lunar.mechanics;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.data.PlayerLunarData;
-import vn.haohan.lunar.item.LunarItems;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
@@ -22,6 +20,8 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+
+import java.util.Map;
 
 public class OxygenMechanic implements Listener {
 
@@ -143,30 +143,28 @@ public class OxygenMechanic implements Listener {
     private boolean chargeHeldOxygenTank(Player player, PlayerLunarData data) {
         ItemStack hand = player.getInventory().getItemInMainHand();
         String customId = vn.haohan.itemmanager.api.HaoHanItemManager.get().getItemService().getId(hand);
-        
-        int capacity = 0;
-        int tier = 0;
-        int maxTicks = 0;
-        String name = "";
-
-        if ("haohan:oxygen_tank_small".equals(customId)) {
-            capacity = 1500;
-            tier = 1;
-            maxTicks = 100;
-            name = "nhỏ";
-        } else if ("haohan:oxygen_tank_medium".equals(customId)) {
-            capacity = 3000;
-            tier = 2;
-            maxTicks = 200;
-            name = "vừa";
-        } else if ("haohan:oxygen_tank_large".equals(customId)) {
-            capacity = 6800;
-            tier = 3;
-            maxTicks = 320;
-            name = "lớn";
+        if (customId == null) {
+            data.setTankCharge(0);
+            return false;
         }
 
-        if (tier == 0 || !(hand.getItemMeta() instanceof Damageable damageable) || damageable.getDamage() == 0) {
+        var def = vn.haohan.itemmanager.api.HaoHanItemManager.get().getItemRegistry().get(customId);
+        if (def == null) {
+            data.setTankCharge(0);
+            return false;
+        }
+
+        Map<String, Object> properties = def.getProperties();
+        if (properties == null || !Boolean.TRUE.equals(properties.get("oxygen_tank"))) {
+            data.setTankCharge(0);
+            return false;
+        }
+
+        int capacity = ((Number) properties.getOrDefault("oxygen_tank_capacity", 0)).intValue();
+        int tier = ((Number) properties.getOrDefault("oxygen_tank_tier", 0)).intValue();
+        int maxTicks = ((Number) properties.getOrDefault("oxygen_tank_charge_ticks", 0)).intValue();
+
+        if (tier == 0 || capacity == 0 || maxTicks == 0 || !(hand.getItemMeta() instanceof Damageable damageable) || damageable.getDamage() == 0) {
             data.setTankCharge(0);
             return false;
         }
@@ -175,7 +173,6 @@ public class OxygenMechanic implements Listener {
         data.setTankCharge(data.getTankCharge() + 1);
 
         // 1. Calculate base percentage from initial damage
-        // start_capacity = max_capacity - damage
         double startCap = capacity - damage;
         double basePct = (startCap * 100.0) / capacity;
 
@@ -185,7 +182,14 @@ public class OxygenMechanic implements Listener {
 
         int displayPct = (int) Math.min(100, Math.ceil(basePct + addedPct));
 
-        player.sendActionBar(Component.text("⚡ Đang nạp bình oxy " + name + "... ", NamedTextColor.YELLOW)
+        String sizeName = switch (tier) {
+            case 1 -> "nhỏ";
+            case 2 -> "vừa";
+            case 3 -> "lớn";
+            default -> "";
+        };
+
+        player.sendActionBar(Component.text("⚡ Đang nạp bình oxy " + sizeName + "... ", NamedTextColor.YELLOW)
             .append(Component.text(displayPct + "%", NamedTextColor.GREEN)));
 
         if (data.getTankCharge() >= maxTicks) {
@@ -275,7 +279,6 @@ public class OxygenMechanic implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         if (player.getWorld().getKey().toString().equals("haohan:lunar")) {
-            // Save state to PDC when player quits
             plugin.getLunarDataManager().saveAndRemove(player);
         } else {
             plugin.getLunarDataManager().remove(player);
@@ -283,27 +286,7 @@ public class OxygenMechanic implements Listener {
     }
 
     public boolean isInSafeZone(Location loc) {
-        if (loc == null || loc.getWorld() == null) return false;
-        World world = loc.getWorld();
-        if (!world.getKey().toString().equals("haohan:lunar")) return false;
-
-        int chunkX = loc.getBlockX() >> 4;
-        int chunkZ = loc.getBlockZ() >> 4;
-
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                var structures = world.getStructures(chunkX + dx, chunkZ + dz);
-                for (var gen : structures) {
-                    String key = gen.getStructure().getKey().toString();
-                    if (key.equals("haohan:rest_base") || key.equals("haohan:space_station")) {
-                        if (gen.getBoundingBox().contains(loc.toVector())) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
+        return isInRestBase(loc) || isInSpaceStation(loc);
     }
 
     public boolean isInRestBase(Location loc) {
