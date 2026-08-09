@@ -3,15 +3,17 @@ package vn.haohan.lunar.item;
 import vn.haohan.itemmanager.api.HaoHanItemManager;
 import vn.haohan.itemmanager.api.item.ItemDefinition;
 import vn.haohan.itemmanager.api.item.ItemType;
+import vn.haohan.itemmanager.api.recipe.Ingredient;
+import vn.haohan.itemmanager.api.recipe.ItemResult;
+import vn.haohan.itemmanager.api.recipe.RecipeDefinition;
+import vn.haohan.itemmanager.api.recipe.RecipeType;
+import vn.haohan.lunar.HaoHanLunarPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.BlockState;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.components.JukeboxPlayableComponent;
+import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.SmithingTransformRecipe;
 import org.bukkit.plugin.Plugin;
 
 import java.util.List;
@@ -24,71 +26,15 @@ public class LunarItems {
         var behavior = new OxygenTankBehavior();
 
         // 1. Spacesuit Parts
-        registry.register(ItemDefinition.builder("haohan:spacesuit_helmet")
-                .material(Material.NETHERITE_HELMET)
-                .displayName("Spacesuit Helmet")
-                .customModelData(1001)
-                .type(ItemType.ARMOR)
-                .property("equippable_asset_id", "haohan:spacesuit")
-                .build());
-
-        registry.register(ItemDefinition.builder("haohan:spacesuit_chestplate")
-                .material(Material.NETHERITE_CHESTPLATE)
-                .displayName("Spacesuit Chestplate")
-                .customModelData(1002)
-                .type(ItemType.ARMOR)
-                .property("equippable_asset_id", "haohan:spacesuit")
-                .build());
-
-        registry.register(ItemDefinition.builder("haohan:spacesuit_leggings")
-                .material(Material.NETHERITE_LEGGINGS)
-                .displayName("Spacesuit Leggings")
-                .customModelData(1003)
-                .type(ItemType.ARMOR)
-                .property("equippable_asset_id", "haohan:spacesuit")
-                .build());
-
-        registry.register(ItemDefinition.builder("haohan:spacesuit_boots")
-                .material(Material.NETHERITE_BOOTS)
-                .displayName("Spacesuit Boots")
-                .customModelData(1004)
-                .type(ItemType.ARMOR)
-                .property("equippable_asset_id", "haohan:spacesuit")
-                .build());
+        registerSpacesuitPart(registry, "helmet", Material.NETHERITE_HELMET, "Spacesuit Helmet", 1001);
+        registerSpacesuitPart(registry, "chestplate", Material.NETHERITE_CHESTPLATE, "Spacesuit Chestplate", 1002);
+        registerSpacesuitPart(registry, "leggings", Material.NETHERITE_LEGGINGS, "Spacesuit Leggings", 1003);
+        registerSpacesuitPart(registry, "boots", Material.NETHERITE_BOOTS, "Spacesuit Boots", 1004);
 
         // 2. Oxygen Tanks
-        registry.register(ItemDefinition.builder("haohan:oxygen_tank_small")
-                .material(Material.CARROT_ON_A_STICK)
-                .displayName("§bBình Oxy Nhỏ")
-                .lore(List.of("§7Dung tích: 1500", "§8Chuột phải để kích hoạt"))
-                .customModelData(2001)
-                .type(ItemType.SPECIAL)
-                .maxStackSize(1)
-                .behavior(behavior)
-                .properties(Map.of("oxygen_tank", true, "oxygen_tank_tier", 1, "oxygen_tank_capacity", 1500, "max_damage", 1500))
-                .build());
-
-        registry.register(ItemDefinition.builder("haohan:oxygen_tank_medium")
-                .material(Material.CARROT_ON_A_STICK)
-                .displayName("§bBình Oxy Vừa")
-                .lore(List.of("§7Dung tích: 3000", "§8Chuột phải để kích hoạt"))
-                .customModelData(2002)
-                .type(ItemType.SPECIAL)
-                .maxStackSize(1)
-                .behavior(behavior)
-                .properties(Map.of("oxygen_tank", true, "oxygen_tank_tier", 2, "oxygen_tank_capacity", 3000, "max_damage", 3000))
-                .build());
-
-        registry.register(ItemDefinition.builder("haohan:oxygen_tank_large")
-                .material(Material.CARROT_ON_A_STICK)
-                .displayName("§bBình Oxy Lớn")
-                .lore(List.of("§7Dung tích: 6800", "§8Chuột phải để kích hoạt"))
-                .customModelData(2003)
-                .type(ItemType.SPECIAL)
-                .maxStackSize(1)
-                .behavior(behavior)
-                .properties(Map.of("oxygen_tank", true, "oxygen_tank_tier", 3, "oxygen_tank_capacity", 6800, "max_damage", 6800))
-                .build());
+        registerOxygenTank(registry, behavior, "small", "§bBình Oxy Nhỏ", 1, 1500, 100, 2001);
+        registerOxygenTank(registry, behavior, "medium", "§bBình Oxy Vừa", 2, 3000, 200, 2002);
+        registerOxygenTank(registry, behavior, "large", "§bBình Oxy Lớn", 3, 6800, 320, 2003);
 
         // 3. Materials
         registry.register(ItemDefinition.builder("haohan:aero_compound")
@@ -103,6 +49,15 @@ public class LunarItems {
                 .displayName("Steel Ingot")
                 .customModelData(3002)
                 .type(ItemType.MATERIAL)
+                .maxStackSize(64)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:raw_anorthosite")
+                .material(Material.KNOWLEDGE_BOOK)
+                .displayName("Raw Anorthosite")
+                .customModelData(3003)
+                .type(ItemType.MATERIAL)
+                .maxStackSize(64)
                 .build());
 
         // 4. Music Disc
@@ -121,7 +76,120 @@ public class LunarItems {
                 .displayName("Anorthosite Ore")
                 .customModelData(5001)
                 .type(ItemType.SPECIAL)
-                .property("custom_block_data", "minecraft:note_block[note=24,instrument=pling,powered=true]")
+                .properties(Map.of(
+                        "custom_block_data", "minecraft:note_block[note=24,instrument=pling,powered=true]",
+                        "custom_block_drop", "haohan:raw_anorthosite",
+                        "hide_additional_tooltip", true
+                ))
+                .maxStackSize(64)
                 .build());
+
+        // 6. Smithing Recipes for Spacesuit Armor Upgrade
+        registerSpacesuitRecipes();
+    }
+
+    private static void registerSpacesuitPart(vn.haohan.itemmanager.api.item.ItemRegistry registry,
+                                              String part, Material material, String displayName, int customModelData) {
+        registry.register(ItemDefinition.builder("haohan:spacesuit_" + part)
+                .material(material)
+                .displayName(displayName)
+                .customModelData(customModelData)
+                .type(ItemType.ARMOR)
+                .property("equippable_asset_id", "haohan:spacesuit")
+                .build());
+    }
+
+    private static void registerOxygenTank(vn.haohan.itemmanager.api.item.ItemRegistry registry,
+                                           OxygenTankBehavior behavior, String size, String displayName,
+                                           int tier, int capacity, int chargeTicks, int customModelData) {
+        registry.register(ItemDefinition.builder("haohan:oxygen_tank_" + size)
+                .material(Material.CARROT_ON_A_STICK)
+                .displayName(displayName)
+                .lore(List.of("§7Dung tích: " + capacity, "§8Chuột phải để kích hoạt"))
+                .customModelData(customModelData)
+                .type(ItemType.SPECIAL)
+                .maxStackSize(1)
+                .behavior(behavior)
+                .properties(Map.of(
+                        "oxygen_tank", true,
+                        "oxygen_tank_tier", tier,
+                        "oxygen_tank_capacity", capacity,
+                        "oxygen_tank_charge_ticks", chargeTicks,
+                        "max_damage", capacity
+                ))
+                .build());
+    }
+
+    private static void registerSpacesuitRecipes() {
+        var recipeRegistry = HaoHanItemManager.get().getRecipeRegistry();
+        Plugin plugin = HaoHanLunarPlugin.getInstance();
+        var itemFactory = HaoHanItemManager.get().getItemFactory();
+        var itemRegistry = HaoHanItemManager.get().getItemRegistry();
+
+        Map<String, Material> armorUpgrades = Map.of(
+                "helmet", Material.NETHERITE_HELMET,
+                "chestplate", Material.NETHERITE_CHESTPLATE,
+                "leggings", Material.NETHERITE_LEGGINGS,
+                "boots", Material.NETHERITE_BOOTS
+        );
+
+        for (Map.Entry<String, Material> entry : armorUpgrades.entrySet()) {
+            String part = entry.getKey();
+            Material netheriteMaterial = entry.getValue();
+
+            RecipeDefinition upgradeRecipe = new RecipeDefinition(
+                    "haohan:spacesuit_" + part + "_smithing",
+                    RecipeType.SMITHING,
+                    List.of(
+                            new Ingredient.MaterialIngredient(Material.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1),
+                            new Ingredient.MaterialIngredient(netheriteMaterial, 1),
+                            new Ingredient.ItemIngredient("haohan:aero_compound", 1)
+                    ),
+                    new ItemResult("haohan:spacesuit_" + part, 1)
+            );
+
+            if (!recipeRegistry.exists(upgradeRecipe.getId())) {
+                recipeRegistry.register(upgradeRecipe);
+            }
+            registerBukkitSmithingRecipe(plugin, upgradeRecipe, itemFactory, itemRegistry);
+        }
+    }
+
+    private static void registerBukkitSmithingRecipe(Plugin plugin, RecipeDefinition recipe,
+                                                      vn.haohan.itemmanager.api.item.ItemFactory itemFactory,
+                                                      vn.haohan.itemmanager.api.item.ItemRegistry itemRegistry) {
+        NamespacedKey key = new NamespacedKey(plugin, recipe.getKey());
+        Bukkit.removeRecipe(key);
+
+        ItemStack resultStack = itemFactory.create(recipe.getResult().item(), recipe.getResult().amount());
+
+        List<Ingredient> ingredients = recipe.getIngredients();
+        RecipeChoice template = toRecipeChoice(ingredients.get(0), itemFactory, itemRegistry);
+        RecipeChoice base = toRecipeChoice(ingredients.get(1), itemFactory, itemRegistry);
+        RecipeChoice addition = toRecipeChoice(ingredients.get(2), itemFactory, itemRegistry);
+
+        SmithingTransformRecipe bukkitRecipe = new SmithingTransformRecipe(key, resultStack, template, base, addition);
+        Bukkit.addRecipe(bukkitRecipe);
+    }
+
+    private static RecipeChoice toRecipeChoice(Ingredient ingredient,
+                                                vn.haohan.itemmanager.api.item.ItemFactory itemFactory,
+                                                vn.haohan.itemmanager.api.item.ItemRegistry itemRegistry) {
+        if (ingredient instanceof Ingredient.ItemIngredient item) {
+            if (itemRegistry.exists(item.id())) {
+                var def = itemRegistry.get(item.id());
+                if (def != null) {
+                    return new RecipeChoice.MaterialChoice(def.getMaterial());
+                }
+            }
+            if (item.id().startsWith("minecraft:")) {
+                String matName = item.id().substring("minecraft:".length()).toUpperCase();
+                Material mat = Material.matchMaterial(matName);
+                if (mat != null) return new RecipeChoice.MaterialChoice(mat);
+            }
+        } else if (ingredient instanceof Ingredient.MaterialIngredient mat) {
+            return new RecipeChoice.MaterialChoice(mat.material());
+        }
+        throw new IllegalArgumentException("Unsupported ingredient: " + ingredient);
     }
 }
