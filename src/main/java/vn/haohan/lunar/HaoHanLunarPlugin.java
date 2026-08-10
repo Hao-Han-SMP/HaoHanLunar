@@ -32,12 +32,12 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         // Initialize managers
         lunarDataManager = new PlayerLunarDataManager(this);
 
-        // Register custom items with HaoHanItemManager API
+        // Register custom items with HaoHanItemCore API
         try {
             LunarItems.register();
-            getLogger().info("Successfully registered custom items with HaoHanItemManager API.");
+            getLogger().info("Successfully registered custom items with HaoHanItemCore API.");
         } catch (Exception e) {
-            getLogger().severe("Failed to register custom items with HaoHanItemManager! Is it loaded? " + e.getMessage());
+            getLogger().severe("Failed to register custom items with HaoHanItemCore! Is it loaded? " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
             return;
         }

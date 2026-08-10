@@ -142,13 +142,13 @@ public class OxygenMechanic implements Listener {
 
     private boolean chargeHeldOxygenTank(Player player, PlayerLunarData data) {
         ItemStack hand = player.getInventory().getItemInMainHand();
-        String customId = vn.haohan.itemmanager.api.HaoHanItemManager.get().getItemService().getId(hand);
+        String customId = vn.haohan.itemcore.api.HaoHanItemCore.get().getItemService().getId(hand);
         if (customId == null) {
             data.setTankCharge(0);
             return false;
         }
 
-        var def = vn.haohan.itemmanager.api.HaoHanItemManager.get().getItemRegistry().get(customId);
+        var def = vn.haohan.itemcore.api.HaoHanItemCore.get().getItemRegistry().get(customId);
         if (def == null) {
             data.setTankCharge(0);
             return false;

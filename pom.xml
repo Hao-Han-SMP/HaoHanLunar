@@ -33,10 +33,10 @@
             <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!-- HaoHanItemManager API -->
+        <!-- HaoHanItemCore API -->
         <dependency>
             <groupId>vn.haohan</groupId>
-            <artifactId>HaoHanItemManager</artifactId>
+            <artifactId>HaoHanItemCore</artifactId>
             <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>

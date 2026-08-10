@@ -1,12 +1,12 @@
 package vn.haohan.lunar.item;
 
-import vn.haohan.itemmanager.api.HaoHanItemManager;
-import vn.haohan.itemmanager.api.item.ItemDefinition;
-import vn.haohan.itemmanager.api.item.ItemType;
-import vn.haohan.itemmanager.api.recipe.Ingredient;
-import vn.haohan.itemmanager.api.recipe.ItemResult;
-import vn.haohan.itemmanager.api.recipe.RecipeDefinition;
-import vn.haohan.itemmanager.api.recipe.RecipeType;
+import vn.haohan.itemcore.api.HaoHanItemCore;
+import vn.haohan.itemcore.api.item.ItemDefinition;
+import vn.haohan.itemcore.api.item.ItemType;
+import vn.haohan.itemcore.api.recipe.Ingredient;
+import vn.haohan.itemcore.api.recipe.ItemResult;
+import vn.haohan.itemcore.api.recipe.RecipeDefinition;
+import vn.haohan.itemcore.api.recipe.RecipeType;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -22,7 +22,7 @@ import java.util.Map;
 public class LunarItems {
 
     public static void register() {
-        var registry = HaoHanItemManager.get().getItemRegistry();
+        var registry = HaoHanItemCore.get().getItemRegistry();
         var behavior = new OxygenTankBehavior();
 
         // 1. Spacesuit Parts
@@ -88,7 +88,7 @@ public class LunarItems {
         registerSpacesuitRecipes();
     }
 
-    private static void registerSpacesuitPart(vn.haohan.itemmanager.api.item.ItemRegistry registry,
+    private static void registerSpacesuitPart(vn.haohan.itemcore.api.item.ItemRegistry registry,
                                               String part, Material material, String displayName, int customModelData) {
         registry.register(ItemDefinition.builder("haohan:spacesuit_" + part)
                 .material(material)
@@ -99,7 +99,7 @@ public class LunarItems {
                 .build());
     }
 
-    private static void registerOxygenTank(vn.haohan.itemmanager.api.item.ItemRegistry registry,
+    private static void registerOxygenTank(vn.haohan.itemcore.api.item.ItemRegistry registry,
                                            OxygenTankBehavior behavior, String size, String displayName,
                                            int tier, int capacity, int chargeTicks, int customModelData) {
         registry.register(ItemDefinition.builder("haohan:oxygen_tank_" + size)
@@ -121,10 +121,10 @@ public class LunarItems {
     }
 
     private static void registerSpacesuitRecipes() {
-        var recipeRegistry = HaoHanItemManager.get().getRecipeRegistry();
+        var recipeRegistry = HaoHanItemCore.get().getRecipeRegistry();
         Plugin plugin = HaoHanLunarPlugin.getInstance();
-        var itemFactory = HaoHanItemManager.get().getItemFactory();
-        var itemRegistry = HaoHanItemManager.get().getItemRegistry();
+        var itemFactory = HaoHanItemCore.get().getItemFactory();
+        var itemRegistry = HaoHanItemCore.get().getItemRegistry();
 
         Map<String, Material> armorUpgrades = Map.of(
                 "helmet", Material.NETHERITE_HELMET,
@@ -156,8 +156,8 @@ public class LunarItems {
     }
 
     private static void registerBukkitSmithingRecipe(Plugin plugin, RecipeDefinition recipe,
-                                                      vn.haohan.itemmanager.api.item.ItemFactory itemFactory,
-                                                      vn.haohan.itemmanager.api.item.ItemRegistry itemRegistry) {
+                                                      vn.haohan.itemcore.api.item.ItemFactory itemFactory,
+                                                      vn.haohan.itemcore.api.item.ItemRegistry itemRegistry) {
         NamespacedKey key = new NamespacedKey(plugin, recipe.getKey());
         Bukkit.removeRecipe(key);
 
@@ -173,8 +173,8 @@ public class LunarItems {
     }
 
     private static RecipeChoice toRecipeChoice(Ingredient ingredient,
-                                                vn.haohan.itemmanager.api.item.ItemFactory itemFactory,
-                                                vn.haohan.itemmanager.api.item.ItemRegistry itemRegistry) {
+                                                vn.haohan.itemcore.api.item.ItemFactory itemFactory,
+                                                vn.haohan.itemcore.api.item.ItemRegistry itemRegistry) {
         if (ingredient instanceof Ingredient.ItemIngredient item) {
             if (itemRegistry.exists(item.id())) {
                 var def = itemRegistry.get(item.id());

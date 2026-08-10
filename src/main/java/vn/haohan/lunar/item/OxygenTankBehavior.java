@@ -1,7 +1,7 @@
 package vn.haohan.lunar.item;
 
-import vn.haohan.itemmanager.api.item.ItemBehavior;
-import vn.haohan.itemmanager.api.item.ItemContext;
+import vn.haohan.itemcore.api.item.ItemBehavior;
+import vn.haohan.itemcore.api.item.ItemContext;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.data.PlayerLunarData;
 
