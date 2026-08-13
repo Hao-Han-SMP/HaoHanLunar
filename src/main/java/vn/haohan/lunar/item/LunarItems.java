@@ -42,6 +42,7 @@ public class LunarItems {
                 .displayName("Aero Compound")
                 .customModelData(3001)
                 .type(ItemType.MATERIAL)
+                .usable(false)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:steel_ingot")
@@ -50,6 +51,7 @@ public class LunarItems {
                 .customModelData(3002)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
+                .usable(false)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:raw_anorthosite")
@@ -58,6 +60,7 @@ public class LunarItems {
                 .customModelData(3003)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
+                .usable(false)
                 .build());
 
         // 4. Music Disc
