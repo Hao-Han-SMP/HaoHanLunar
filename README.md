@@ -24,6 +24,7 @@ Ngôn ngữ: Tiếng Việt
 - Tích hợp đăng ký Custom Item đặc trưng Mặt Trăng (Spacesuit, Oxygen Tanks, Raw Anorthosite, Aero Compound) qua `HaoHanItemCore` API.
 - Cơ chế khai thác quặng `Anorthosite Ore` giới hạn công cụ đào (chỉ Cúp Netherite mới có thể đào).
 - Kết hợp với Datapack server để nhận diện vị trí trạm an toàn (`haohan:rest_base`, `haohan:space_station`) và sinh địa hình Mặt Trăng.
+- Beacon đặt trong chiều `haohan:lunar` sẽ mở rộng nhanh thành vùng bảo vệ năng lượng nhiều lớp; người chơi trong vùng được duy trì Oxy.
 
 ## Công nghệ sử dụng
 
@@ -46,6 +47,7 @@ Ngôn ngữ: Tiếng Việt
 | `OxygenMechanic` | Quản lý chỉ số Oxy, kiểm tra vùng an toàn, sử dụng bình Oxy và sạc bình tự động. |
 | `MiningMechanic` | Kiểm soát tốc độ đào quặng Anorthosite Ore theo công cụ sử dụng (Raycast dò block). |
 | `VisualMechanic` | Phát sinh hạt hiệu ứng theo Biome và hiển thị tiêu đề chào mừng khi đến Mặt Trăng. |
+| `BeaconShieldMechanic` | Quản lý vùng năng lượng động quanh beacon Mặt Trăng, animation mở rộng và các lớp particle bảo vệ. |
 | `LunarItems` | Đăng ký toàn bộ custom item và công thức rèn (Smithing Recipes) vào `HaoHanItemCore`. |
 | `OxygenTankBehavior` | Item Behavior xử lý logic khi người chơi kích hoạt bình Oxy (chuột phải). |
 | `PlayerLunarDataManager` | Quản lý dữ liệu trạng thái Oxy và tiến trình sạc bình của từng người chơi trong bộ nhớ. |
@@ -161,6 +163,18 @@ Item rơi (`minecraft:item`) và Falling Block (`minecraft:falling_block`) đư�
   - **Bình vừa**: Nạp đầy sau 200 ticks (10 giây).
   - **Bình lớn**: Nạp đầy sau 320 ticks (16 giây).
 - **Yêu cầu bình Oxy**: Người chơi phải **mặc đủ cả 4 món Spacesuit** thì bình Oxy mới kích hoạt nạp khí ngoài không gian.
+
+Beacon năng lượng đặt trên Mặt Trăng tạo vùng Oxy bảo vệ. Vùng bắt đầu từ beacon và mở rộng nhanh đến bán kính cấu hình trong `config.yml`:
+
+```yaml
+beacon-shield:
+  radius: 48.0
+  expansion-speed: 3.0
+  ring-points: 72
+  display-height: 4.0
+```
+
+Resourcepack dùng các ô vuông `ItemDisplay` ghép thành vòng tròn; mỗi ô chạy qua 6 frame alpha để tạo animation border. Particle được xếp thành nhiều lớp: vòng biên xanh điện, lớp hạt trong suốt chạy dọc theo thành vùng và lớp lõi xanh nhấp nháy.
 
 ### 3. Cơ chế Khai thác Quặng (MiningMechanic)
 

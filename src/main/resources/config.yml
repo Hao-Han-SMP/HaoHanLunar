@@ -1,0 +1,17 @@
+beacon-shield:
+  # Maximum horizontal radius in blocks.
+  radius: 48.0
+  # Expansion distance per tick. 3.0 reaches 48 blocks in roughly 0.8 seconds.
+  expansion-speed: 3.0
+  # Controls the base resolution of the polyhedron edges.
+  ring-points: 72
+  # Retained for compatibility with older configurations.
+  display-height: 4.0
+  # Distance between decorative particles on each edge.
+  edge-particle-spacing: 1.5
+  # Decorative particles are rendered every N ticks.
+  render-interval: 4
+  # Distance from the boundary at which particles become visible to a player.
+  boundary-particle-distance: 8.0
+  # Rotation speed in radians per tick for the complete shield shape.
+  rotation-speed: 0.012

@@ -55,7 +55,9 @@ public class OxygenMechanic implements Listener {
         Location loc = player.getLocation();
         boolean inRestBase = isInRestBase(loc);
         boolean inSpaceStation = isInSpaceStation(loc);
-        boolean inSafeZone = inRestBase || inSpaceStation;
+        boolean inBeaconShield = plugin.getBeaconShieldMechanic() != null
+                && plugin.getBeaconShieldMechanic().isInShield(loc);
+        boolean inSafeZone = inRestBase || inSpaceStation || inBeaconShield;
 
         if (inSafeZone) {
             // Reset active tank values inside safe regen areas
@@ -72,7 +74,7 @@ public class OxygenMechanic implements Listener {
                     data.setOxygen(data.getOxygen() + 100);
                     data.setRbRegen(0);
                 }
-            } else {
+            } else if (inSpaceStation) {
                 data.setRbRegen(0);
                 data.setOxygenDmg(0);
                 data.setSsRegen(data.getSsRegen() + 1);
@@ -80,6 +82,11 @@ public class OxygenMechanic implements Listener {
                     data.setOxygen(data.getOxygen() + 150);
                     data.setSsRegen(0);
                 }
+            } else {
+                data.setRbRegen(0);
+                data.setSsRegen(0);
+                data.setOxygenDmg(0);
+                data.setOxygen(Math.min(600, data.getOxygen() + 1));
             }
 
             // Charge held oxygen tank in safe structures

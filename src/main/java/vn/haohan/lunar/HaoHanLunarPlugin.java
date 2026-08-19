@@ -6,6 +6,7 @@ import vn.haohan.lunar.mechanics.GravityMechanic;
 import vn.haohan.lunar.mechanics.MiningMechanic;
 import vn.haohan.lunar.mechanics.OxygenMechanic;
 import vn.haohan.lunar.mechanics.VisualMechanic;
+import vn.haohan.lunar.mechanics.BeaconShieldMechanic;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -20,6 +21,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private OxygenMechanic oxygenMechanic;
     private MiningMechanic miningMechanic;
     private VisualMechanic visualMechanic;
+    private BeaconShieldMechanic beaconShieldMechanic;
 
     public static HaoHanLunarPlugin getInstance() {
         return instance;
@@ -28,6 +30,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        saveDefaultConfig();
 
         // Initialize managers
         lunarDataManager = new PlayerLunarDataManager(this);
@@ -47,6 +50,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         oxygenMechanic = new OxygenMechanic(this);
         miningMechanic = new MiningMechanic(this);
         visualMechanic = new VisualMechanic(this);
+        beaconShieldMechanic = new BeaconShieldMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();
@@ -54,6 +58,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(oxygenMechanic, this);
         pm.registerEvents(miningMechanic, this);
         pm.registerEvents(visualMechanic, this);
+        pm.registerEvents(beaconShieldMechanic, this);
 
         // Start main repeating task (runs every tick)
         Bukkit.getScheduler().runTaskTimer(this, () -> {
@@ -62,6 +67,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
                 oxygenMechanic.tick();
                 miningMechanic.tick();
                 visualMechanic.tick();
+                beaconShieldMechanic.tick();
             } catch (Exception e) {
                 getLogger().warning("Error in tick loop: " + e.getMessage());
             }
@@ -75,6 +81,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         // Save in-memory player state
         if (lunarDataManager != null) {
             lunarDataManager.saveAll();
+        }
+        if (beaconShieldMechanic != null) {
+            beaconShieldMechanic.removeAll();
         }
 
         // Clean up low gravity and mining attributes modifiers from players
@@ -106,5 +115,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
     public VisualMechanic getVisualMechanic() {
         return visualMechanic;
+    }
+
+    public BeaconShieldMechanic getBeaconShieldMechanic() {
+        return beaconShieldMechanic;
     }
 }
