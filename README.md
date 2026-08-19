@@ -120,7 +120,14 @@ Tất cả item được đăng ký dưới namespace `haohan:` thông qua `HaoH
 | `haohan:aero_compound` | Aero Compound | `MATERIAL` | Nguyên liệu đặc thù Mặt Trăng, dùng để nâng cấp bộ trang phục Spacesuit. |
 | `haohan:steel_ingot` | Steel Ingot | `MATERIAL` | Phôi Thép, nguyên liệu chế tạo trang thiết bị. |
 | `haohan:raw_anorthosite` | Raw Anorthosite | `MATERIAL` | Anorthosite thô rơi ra khi đào quặng Anorthosite Ore. |
-| `haohan:anorthosite_ore` | Anorthosite Ore | `SPECIAL` | Quặng đặc trưng Mặt Trăng (dựa trên Note Block custom state). |
+| `haohan:anorthosite_ore` | Anorthosite Ore | `SPECIAL` | Quặng đặc trưng Mặt Trăng (Note Block state `note=24, instrument=pling`). |
+| `haohan:raw_ilmenite` | Raw Ilmenite | `MATERIAL` | Ilmenite thô rơi ra khi đào quặng Ilmenite Ore. |
+| `haohan:ilmenite_ore` | Ilmenite Ore | `SPECIAL` | Quặng Ilmenite Mặt Trăng (Note Block state `note=23, instrument=pling`). |
+| `haohan:raw_pyroxene` | Raw Pyroxene | `MATERIAL` | Pyroxene thô rơi ra khi đào quặng Pyroxene Ore. |
+| `haohan:pyroxene_debris` | Pyroxene Debris | `MATERIAL` | Mảnh vỡ tinh thể Pyroxene từ tầng sâu Mặt Trăng. |
+| `haohan:pyroxene_ore` | Pyroxene Ore | `SPECIAL` | Quặng Pyroxene Mặt Trăng (Note Block state `note=22, instrument=pling`). |
+| `haohan:kreep_dust` | KREEP Dust | `MATERIAL` | Bụi KREEP giàu kali, nguyên tố đất hiếm và phốt pho, rơi ra khi đào quặng KREEP Basalt. |
+| `haohan:kreep_basalt` | KREEP Basalt | `SPECIAL` | Đá bazan Mặt Trăng giàu khoáng vật KREEP (Note Block state `note=21, instrument=pling`). |
 | `haohan:i_really_want_to_stay_at_your_house` | Đĩa nhạc HaoHanSMP | `SPECIAL` | Đĩa nhạc custom, phát bài Lunity - I Really Want to Stay at Your House. |
 
 ---

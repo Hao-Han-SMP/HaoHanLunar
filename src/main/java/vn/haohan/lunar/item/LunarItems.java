@@ -38,15 +38,16 @@ public class LunarItems {
 
         // 3. Materials
         registry.register(ItemDefinition.builder("haohan:aero_compound")
-                .material(Material.KNOWLEDGE_BOOK)
+                .material(Material.PAPER)
                 .displayName("Aero Compound")
                 .customModelData(3001)
                 .type(ItemType.MATERIAL)
                 .usable(false)
+                .maxStackSize(1)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:steel_ingot")
-                .material(Material.KNOWLEDGE_BOOK)
+                .material(Material.PAPER)
                 .displayName("Steel Ingot")
                 .customModelData(3002)
                 .type(ItemType.MATERIAL)
@@ -55,9 +56,45 @@ public class LunarItems {
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:raw_anorthosite")
-                .material(Material.KNOWLEDGE_BOOK)
+                .material(Material.PAPER)
                 .displayName("Raw Anorthosite")
                 .customModelData(3003)
+                .type(ItemType.MATERIAL)
+                .maxStackSize(64)
+                .usable(false)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:raw_ilmenite")
+                .material(Material.PAPER)
+                .displayName("Raw Ilmenite")
+                .customModelData(3004)
+                .type(ItemType.MATERIAL)
+                .maxStackSize(64)
+                .usable(false)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:raw_pyroxene")
+                .material(Material.PAPER)
+                .displayName("Raw Pyroxene")
+                .customModelData(3005)
+                .type(ItemType.MATERIAL)
+                .maxStackSize(64)
+                .usable(false)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:pyroxene_debris")
+                .material(Material.PAPER)
+                .displayName("Pyroxene Debris")
+                .customModelData(3006)
+                .type(ItemType.MATERIAL)
+                .maxStackSize(64)
+                .usable(false)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:kreep_dust")
+                .material(Material.PAPER)
+                .displayName("KREEP Dust")
+                .customModelData(3007)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
                 .usable(false)
@@ -82,6 +119,45 @@ public class LunarItems {
                 .properties(Map.of(
                         "custom_block_data", "minecraft:note_block[note=24,instrument=pling,powered=true]",
                         "custom_block_drop", "haohan:raw_anorthosite",
+                        "hide_additional_tooltip", true
+                ))
+                .maxStackSize(64)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:ilmenite_ore")
+                .material(Material.NOTE_BLOCK)
+                .displayName("Ilmenite Ore")
+                .customModelData(5002)
+                .type(ItemType.SPECIAL)
+                .properties(Map.of(
+                        "custom_block_data", "minecraft:note_block[note=23,instrument=pling,powered=true]",
+                        "custom_block_drop", "haohan:raw_ilmenite",
+                        "hide_additional_tooltip", true
+                ))
+                .maxStackSize(64)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:pyroxene_ore")
+                .material(Material.NOTE_BLOCK)
+                .displayName("Pyroxene Ore")
+                .customModelData(5003)
+                .type(ItemType.SPECIAL)
+                .properties(Map.of(
+                        "custom_block_data", "minecraft:note_block[note=22,instrument=pling,powered=true]",
+                        "custom_block_drop", "haohan:raw_pyroxene",
+                        "hide_additional_tooltip", true
+                ))
+                .maxStackSize(64)
+                .build());
+
+        registry.register(ItemDefinition.builder("haohan:kreep_basalt")
+                .material(Material.NOTE_BLOCK)
+                .displayName("KREEP Basalt")
+                .customModelData(5004)
+                .type(ItemType.SPECIAL)
+                .properties(Map.of(
+                        "custom_block_data", "minecraft:note_block[note=21,instrument=pling,powered=true]",
+                        "custom_block_drop", "haohan:kreep_dust",
                         "hide_additional_tooltip", true
                 ))
                 .maxStackSize(64)

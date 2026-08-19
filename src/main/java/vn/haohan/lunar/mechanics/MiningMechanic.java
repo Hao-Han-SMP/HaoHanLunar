@@ -33,15 +33,16 @@ public class MiningMechanic implements Listener {
     }
 
     private void tickPlayerMining(Player player) {
-        boolean lookingAtOre = isLookingAtAnorthositeOre(player);
+        boolean lookingAtOre = isLookingAtLunarOre(player);
         updateMiningAttributes(player, lookingAtOre);
     }
 
-    private boolean isLookingAtAnorthositeOre(Player player) {
+    private boolean isLookingAtLunarOre(Player player) {
         Block target = player.getTargetBlockExact(5);
         if (target != null && target.getType() == Material.NOTE_BLOCK) {
             if (target.getBlockData() instanceof NoteBlock noteBlock) {
-                return noteBlock.getNote().getId() == 24 &&
+                int note = noteBlock.getNote().getId();
+                return (note >= 21 && note <= 24) &&
                         noteBlock.getInstrument() == org.bukkit.Instrument.PLING;
             }
         }
