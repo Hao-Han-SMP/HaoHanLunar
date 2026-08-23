@@ -104,9 +104,9 @@ public class LunarItems {
         registry.register(ItemDefinition.builder("haohan:i_really_want_to_stay_at_your_house")
                 .material(Material.MUSIC_DISC_13)
                 .displayName("§6Đĩa nhạc HaoHanSMP")
-                .lore(List.of("§7Lunity - I Really Want to Stay at Your House (Acoustic Cover)"))
                 .customModelData(4001)
                 .type(ItemType.SPECIAL)
+                .maxStackSize(1)
                 .properties(Map.of("jukebox_playable", "haohan:i_really_want_to_stay_at_your_house"))
                 .build());
 
@@ -174,6 +174,7 @@ public class LunarItems {
                 .displayName(displayName)
                 .customModelData(customModelData)
                 .type(ItemType.ARMOR)
+                .maxStackSize(1)
                 .property("equippable_asset_id", "haohan:spacesuit")
                 .build());
     }
