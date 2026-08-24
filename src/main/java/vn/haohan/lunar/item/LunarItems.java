@@ -42,7 +42,6 @@ public class LunarItems {
                 .displayName("Aero Compound")
                 .customModelData(3001)
                 .type(ItemType.MATERIAL)
-                .usable(false)
                 .maxStackSize(1)
                 .build());
 
@@ -52,7 +51,6 @@ public class LunarItems {
                 .customModelData(3002)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
-                .usable(false)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:raw_anorthosite")
@@ -61,7 +59,6 @@ public class LunarItems {
                 .customModelData(3003)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
-                .usable(false)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:raw_ilmenite")
@@ -70,7 +67,6 @@ public class LunarItems {
                 .customModelData(3004)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
-                .usable(false)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:raw_pyroxene")
@@ -79,7 +75,6 @@ public class LunarItems {
                 .customModelData(3005)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
-                .usable(false)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:pyroxene_debris")
@@ -88,7 +83,6 @@ public class LunarItems {
                 .customModelData(3006)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
-                .usable(false)
                 .build());
 
         registry.register(ItemDefinition.builder("haohan:kreep_dust")
@@ -97,7 +91,6 @@ public class LunarItems {
                 .customModelData(3007)
                 .type(ItemType.MATERIAL)
                 .maxStackSize(64)
-                .usable(false)
                 .build());
 
         // 4. Music Disc
