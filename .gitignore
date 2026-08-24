@@ -2,6 +2,8 @@
 .gradle/
 build/
 out/
+bin/
+.settings/
 
 target/
 pom.xml.tag
@@ -20,4 +22,5 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
 
