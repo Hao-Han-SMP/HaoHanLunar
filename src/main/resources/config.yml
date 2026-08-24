@@ -15,3 +15,17 @@ beacon-shield:
   boundary-particle-distance: 8.0
   # Rotation speed in radians per tick for the complete shield shape.
   rotation-speed: 0.012
+  # Duration of the collapse animation after the beacon is broken.
+  collapse-duration: 24
+
+lunar-surface:
+  # The conversion is limited to the exposed top block in this radius.
+  radius: 48.0
+  # Fallback speed for the first state. stage-speeds controls each wave.
+  expansion-speed: 1.0
+  # Randomized edge offset in blocks; combines broad and fine noise.
+  edge-noise: 1.8
+  # Each state starts after this many ticks from beacon placement.
+  stage-delays: [0, 20, 40, 60, 80]
+  # Each wave progresses independently; later states are intentionally slower.
+  stage-speeds: [1.0, 0.8, 0.64, 0.51, 0.41]

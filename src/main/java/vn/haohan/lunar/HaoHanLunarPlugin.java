@@ -7,6 +7,7 @@ import vn.haohan.lunar.mechanics.MiningMechanic;
 import vn.haohan.lunar.mechanics.OxygenMechanic;
 import vn.haohan.lunar.mechanics.VisualMechanic;
 import vn.haohan.lunar.mechanics.BeaconShieldMechanic;
+import vn.haohan.lunar.mechanics.LunarSurfaceSpreadMechanic;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -22,6 +23,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private MiningMechanic miningMechanic;
     private VisualMechanic visualMechanic;
     private BeaconShieldMechanic beaconShieldMechanic;
+    private LunarSurfaceSpreadMechanic lunarSurfaceSpreadMechanic;
 
     public static HaoHanLunarPlugin getInstance() {
         return instance;
@@ -51,6 +53,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         miningMechanic = new MiningMechanic(this);
         visualMechanic = new VisualMechanic(this);
         beaconShieldMechanic = new BeaconShieldMechanic(this);
+        lunarSurfaceSpreadMechanic = new LunarSurfaceSpreadMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();
@@ -59,6 +62,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(miningMechanic, this);
         pm.registerEvents(visualMechanic, this);
         pm.registerEvents(beaconShieldMechanic, this);
+        pm.registerEvents(lunarSurfaceSpreadMechanic, this);
 
         // Start main repeating task (runs every tick)
         Bukkit.getScheduler().runTaskTimer(this, () -> {
@@ -68,6 +72,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
                 miningMechanic.tick();
                 visualMechanic.tick();
                 beaconShieldMechanic.tick();
+                lunarSurfaceSpreadMechanic.tick();
             } catch (Exception e) {
                 getLogger().warning("Error in tick loop: " + e.getMessage());
             }
@@ -84,6 +89,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }
         if (beaconShieldMechanic != null) {
             beaconShieldMechanic.removeAll();
+        }
+        if (lunarSurfaceSpreadMechanic != null) {
+            lunarSurfaceSpreadMechanic.removeAll();
         }
 
         // Clean up low gravity and mining attributes modifiers from players

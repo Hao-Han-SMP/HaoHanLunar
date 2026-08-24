@@ -7,7 +7,7 @@ Plugin cơ chế chiều không gian Mặt Trăng và Custom Item cho Minecraft 
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-62B47A?style=for-the-badge&logo=minecraft&logoColor=white)](https://www.minecraft.net/)
 [![Paper](https://img.shields.io/badge/Paper-API-222222?style=for-the-badge&logo=paper&logoColor=white)](https://papermc.io/)
 [![Java](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Maven](https://img.shields.io/badge/Maven-Build-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)](https://maven.apache.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-Build-02303A?style=for-the-badge&logo=gradle&logoColor=white)](https://gradle.org/)
 
 Ngôn ngữ: Tiếng Việt
 
@@ -32,7 +32,7 @@ Ngôn ngữ: Tiếng Việt
 | --- | --- |
 | Paper API (1.21.11) | Nền tảng API chính để phát triển Paper plugin (sử dụng format `paper-plugin.yml`). |
 | Java 21 | Ngôn ngữ và runtime chính của plugin. |
-| Maven | Quản lý dependency và build file `.jar`. |
+| Gradle | Quản lý dependency và build file `.jar`. |
 | HaoHanItemCore API | Đăng ký và quản lý tập trung toàn bộ custom item/recipe của Mặt Trăng qua `ItemDefinition` API. |
 | HaoHanSMP Datapack | Định nghĩa chiều không gian `haohan:lunar`, cấu trúc trạm dừng chân và dữ liệu sinh địa hình Mặt Trăng. |
 | Bukkit Attribute API | Áp dụng modifier trọng lực, tốc độ rơi và tốc độ đào block theo thời gian thực. |
@@ -94,15 +94,16 @@ Datapack chứa định nghĩa chiều không gian `haohan:lunar`, cấu trúc n
 
 ## Build từ mã nguồn
 
-Chạy lệnh Maven tại thư mục gốc của dự án:
+Chạy lệnh Gradle Wrapper tại thư mục gốc của dự án:
 
 ```bash
-mvn clean package
+./gradlew build
 ```
+*(Hoặc `gradlew.bat build` trên Windows)*
 
-File `.jar` sau khi biên dịch nằm tại `target/HaoHanLunar-1.0.0.jar`.
+File `.jar` sau khi biên dịch nằm tại `build/libs/HaoHanLunar-1.0.0.jar`.
 
-> **Lưu ý:** Dự án phụ thuộc vào `HaoHanItemCore`. Đảm bảo bạn đã biên dịch và cài đặt `HaoHanItemCore` vào Maven local repository (`mvn install` hoặc có trong classpath build).
+> **Lưu ý:** Dự án phụ thuộc vào `HaoHanItemCore`. Đảm bảo bạn đã biên dịch và cài đặt `HaoHanItemCore` vào Maven local repository (`mvn install` hoặc `./gradlew publishToMavenLocal`).
 
 ---
 
@@ -173,8 +174,6 @@ beacon-shield:
   ring-points: 72
   display-height: 4.0
 ```
-
-Resourcepack dùng các ô vuông `ItemDisplay` ghép thành vòng tròn; mỗi ô chạy qua 6 frame alpha để tạo animation border. Particle được xếp thành nhiều lớp: vòng biên xanh điện, lớp hạt trong suốt chạy dọc theo thành vùng và lớp lõi xanh nhấp nháy.
 
 ### 3. Cơ chế Khai thác Quặng (MiningMechanic)
 

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import org.joml.AxisAngle4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -51,6 +52,7 @@ public final class BeaconShieldMechanic implements Listener {
     private final int renderInterval;
     private final double boundaryParticleDistance;
     private final double rotationSpeed;
+    private final int collapseDuration;
     private final List<ItemDisplay> displays = new ArrayList<>();
     private long animationTick;
 
@@ -75,6 +77,8 @@ public final class BeaconShieldMechanic implements Listener {
         this.boundaryParticleDistance = Math.max(1.0,
                 plugin.getConfig().getDouble("beacon-shield.boundary-particle-distance", 8.0));
         this.rotationSpeed = plugin.getConfig().getDouble("beacon-shield.rotation-speed", 0.012);
+        this.collapseDuration = Math.max(6,
+                plugin.getConfig().getInt("beacon-shield.collapse-duration", 24));
     }
 
     public void tick() {
@@ -82,6 +86,13 @@ public final class BeaconShieldMechanic implements Listener {
         Iterator<Shield> iterator = shields.iterator();
         while (iterator.hasNext()) {
             Shield shield = iterator.next();
+            if (shield.collapsing) {
+                if (tickCollapse(shield)) {
+                    removeDisplays(shield);
+                    iterator.remove();
+                }
+                continue;
+            }
             if (!isValid(shield)) {
                 removeDisplays(shield);
                 iterator.remove();
@@ -115,7 +126,11 @@ public final class BeaconShieldMechanic implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBeaconBreak(BlockBreakEvent event) {
         if (event.getBlock().getType().name().equals("BEACON")) {
-            removeShields(shield -> shield.beacon.equals(event.getBlock().getLocation()));
+            for (Shield shield : shields) {
+                if (shield.beacon.getBlock().equals(event.getBlock())) {
+                    shield.beginCollapse();
+                }
+            }
         }
     }
 
@@ -135,7 +150,7 @@ public final class BeaconShieldMechanic implements Listener {
             double dx = location.getX() - shield.beacon.getX();
             double dy = location.getY() - shield.beacon.getY();
             double dz = location.getZ() - shield.beacon.getZ();
-            if (dx * dx + dy * dy + dz * dz <= shield.radius * shield.radius) return true;
+            if (!shield.collapsing && dx * dx + dy * dy + dz * dz <= shield.radius * shield.radius) return true;
         }
         return false;
     }
@@ -173,6 +188,65 @@ public final class BeaconShieldMechanic implements Listener {
                         shield.beacon.getY() + y * radius,
                         shield.beacon.getZ() + z * radius), Particle.DUST,
                         (sample + edgeIndex) % 5 == 0 ? blue : cyan, 1);
+            }
+        }
+    }
+
+    /** Shrinks the displays while throwing pieces of the field away from its centre. */
+    private boolean tickCollapse(Shield shield) {
+        shield.collapseTick++;
+        double progress = Math.min(1.0, (double) shield.collapseTick / collapseDuration);
+        double remaining = 1.0 - progress;
+        // Ease-in toward the end so the shield hangs briefly before disintegrating.
+        shield.radius = shield.collapseStartRadius * remaining * remaining;
+
+        updateDisplays(shield);
+        if (shield.radius > 0.05) {
+            renderCollapseParticles(shield, progress);
+        }
+        return shield.collapseTick >= collapseDuration;
+    }
+
+    private void renderCollapseParticles(Shield shield, double progress) {
+        World world = shield.beacon.getWorld();
+        if (world == null) return;
+
+        double radius = Math.max(0.05, shield.radius);
+        double fragmentChance = 0.35 + progress * 0.45;
+        Particle.DustOptions cyan = new Particle.DustOptions(Color.fromRGB(45, 190, 255), 1.1f);
+        Particle.DustOptions white = new Particle.DustOptions(Color.WHITE, 0.8f);
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+
+        for (int edgeIndex = 0; edgeIndex < POLYHEDRON_EDGES.size(); edgeIndex++) {
+            int[] edge = POLYHEDRON_EDGES.get(edgeIndex);
+            Vector3f from = rotated(POLYHEDRON_VERTICES.get(edge[0]));
+            Vector3f to = rotated(POLYHEDRON_VERTICES.get(edge[1]));
+            int samples = Math.max(2, (int) Math.ceil(from.distance(to) * radius / 2.5));
+
+            for (int sample = 0; sample <= samples; sample++) {
+                if (random.nextDouble() > fragmentChance) continue;
+                double t = (double) sample / samples;
+                double x = from.x + (to.x - from.x) * t;
+                double y = from.y + (to.y - from.y) * t;
+                double z = from.z + (to.z - from.z) * t;
+
+                // Give each piece a small outward displacement, making the wireframe
+                // look as if it is breaking apart instead of simply fading.
+                Vector direction = new Vector(x, y, z).normalize();
+                double spread = 0.12 + progress * 0.7;
+                Location fragment = new Location(world,
+                        shield.beacon.getX() + x * radius + random.nextGaussian() * spread,
+                        shield.beacon.getY() + y * radius + random.nextGaussian() * spread,
+                        shield.beacon.getZ() + z * radius + random.nextGaussian() * spread);
+
+                world.spawnParticle(Particle.DUST, fragment, 1,
+                        direction.getX() * spread, direction.getY() * spread, direction.getZ() * spread,
+                        0.01, (edgeIndex + sample) % 4 == 0 ? white : cyan);
+                if (random.nextDouble() < 0.32) {
+                    world.spawnParticle(Particle.END_ROD, fragment, 1,
+                            direction.getX() * spread, direction.getY() * spread, direction.getZ() * spread,
+                            0.015);
+                }
             }
         }
     }
@@ -568,11 +642,22 @@ public final class BeaconShieldMechanic implements Listener {
     private static final class Shield {
         private final Location beacon;
         private double radius;
+        private double collapseStartRadius;
+        private int collapseTick;
+        private boolean collapsing;
         private final List<ItemDisplay> displays = new ArrayList<>();
         private final List<Location> groundContacts = new ArrayList<>();
 
         private Shield(Location beacon) {
             this.beacon = beacon;
+        }
+
+        private void beginCollapse() {
+            if (collapsing) return;
+            collapseStartRadius = radius;
+            collapseTick = 0;
+            collapsing = true;
+            groundContacts.clear();
         }
     }
 }
