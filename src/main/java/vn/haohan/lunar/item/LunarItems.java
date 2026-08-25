@@ -103,7 +103,15 @@ public class LunarItems {
                 .properties(Map.of("jukebox_playable", "haohan:i_really_want_to_stay_at_your_house"))
                 .build());
 
-        // 5. Block
+        // 5. Tools & Utility
+        registry.register(ItemDefinition.builder("haohan:telescope")
+                .material(Material.SPYGLASS)
+                .displayName("Kính viễn vọng")
+                .type(ItemType.TOOL)
+                .maxStackSize(1)
+                .build());
+
+        // 6. Block
         registry.register(ItemDefinition.builder("haohan:anorthosite_ore")
                 .material(Material.NOTE_BLOCK)
                 .displayName("Anorthosite Ore")
