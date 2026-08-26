@@ -8,6 +8,7 @@ import vn.haohan.lunar.mechanics.OxygenMechanic;
 import vn.haohan.lunar.mechanics.VisualMechanic;
 import vn.haohan.lunar.mechanics.BeaconShieldMechanic;
 import vn.haohan.lunar.mechanics.LunarSurfaceSpreadMechanic;
+import vn.haohan.lunar.mechanics.TelescopeMechanic;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -24,6 +25,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private VisualMechanic visualMechanic;
     private BeaconShieldMechanic beaconShieldMechanic;
     private LunarSurfaceSpreadMechanic lunarSurfaceSpreadMechanic;
+    private TelescopeMechanic telescopeMechanic;
 
     public static HaoHanLunarPlugin getInstance() {
         return instance;
@@ -54,6 +56,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         visualMechanic = new VisualMechanic(this);
         beaconShieldMechanic = new BeaconShieldMechanic(this);
         lunarSurfaceSpreadMechanic = new LunarSurfaceSpreadMechanic(this);
+        telescopeMechanic = new TelescopeMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();
@@ -63,6 +66,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(visualMechanic, this);
         pm.registerEvents(beaconShieldMechanic, this);
         pm.registerEvents(lunarSurfaceSpreadMechanic, this);
+        pm.registerEvents(telescopeMechanic, this);
 
         // Start main repeating task (runs every tick)
         Bukkit.getScheduler().runTaskTimer(this, () -> {
@@ -92,6 +96,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }
         if (lunarSurfaceSpreadMechanic != null) {
             lunarSurfaceSpreadMechanic.removeAll();
+        }
+        if (telescopeMechanic != null) {
+            telescopeMechanic.removeAllMarkers();
         }
 
         // Clean up low gravity and mining attributes modifiers from players
@@ -127,5 +134,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
     public BeaconShieldMechanic getBeaconShieldMechanic() {
         return beaconShieldMechanic;
+    }
+
+    public TelescopeMechanic getTelescopeMechanic() {
+        return telescopeMechanic;
     }
 }
