@@ -6,12 +6,10 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
-import org.bukkit.FluidCollisionMode;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
-import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -40,14 +38,9 @@ import org.bukkit.util.Transformation;
 public final class BeaconShieldMechanic implements Listener {
 
     private static final String LUNAR_WORLD = "haohan:lunar";
-    private final HaoHanLunarPlugin plugin;
     private final List<Shield> shields = new ArrayList<>();
     private final double maxRadius;
     private final double expansionPerTick;
-    private final int ringPoints;
-    private final int sphereBands;
-    private final int spherePoints;
-    private final double displayHeight;
     private final double edgeParticleSpacing;
     private final int renderInterval;
     private final double boundaryParticleDistance;
@@ -61,15 +54,8 @@ public final class BeaconShieldMechanic implements Listener {
     private static final List<Face> POLYHEDRON_FACES = createPolyhedronFaces();
 
     public BeaconShieldMechanic(HaoHanLunarPlugin plugin) {
-        this.plugin = plugin;
         this.maxRadius = Math.max(4.0, plugin.getConfig().getDouble("beacon-shield.radius", 48.0));
         this.expansionPerTick = Math.max(0.25, plugin.getConfig().getDouble("beacon-shield.expansion-speed", 3.0));
-        this.ringPoints = Math.max(16, plugin.getConfig().getInt("beacon-shield.ring-points", 48));
-        // Use enough latitude rings and points that the display tiles overlap slightly
-        // instead of looking like a collection of separate panels.
-        this.sphereBands = Math.max(12, ringPoints / 4);
-        this.spherePoints = ringPoints;
-        this.displayHeight = Math.max(1.0, plugin.getConfig().getDouble("beacon-shield.display-height", 4.0));
         this.edgeParticleSpacing = Math.max(0.75,
                 plugin.getConfig().getDouble("beacon-shield.edge-particle-spacing", 1.0));
         this.renderInterval = Math.max(1,
@@ -160,8 +146,6 @@ public final class BeaconShieldMechanic implements Listener {
         if (world == null) return;
 
         double radius = shield.radius;
-        double pulse = 0.82 + Math.sin(animationTick * 0.16) * 0.12;
-        double rotation = animationTick * 0.07;
         Particle.DustOptions cyan = new Particle.DustOptions(Color.fromRGB(45, 190, 255), 1.15f);
         Particle.DustOptions blue = new Particle.DustOptions(Color.fromRGB(25, 90, 255), 1.0f);
 
@@ -265,7 +249,7 @@ public final class BeaconShieldMechanic implements Listener {
 
     private void createDisplays(Shield shield) {
         World world = shield.beacon.getWorld();
-        for (int[] edge : POLYHEDRON_EDGES) {
+        for (int i = 0; i < POLYHEDRON_EDGES.size(); i++) {
             ItemDisplay display = world.spawn(shield.beacon, ItemDisplay.class);
             display.setItemStack(borderItem(0));
             display.setBillboard(Display.Billboard.FIXED);
@@ -442,31 +426,6 @@ public final class BeaconShieldMechanic implements Listener {
         }
     }
 
-    private boolean hasPlayerNearBoundary(Shield shield) {
-        World world = shield.beacon.getWorld();
-        if (world == null) return false;
-        for (org.bukkit.entity.Player player : world.getPlayers()) {
-            double dx = player.getLocation().getX() - shield.beacon.getX();
-            double dy = player.getLocation().getY() - shield.beacon.getY();
-            double dz = player.getLocation().getZ() - shield.beacon.getZ();
-            double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            if (Math.abs(distance - shield.radius) <= boundaryParticleDistance) return true;
-        }
-        return false;
-    }
-
-    private boolean isNearPlayer(World world, double x, double y, double z) {
-        double maxDistanceSquared = boundaryParticleDistance * boundaryParticleDistance;
-        for (org.bukkit.entity.Player player : world.getPlayers()) {
-            Location playerLocation = player.getLocation();
-            double dx = playerLocation.getX() - x;
-            double dy = playerLocation.getY() - y;
-            double dz = playerLocation.getZ() - z;
-            if (dx * dx + dy * dy + dz * dz <= maxDistanceSquared) return true;
-        }
-        return false;
-    }
-
     private static List<Vector3f> createPolyhedronVertices() {
         double phi = (1.0 + Math.sqrt(5.0)) / 2.0;
         Vector3f[] base = new Vector3f[]{
@@ -609,6 +568,7 @@ public final class BeaconShieldMechanic implements Listener {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private ItemStack borderItem(int frame) {
         ItemStack item = new ItemStack(org.bukkit.Material.PAPER);
         ItemMeta meta = item.getItemMeta();

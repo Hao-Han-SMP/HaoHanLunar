@@ -7,7 +7,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
@@ -304,6 +303,7 @@ public class OxygenMechanic implements Listener {
         return isInSpecificStructure(loc, "haohan:space_station");
     }
 
+    @SuppressWarnings("removal")
     private boolean isInSpecificStructure(Location loc, String structureKey) {
         if (loc == null || loc.getWorld() == null) return false;
         World world = loc.getWorld();

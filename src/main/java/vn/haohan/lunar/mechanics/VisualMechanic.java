@@ -20,11 +20,9 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 
 public class VisualMechanic implements Listener {
 
-    private final HaoHanLunarPlugin plugin;
     private int tickCounter = 0;
 
     public VisualMechanic(HaoHanLunarPlugin plugin) {
-        this.plugin = plugin;
     }
 
     public void tick() {

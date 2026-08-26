@@ -16,12 +16,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public class MiningMechanic implements Listener {
 
-    private final HaoHanLunarPlugin plugin;
     private final NamespacedKey slowMiningKey;
     private final NamespacedKey noMiningKey;
 
     public MiningMechanic(HaoHanLunarPlugin plugin) {
-        this.plugin = plugin;
         this.slowMiningKey = new NamespacedKey(plugin, "slow_mining");
         this.noMiningKey = new NamespacedKey(plugin, "no_mining");
     }

@@ -2,7 +2,6 @@ package vn.haohan.lunar.mechanics;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
