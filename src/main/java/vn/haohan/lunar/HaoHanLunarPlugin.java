@@ -9,6 +9,7 @@ import vn.haohan.lunar.mechanics.VisualMechanic;
 import vn.haohan.lunar.mechanics.BeaconShieldMechanic;
 import vn.haohan.lunar.mechanics.LunarSurfaceSpreadMechanic;
 import vn.haohan.lunar.mechanics.TelescopeMechanic;
+import vn.haohan.lunar.mechanics.LunarWardenMechanic;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -26,6 +27,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private BeaconShieldMechanic beaconShieldMechanic;
     private LunarSurfaceSpreadMechanic lunarSurfaceSpreadMechanic;
     private TelescopeMechanic telescopeMechanic;
+    private LunarWardenMechanic lunarWardenMechanic;
 
     public static HaoHanLunarPlugin getInstance() {
         return instance;
@@ -57,6 +59,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         beaconShieldMechanic = new BeaconShieldMechanic(this);
         lunarSurfaceSpreadMechanic = new LunarSurfaceSpreadMechanic(this);
         telescopeMechanic = new TelescopeMechanic(this);
+        lunarWardenMechanic = new LunarWardenMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();

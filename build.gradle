@@ -18,6 +18,10 @@ repositories {
         name = 'papermc-repo'
         url = 'https://repo.papermc.io/repository/maven-public/'
     }
+    maven {
+        name = 'jitpack'
+        url = 'https://jitpack.io'
+    }
     mavenLocal()
     flatDir {
         dirs 'libs'
@@ -26,6 +30,7 @@ repositories {
 
 dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+    compileOnly 'com.github.Hao-Han-SMP:HaoHanItemCore:main-SNAPSHOT'
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
