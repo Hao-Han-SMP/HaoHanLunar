@@ -106,6 +106,16 @@ public class LunarItems {
                                 .build());
 
                 // 5. Tools & Utility
+                registry.register(ItemDefinition.builder("haohan:lunar_claymore")
+                                .material(Material.NETHERITE_SWORD)
+                                .displayName("§b§lThanh Kiếm Nguyệt Thạch")
+                                .lore(List.of("§7Thanh đại kiếm mang sức mạnh bóng đêm của Mặt Trăng."))
+                                .customModelData(6001)
+                                .model("haohan:claymore")
+                                .type(ItemType.WEAPON)
+                                .maxStackSize(1)
+                                .build());
+
                 registry.register(ItemDefinition.builder("haohan:telescope")
                                 .material(Material.SPYGLASS)
                                 .displayName("Kính viễn vọng")
@@ -357,4 +367,3 @@ public class LunarItems {
                 }
         }
 }
-

@@ -9,9 +9,14 @@ import vn.haohan.lunar.mechanics.VisualMechanic;
 import vn.haohan.lunar.mechanics.BeaconShieldMechanic;
 import vn.haohan.lunar.mechanics.LunarSurfaceSpreadMechanic;
 import vn.haohan.lunar.mechanics.TelescopeMechanic;
-import vn.haohan.lunar.mechanics.LunarWardenMechanic;
+import vn.haohan.lunar.mechanics.boss.warden.LunarWardenMechanic;
+import vn.haohan.lunar.mechanics.boss.warden.WardenSpawner;
+import vn.haohan.lunar.mechanics.boss.warden.visual.WardenTrailCaptureSystem;
+import vn.haohan.lunar.mechanics.LunarClaymoreMechanic;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -28,6 +33,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private LunarSurfaceSpreadMechanic lunarSurfaceSpreadMechanic;
     private TelescopeMechanic telescopeMechanic;
     private LunarWardenMechanic lunarWardenMechanic;
+    private LunarClaymoreMechanic lunarClaymoreMechanic;
 
     public static HaoHanLunarPlugin getInstance() {
         return instance;
@@ -60,6 +66,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         lunarSurfaceSpreadMechanic = new LunarSurfaceSpreadMechanic(this);
         telescopeMechanic = new TelescopeMechanic(this);
         lunarWardenMechanic = new LunarWardenMechanic(this);
+        lunarClaymoreMechanic = new LunarClaymoreMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();
@@ -70,6 +77,25 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(beaconShieldMechanic, this);
         pm.registerEvents(lunarSurfaceSpreadMechanic, this);
         pm.registerEvents(telescopeMechanic, this);
+        pm.registerEvents(lunarClaymoreMechanic, this);
+
+        // Register commands dynamically for Paper plugins
+        Bukkit.getCommandMap().register("haohan", new BukkitCommand("spawnwarden") {
+            {
+                setDescription("Triệu hồi Boss The Lunar Warden");
+                setPermission("haohan.admin");
+            }
+
+            @Override
+            public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cChỉ có người chơi mới dùng được lệnh này!");
+                    return true;
+                }
+                WardenSpawner.spawnWarden(HaoHanLunarPlugin.this, lunarWardenMechanic, player.getLocation(), player);
+                return true;
+            }
+        });
 
         // Start main repeating task (runs every tick)
         Bukkit.getScheduler().runTaskTimer(this, () -> {
@@ -80,6 +106,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
                 visualMechanic.tick();
                 beaconShieldMechanic.tick();
                 lunarSurfaceSpreadMechanic.tick();
+                WardenTrailCaptureSystem.renderDebugTrails();
             } catch (Exception e) {
                 getLogger().warning("Error in tick loop: " + e.getMessage());
             }
@@ -141,5 +168,13 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
     public TelescopeMechanic getTelescopeMechanic() {
         return telescopeMechanic;
+    }
+
+    public LunarWardenMechanic getLunarWardenMechanic() {
+        return lunarWardenMechanic;
+    }
+
+    public LunarClaymoreMechanic getLunarClaymoreMechanic() {
+        return lunarClaymoreMechanic;
     }
 }

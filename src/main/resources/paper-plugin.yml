@@ -11,7 +11,3 @@ dependencies:
     ModelEngine:
       load: BEFORE
       required: true
-commands:
-  spawnwarden:
-    description: Spawn TheLunarWarden boss
-    permission: op
