@@ -1,6 +1,7 @@
 package vn.haohan.lunar.mechanics.boss.warden.visual;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -85,31 +86,14 @@ public class WardenTrailCaptureSystem implements Listener {
 
                 WardenState state = mechanic != null ? mechanic.getBossStates().get(uuid) : null;
 
-                boolean shouldCaptureTrail = false;
-                if (state != null) {
-                    String currentAttack = state.currentAttack != null ? state.currentAttack : "";
-                    switch (currentAttack) {
-                        case "attack_slash_straight", "attack_slash_left", "attack_sweep_right", "skill_shield_sword_slam" -> {
-                            if (state.attackTicks >= 1 && state.attackTicks <= state.attackTotalTicks) {
-                                shouldCaptureTrail = true;
-                            }
-                        }
-                    }
-                } else {
-                    var animHandler = activeModel.getAnimationHandler();
-                    if (animHandler.isPlayingAnimation("attack_slash_left") || animHandler.isPlayingAnimation("attack_sweep_right")
-                            || animHandler.isPlayingAnimation("attack_slash_straight") || animHandler.isPlayingAnimation("skill_shield_sword_slam")) {
-                        shouldCaptureTrail = true;
-                    }
-                }
+                boolean shouldCaptureTrail = isShouldCaptureTrail(state, activeModel);
 
                 if (!shouldCaptureTrail) {
                     continue;
                 }
 
-                // Robust blade position calculator: supports locator bones, sword bone offsets, and directional fallbacks
                 WardenBladeCalculator.BladeSegment blade = WardenBladeCalculator.calculateBladeSegment(golem);
-                if (blade != null && blade.base != null && blade.tip != null) {
+                if (blade.base != null && blade.tip != null) {
                     Deque<TrailPoint> history = historyBuffers.computeIfAbsent(uuid, k -> new ArrayDeque<>());
                     history.addLast(new TrailPoint(blade.base.clone(), blade.tip.clone()));
                     while (history.size() > 16) {
@@ -120,7 +104,28 @@ public class WardenTrailCaptureSystem implements Listener {
         }
     }
 
-    public static void renderDebugTrails() {
+    private static boolean isShouldCaptureTrail(WardenState state, ActiveModel activeModel) {
+        boolean shouldCaptureTrail = false;
+        if (state != null) {
+            String currentAttack = state.currentAttack != null ? state.currentAttack : "";
+            switch (currentAttack) {
+                case "attack_slash_straight", "attack_slash_left", "attack_sweep_right" -> {
+                    if (state.attackTicks >= 1 && state.attackTicks <= state.attackTotalTicks) {
+                        shouldCaptureTrail = true;
+                    }
+                }
+            }
+        } else {
+            var animHandler = activeModel.getAnimationHandler();
+            if (animHandler.isPlayingAnimation("attack_slash_left") || animHandler.isPlayingAnimation("attack_sweep_right")
+                    || animHandler.isPlayingAnimation("attack_slash_straight")) {
+                shouldCaptureTrail = true;
+            }
+        }
+        return shouldCaptureTrail;
+    }
+
+    public static void renderTrails() {
         captureTick();
 
         long now = System.currentTimeMillis();

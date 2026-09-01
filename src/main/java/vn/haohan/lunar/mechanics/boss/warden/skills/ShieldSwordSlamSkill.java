@@ -37,6 +37,7 @@ import vn.haohan.lunar.mechanics.boss.warden.combat.WardenCombatHandler;
 import vn.haohan.lunar.mechanics.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.mechanics.boss.warden.util.WardenLocationUtil;
 import vn.haohan.lunar.util.MathUtil;
+import vn.haohan.lunar.mechanics.boss.warden.visual.BlockWaveRenderer;
 import vn.haohan.lunar.mechanics.boss.warden.visual.WardenAnimationController;
 import vn.haohan.lunar.mechanics.boss.warden.visual.WardenAudio;
 
@@ -453,7 +454,7 @@ public final class ShieldSwordSlamSkill {
             }.runTaskTimer(plugin, 1L, 1L);
 
         } catch (Throwable e) {
-            plugin.getLogger().warning("Error spawning shield projectile: " + e.getMessage());
+            plugin.getLogger().warning("Error warning shield projectile: " + e.getMessage());
         }
     }
 
@@ -586,7 +587,6 @@ public final class ShieldSwordSlamSkill {
                         recallStep++;
                         int recallTotal = Math.max(1, MathUtil.secondsToTicks(5.07) - MathUtil.secondsToTicks(4.65));
                         double recallProg = Math.min(1.0, (double) recallStep / (double) recallTotal);
-
                         Location targetHand = getBoneWorldLocation(golem, "left_forearm", "left_arm");
                         if (targetHand == null) targetHand = golem.getLocation().add(0, 1.8, 0);
 
@@ -640,8 +640,10 @@ public final class ShieldSwordSlamSkill {
         BlockData bData = (!groundBlock.isPassable() && groundBlock.getType().isSolid()) ? groundBlock.getBlockData() : Material.GRAY_CONCRETE.createBlockData();
         world.spawnParticle(Particle.BLOCK, safeLand.clone().add(0, 0.5, 0), 50, 2.0, 0.6, 2.0, 0.25, bData);
 
-        // Spawn mini shockwave rock visual
-        spawnMiniShockwaveVisual(plugin, safeLand, bData);
+        // Spawn smooth fractured explosive burst ring and concentric shockwave ripple
+        Random rand = new Random();
+        BlockWaveRenderer.spawnBurstRing(plugin, safeLand, 3.2, 10, 0.85, 13, 0.24, rand);
+        BlockWaveRenderer.spawnConcentricWave(plugin, safeLand, 5.8, 1.35, 0.80, 13, 0.24, rand);
 
         // Expanded Shockwave Radius = 7.8m (Just slightly smaller than Ground Slam's 8.5m)
         double slamRadiusSq = 7.8 * 7.8;
@@ -666,48 +668,9 @@ public final class ShieldSwordSlamSkill {
                 }
 
                 victim.playSound(vLoc, Sound.ENTITY_PLAYER_HURT, 1.2f, 0.8f);
-                victim.getWorld().spawnParticle(Particle.CRIT, vLoc.clone().add(0, 1.0, 0), 15, 0.3, 0.3, 0.3, 0.15);
+                victim.getWorld().spawnParticle(Particle.CRIT, vLoc.clone().add(0, 1.0, 0), 15, 0.3, 0.3, 0.15);
             }
         }
     }
 
-    private static void spawnMiniShockwaveVisual(HaoHanLunarPlugin plugin, Location center, BlockData bData) {
-        World world = center.getWorld();
-        if (world == null) return;
-
-        int rocks = 8;
-        for (int i = 0; i < rocks; i++) {
-            double angle = (2 * Math.PI / rocks) * i;
-            double radius = 2.4;
-            double rx = center.getX() + Math.cos(angle) * radius;
-            double rz = center.getZ() + Math.sin(angle) * radius;
-            Location rockLoc = WardenLocationUtil.adjustToTerrainSurface(new Location(world, rx, center.getY(), rz), -0.2);
-
-            try {
-                BlockDisplay bd = world.spawn(rockLoc, BlockDisplay.class, entity -> {
-                    entity.setBlock(bData);
-                    entity.setTransformation(new Transformation(
-                            new Vector3f(-0.35f, 0f, -0.35f),
-                            new Quaternionf().rotateX((float) ((Math.random() - 0.5) * 0.4)).rotateZ((float) ((Math.random() - 0.5) * 0.4)),
-                            new Vector3f(0.8f, 0.8f, 0.8f),
-                            new Quaternionf()
-                    ));
-                    entity.setBillboard(Display.Billboard.FIXED);
-                });
-                WardenEntityManager.registerTempEntity(bd);
-
-                new BukkitRunnable() {
-                    int tick = 0;
-                    @Override
-                    public void run() {
-                        tick++;
-                        if (!bd.isValid() || tick > 28) {
-                            WardenEntityManager.removeTempEntity(bd);
-                            cancel();
-                        }
-                    }
-                }.runTaskTimer(plugin, 1L, 1L);
-            } catch (Throwable ignored) {}
-        }
-    }
 }

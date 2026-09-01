@@ -106,7 +106,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
                 visualMechanic.tick();
                 beaconShieldMechanic.tick();
                 lunarSurfaceSpreadMechanic.tick();
-                WardenTrailCaptureSystem.renderDebugTrails();
+                WardenTrailCaptureSystem.renderTrails();
             } catch (Exception e) {
                 getLogger().warning("Error in tick loop: " + e.getMessage());
             }
