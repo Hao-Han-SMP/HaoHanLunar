@@ -12,6 +12,7 @@ import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -20,9 +21,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -37,7 +38,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import vn.haohan.itemcore.api.HaoHanItemCore;
@@ -48,25 +48,27 @@ import vn.haohan.lunar.mechanics.weapon.claymore.SmoothSlashTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles custom mechanics, mace-like ground slam with block ripple wave,
  * Mace enchantments (Density, Breach, Wind Burst), smooth slash animation and melee cleave,
- * and anti-loss inventory protection for the Lunar Claymore (Thanh Kiếm Nguyệt Thạch).
+ * defensive guard block (Block_Sword), and anti-loss inventory protection for the Lunar Claymore (Thanh Kiếm Nguyệt Thạch).
  */
 public class LunarClaymoreMechanic implements Listener {
 
     private final HaoHanLunarPlugin plugin;
     private static final int CMD_IDLE = 6001;
+    private static final int CMD_SLASHING = 6002;
 
     private static final Particle.DustOptions LUNAR_CYAN = new Particle.DustOptions(Color.fromRGB(90, 225, 255), 1.6f);
+
+    // ThreadLocal flag to allow custom programmatic damage to bypass the vanilla attack cancellation
+    private static final ThreadLocal<Boolean> IS_APPLYING_CUSTOM_DAMAGE = ThreadLocal.withInitial(() -> false);
 
     private final Map<UUID, Long> lastSlashTime = new ConcurrentHashMap<>();
     private final Map<UUID, Integer> playerComboStep = new ConcurrentHashMap<>();
@@ -93,7 +95,7 @@ public class LunarClaymoreMechanic implements Listener {
 
         if (meta.hasCustomModelData()) {
             int cmd = meta.getCustomModelData();
-            if (cmd == CMD_IDLE) {
+            if (cmd == CMD_IDLE || cmd == CMD_SLASHING) {
                 return true;
             }
         }
@@ -108,6 +110,23 @@ public class LunarClaymoreMechanic implements Listener {
             return name.contains("Lunar Claymore") || name.contains("Nguyệt Thạch");
         }
         return false;
+    }
+
+    /**
+     * Safely applies custom damage from the Lunar Claymore without getting cancelled
+     * by the onEntityDamage listener.
+     */
+    public static void applyCustomDamage(Damageable target, Player damager, double damage) {
+        if (target == null || damager == null || target.isDead()) return;
+        if (target instanceof LivingEntity living) {
+            living.setNoDamageTicks(0);
+        }
+        try {
+            IS_APPLYING_CUSTOM_DAMAGE.set(true);
+            target.damage(damage, damager);
+        } finally {
+            IS_APPLYING_CUSTOM_DAMAGE.set(false);
+        }
     }
 
     public static boolean isMaceEnchantment(Enchantment ench) {
@@ -349,37 +368,31 @@ public class LunarClaymoreMechanic implements Listener {
 
         Action action = event.getAction();
 
-        // 1. RIGHT CLICK: Heavy Smash Mechanic (Slam to ground, shockwave, knockback)
+        // 1. RIGHT CLICK: Defensive Block Guard Mechanic ("Block_Sword")
         if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
-            if (SmoothSlashTask.isSlashing(player)) {
+            if (SmoothSlashTask.isPlayerBlocking(player)) {
                 return;
             }
-            player.swingHand(event.getHand());
 
             UUID uuid = player.getUniqueId();
             long now = System.currentTimeMillis();
             long lastTime = lastSlashTime.getOrDefault(uuid, 0L);
 
-            if (now - lastTime < 1500L) { // 1.5s cooldown
+            if (now - lastTime < 400L) { // 0.4s cooldown
                 return;
             }
             lastSlashTime.put(uuid, now);
-            lastSlashType.put(uuid, SmoothSlashTask.SlashType.DOWNWARD);
-            consecutiveSlashesCount.put(uuid, 0);
-
-            World world = player.getWorld();
-            world.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.2f, 0.7f);
-            WardenAudio.playCustomSound(player.getLocation(), "haohan:weapon.claymore_swing", 1.0f, 0.8f);
+            lastSlashType.put(uuid, SmoothSlashTask.SlashType.BLOCK);
 
             SmoothSlashTask.play(
                     plugin,
                     player,
                     item,
-                    SmoothSlashTask.SlashType.DOWNWARD,
+                    SmoothSlashTask.SlashType.BLOCK,
                     null,
-                    (t, e) -> performSwordSlamImpact(player, player.getLocation(), 25.0, null),
-                    null
+                    null, // Đòn đỡ - không gây sát thương lên quái
+                    executedType -> playSlashSound(player, executedType)
             );
             return;
         }
@@ -395,6 +408,11 @@ public class LunarClaymoreMechanic implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onEntityDamage(EntityDamageByEntityEvent event) {
+        // If this event was triggered by our own custom damage application, let it through!
+        if (IS_APPLYING_CUSTOM_DAMAGE.get()) {
+            return;
+        }
+
         if (!(event.getDamager() instanceof Player player)) return;
         ItemStack item = player.getInventory().getItemInMainHand();
         if (!isLunarClaymore(item)) return;
@@ -463,17 +481,48 @@ public class LunarClaymoreMechanic implements Listener {
     }
 
     /**
+     * Intercepts incoming damage while the player is guarding with Block_Sword.
+     * Blocks frontal attacks completely with sound & spark effects.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerDefendWhileBlocking(EntityDamageByEntityEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (!SmoothSlashTask.isPlayerBlocking(player)) return;
+
+        Entity damager = event.getDamager();
+        Location playerLoc = player.getLocation();
+        Vector playerDir = playerLoc.getDirection().setY(0).normalize();
+        Vector toDamager = damager.getLocation().toVector().subtract(playerLoc.toVector()).setY(0);
+
+        if (toDamager.lengthSquared() > 0.001) {
+            toDamager.normalize();
+            if (playerDir.dot(toDamager) < -0.2) {
+                // Attacker is behind player; cannot block
+                return;
+            }
+        }
+
+        // Successfully blocked damage!
+        event.setCancelled(true);
+
+        World world = player.getWorld();
+        Location blockLoc = player.getEyeLocation().add(playerDir.multiply(0.8)).subtract(0, 0.2, 0);
+
+        world.playSound(blockLoc, Sound.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 1.4f, 0.9f);
+        world.playSound(blockLoc, Sound.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 0.6f, 1.6f);
+        WardenAudio.playCustomSound(blockLoc, "haohan:weapon.claymore_swing", 0.8f, 1.4f);
+
+        world.spawnParticle(Particle.CRIT, blockLoc, 10, 0.2, 0.2, 0.2, 0.2);
+        world.spawnParticle(Particle.ELECTRIC_SPARK, blockLoc, 6, 0.15, 0.15, 0.15, 0.1);
+
+        // Repel the attacker slightly
+        Vector repel = toDamager.clone().multiply(0.4).setY(0.1);
+        damager.setVelocity(damager.getVelocity().add(repel));
+    }
+
+    /**
      * Executes the fluid combo sequence:
      * Seamlessly chains into the active ModelEngine model or buffers input for rhythmic fluidity.
-     * <p>
-     * Logic đòn Chặt (DOWNWARD):
-     * - Chỉ được phép xuất hiện sau khi người chơi đã chém liên tục ít nhất 5 lần (consecutiveSlashes >= 5).
-     * - Tỷ lệ xuất hiện của đòn Chặt giảm xuống thấp (~18% cơ hội khi đã đủ điều kiện).
-     * - Sau khi tung đòn Chặt, bộ đếm reset về 0 (buộc phải chém tiếp ít nhất 5 lần nữa mới có thể ra đòn Chặt tiếp).
-     * <p>
-     * Logic Non-Duplicate:
-     * - Đòn tiếp theo bắt buộc KHÁC đòn trước đó (SlashType khác nhau).
-     * - Hoạt ảnh ModelEngine của đòn tiếp theo cũng bắt buộc KHÁC với hoạt ảnh vừa chạy.
      */
     private void performSlashEffect(Player player, Entity primaryTarget) {
         UUID uuid = player.getUniqueId();
@@ -505,13 +554,10 @@ public class LunarClaymoreMechanic implements Listener {
             previous = lastSlashType.get(uuid);
         }
 
-        // Danh sách các đòn chém thường:
-        // 1. Không bao gồm DOWNWARD (chỉ kích hoạt sau khi đã đủ ít nhất 5 lần chém liên tục)
-        // 2. Bắt buộc KHÁC đòn trước đó (candidate != previous)
-        // 3. Bắt buộc hoạt ảnh ModelEngine không được trùng lặp với hoạt ảnh vừa chạy
+        // Danh sách các đòn chém thường (loại trừ DOWNWARD và BLOCK):
         List<SmoothSlashTask.SlashType> normalCandidates = new ArrayList<>();
         for (SmoothSlashTask.SlashType candidate : SmoothSlashTask.SlashType.values()) {
-            if (candidate == SmoothSlashTask.SlashType.DOWNWARD || candidate == previous) {
+            if (candidate == SmoothSlashTask.SlashType.DOWNWARD || candidate == SmoothSlashTask.SlashType.BLOCK || candidate == previous) {
                 continue;
             }
             if (existing != null && existing.getActiveModel() != null && currentAnimName != null) {
@@ -526,7 +572,7 @@ public class LunarClaymoreMechanic implements Listener {
         // Fallback dự phòng nếu bộ animation của model bị giới hạn
         if (normalCandidates.isEmpty()) {
             for (SmoothSlashTask.SlashType candidate : SmoothSlashTask.SlashType.values()) {
-                if (candidate != SmoothSlashTask.SlashType.DOWNWARD && candidate != previous) {
+                if (candidate != SmoothSlashTask.SlashType.DOWNWARD && candidate != SmoothSlashTask.SlashType.BLOCK && candidate != previous) {
                     normalCandidates.add(candidate);
                 }
             }
@@ -571,6 +617,10 @@ public class LunarClaymoreMechanic implements Listener {
         if (world == null) return;
 
         switch (type) {
+            case BLOCK -> {
+                world.playSound(loc, Sound.ITEM_ARMOR_EQUIP_IRON, SoundCategory.PLAYERS, 1.0f, 1.0f);
+                world.playSound(loc, Sound.ITEM_SHIELD_BLOCK, SoundCategory.PLAYERS, 0.9f, 1.2f);
+            }
             case DOWNWARD -> {
                 world.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.2f, 0.75f);
                 world.playSound(loc, Sound.ITEM_MACE_SMASH_AIR, SoundCategory.PLAYERS, 1.1f, 1.1f);
@@ -594,9 +644,11 @@ public class LunarClaymoreMechanic implements Listener {
      * - Left/Right slashes: Wide AoE cleave, slightly shorter range (3.2m), standard damage (16.0)
      * - Downward strike: High single-target damage (26.0), no AoE
      * - Stabbing attack: Furthest range (5.0m), standard single-target damage (16.0), no AoE
+     * - Block: Defensive stance, no damage
      */
     private void executeLunarAttack(Player player, Entity primaryTarget, SmoothSlashTask.SlashType type) {
         switch (type) {
+            case BLOCK -> {}
             case DOWNWARD -> executeDownwardStrike(player, primaryTarget);
             case STABBING_ATTACK -> executeStabbingAttack(player, primaryTarget);
             default -> executeSlashCleave(player, primaryTarget);
@@ -626,8 +678,7 @@ public class LunarClaymoreMechanic implements Listener {
             }
             toTarget.normalize();
             if (dir.dot(toTarget) > 0.35) {
-                target.setNoDamageTicks(0);
-                target.damage(16.0, player);
+                applyCustomDamage(target, player, 16.0);
                 Vector knockback = dir.clone().setY(0.25).multiply(0.60);
                 target.setVelocity(target.getVelocity().add(knockback));
             }
@@ -681,8 +732,7 @@ public class LunarClaymoreMechanic implements Listener {
         world.playSound(strikeLoc, Sound.ITEM_MACE_SMASH_GROUND_HEAVY, SoundCategory.PLAYERS, 1.0f, 1.3f);
 
         if (targetToHit != null) {
-            targetToHit.setNoDamageTicks(0);
-            targetToHit.damage(26.0, player);
+            applyCustomDamage(targetToHit, player, 26.0);
 
             Vector knockback = dir.clone().multiply(0.35).setY(-0.25);
             targetToHit.setVelocity(targetToHit.getVelocity().add(knockback));
@@ -723,8 +773,7 @@ public class LunarClaymoreMechanic implements Listener {
         world.playSound(thrustTip, Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 1.1f, 1.2f);
 
         if (targetToHit != null) {
-            targetToHit.setNoDamageTicks(0);
-            targetToHit.damage(16.0, player);
+            applyCustomDamage(targetToHit, player, 16.0);
 
             Vector knockback = dir.clone().multiply(0.70).setY(0.15);
             targetToHit.setVelocity(targetToHit.getVelocity().add(knockback));
@@ -768,7 +817,7 @@ public class LunarClaymoreMechanic implements Listener {
             if (!(nearby instanceof LivingEntity living) || nearby == player || nearby == primaryTarget) {
                 continue;
             }
-            living.damage(aoeDmg, player);
+            applyCustomDamage(living, player, aoeDmg);
             Vector diff = nearby.getLocation().toVector().subtract(impactLoc.toVector()).setY(0);
             Vector knockback;
             if (diff.lengthSquared() > 0) {

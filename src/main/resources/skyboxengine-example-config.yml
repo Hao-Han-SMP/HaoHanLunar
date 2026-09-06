@@ -1,0 +1,38 @@
+# ==========================================================
+# Cấu hình chuẩn cho plugin SkyboxEngine trên Server HaoHan SMP
+# Đường dẫn cài đặt: plugins/SkyboxEngine/config.yml
+# Sử dụng cùng Resource Pack HaoHan-Resourcepack
+# ==========================================================
+
+skyboxRegistry:
+  # Skybox Mặt Trăng: Không gian tối sâu thẳm, ngàn sao lấp lánh, mặt trời dạng cube 3D rực sáng
+  lunar_space:
+    skyboxId: "skyboxengine:model_shader_1"
+
+  # Bầu trời sao chuyển động rực rỡ
+  lunar_animated_stars:
+    skyboxId: "skyboxengine:model_shader_3"
+
+  # Hiệu ứng hố đen xoáy tím Outer Wilds (vùng Rừng Tinh Thể Khổng Lồ hoặc Đấu Trường Warden)
+  lunar_void_vortex:
+    skyboxId: "skyboxengine:model_shader_6"
+
+  # Raymarching các hành tinh / khối cầu không gian
+  lunar_raymarching:
+    skyboxId: "skyboxengine:model_shader_4"
+
+# QUAN TRỌNG: Bắt buộc để TRỐNG ("") để SkyboxEngine KHÔNG ảnh hưởng tới Overworld, Nether, End hay dimension khác!
+defaultSkybox: ""
+
+# CHỈ áp dụng riêng cho thế giới Mặt Trăng (haohan:lunar)
+dimensionSkyboxes:
+  haohan:lunar: "lunar_space"
+
+# Tự động thay đổi bầu trời theo từng Biome của HaoHanLunar
+biomeSkyboxes:
+  haohan:lunar_terrae: "lunar_space"
+  haohan:lunar_maria: "lunar_space"
+  haohan:lunar_craters: "lunar_space"
+  haohan:lunar_crystal_craters: "lunar_animated_stars"
+  haohan:lunar_giant_crystals: "lunar_void_vortex"
+  haohan:lunar_giant_crystal_outskirts: "lunar_animated_stars"

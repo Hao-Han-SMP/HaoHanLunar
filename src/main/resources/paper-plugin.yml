@@ -11,3 +11,6 @@ dependencies:
     ModelEngine:
       load: BEFORE
       required: true
+    SkyboxEngine:
+      load: BEFORE
+      required: false

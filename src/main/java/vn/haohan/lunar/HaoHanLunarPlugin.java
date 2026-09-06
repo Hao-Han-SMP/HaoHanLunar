@@ -17,6 +17,8 @@ import vn.haohan.lunar.mechanics.LunarClaymoreMechanic;
 import vn.haohan.lunar.mechanics.weapon.claymore.SmoothSlashTask;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.IronGolem;
@@ -85,7 +87,47 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(lunarClaymoreMechanic, this);
 
         // Register commands dynamically for Paper plugins
-        // 1. /spawnwarden [showcase|clear]
+        // 1. /tplunar (aliases: /lunar, /tplunardimension, /gotolunar)
+        Bukkit.getCommandMap().register("haohan", new BukkitCommand("tplunar") {
+            {
+                setDescription("Teleport sang thế giới Mặt Trăng haohan:lunar");
+                setAliases(List.of("lunar", "tplunardimension", "gotolunar"));
+                setPermission("haohan.admin");
+            }
+
+            @Override
+            public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("§cChỉ có người chơi mới dùng được lệnh này!");
+                    return true;
+                }
+
+                String lunarWorldName = getConfig().getString("skybox.world", "haohan:lunar");
+                World lunarWorld = Bukkit.getWorld(lunarWorldName);
+
+                if (lunarWorld == null) {
+                    // Search by key
+                    for (World w : Bukkit.getWorlds()) {
+                        if (w.getKey().toString().equals(lunarWorldName) || w.getName().equalsIgnoreCase("lunar")) {
+                            lunarWorld = w;
+                            break;
+                        }
+                    }
+                }
+
+                if (lunarWorld == null) {
+                    player.sendMessage("§c[HaoHanLunar] Không tìm thấy thế giới Mặt Trăng (§e" + lunarWorldName + "§c)! Hãy đảm bảo thế giới đã được nạp.");
+                    return true;
+                }
+
+                Location spawnLoc = lunarWorld.getSpawnLocation();
+                player.teleport(spawnLoc);
+                player.sendMessage("§a[HaoHanLunar] Đã dịch chuyển thành công đến Mặt Trăng (§e" + lunarWorld.getName() + "§a)!");
+                return true;
+            }
+        });
+
+        // 2. /spawnwarden [showcase|clear]
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("spawnwarden") {
             {
                 setDescription("Triệu hồi Boss The Lunar Warden");
@@ -126,7 +168,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         });
 
-        // 2. /wardenshowcase [spacing] (aliases: /spawnwardenshowcase, /wardendummy, /showcasewarden, /wardenline)
+        // 3. /wardenshowcase [spacing] (aliases: /spawnwardenshowcase, /wardendummy, /showcasewarden, /wardenline)
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("wardenshowcase") {
             {
                 setDescription("Triệu hồi hàng Boss biểu diễn tất cả các chiêu thức The Lunar Warden liên tục tại chỗ");
@@ -156,7 +198,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         });
 
-        // 3. /clearwarden (aliases: /wardenclear, /cleardummy, /wardencleardummy, /killwarden)
+        // 4. /clearwarden (aliases: /wardenclear, /cleardummy, /wardencleardummy, /killwarden)
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("clearwarden") {
             {
                 setDescription("Xóa toàn bộ Boss The Lunar Warden và các Boss Showcase");
@@ -194,6 +236,11 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     public void onDisable() {
         // Clear active smooth slash visual tasks
         SmoothSlashTask.cleanupAll();
+
+        // Clear active skyboxes
+        if (visualMechanic != null) {
+            visualMechanic.cleanup();
+        }
 
         // Clear and cleanup all active bosses, models and displays
         if (lunarWardenMechanic != null) {

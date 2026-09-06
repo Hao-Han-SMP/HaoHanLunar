@@ -29,3 +29,18 @@ lunar-surface:
   stage-delays: [0, 20, 40, 60, 80]
   # Each wave progresses independently; later states are intentionally slower.
   stage-speeds: [1.0, 0.8, 0.64, 0.51, 0.41]
+
+# SkyboxEngine integration for Lunar dimension and biomes
+skybox:
+  enabled: true
+  world: "haohan:lunar"
+  # Default skybox for haohan:lunar if no specific biome mapping matches
+  default-skybox: "lunar_space"
+  # Mapping from lunar biomes to skybox identifiers registered in SkyboxEngine
+  biome-skyboxes:
+    "haohan:lunar_terrae": "lunar_space"
+    "haohan:lunar_maria": "lunar_space"
+    "haohan:lunar_craters": "lunar_raymarching"
+    "haohan:lunar_crystal_craters": "lunar_animated_stars"
+    "haohan:lunar_giant_crystals": "lunar_void_vortex"
+    "haohan:lunar_giant_crystal_outskirts": "lunar_animated_stars"

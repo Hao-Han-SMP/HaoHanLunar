@@ -49,6 +49,7 @@ import java.util.function.Consumer;
  *    and buffers clicks made during swing anticipation so attacks automatically chain on rhythm.
  * 5. Strict Non-Duplicate Guarantee: Guarantees that neither the SlashType nor the underlying
  *    ModelEngine animation repeats back-to-back.
+ * 6. Defensive Guard (Block_Sword): Supports dedicated defensive guard stance on right-click.
  */
 public class SmoothSlashTask extends BukkitRunnable {
 
@@ -58,7 +59,8 @@ public class SmoothSlashTask extends BukkitRunnable {
         DOWNWARD,
         HORIZONTAL_LEFT,
         HORIZONTAL_RIGHT,
-        STABBING_ATTACK
+        STABBING_ATTACK,
+        BLOCK
     }
 
     private static final Map<UUID, SmoothSlashTask> ACTIVE_TASKS = new ConcurrentHashMap<>();
@@ -211,7 +213,8 @@ public class SmoothSlashTask extends BukkitRunnable {
 
                     updateRotation(player.getYaw(), player.getPitch(), me, am, null);
 
-                    prop = am.getAnimationHandler().playAnimation(resolvedAnim, 0.05, 0.05, ANIM_SPEED, true);
+                    double playSpeed = (initialType == SlashType.BLOCK) ? 1.0 : ANIM_SPEED;
+                    prop = am.getAnimationHandler().playAnimation(resolvedAnim, 0.05, 0.05, playSpeed, true);
                     if (prop != null) {
                         try {
                             prop.setForceLoopMode(BlueprintAnimation.LoopMode.ONCE);
@@ -238,9 +241,10 @@ public class SmoothSlashTask extends BukkitRunnable {
         this.animationName = resolvedAnim;
         this.animationTotalLength = animLength;
 
-        int expectedTicks = (int) Math.ceil((animLength / ANIM_SPEED) * 20.0);
-        this.minTicks = Math.max(11, expectedTicks);
-        this.maxTicks = Math.max(18, this.minTicks + 6);
+        double speedForTicks = (initialType == SlashType.BLOCK) ? 1.0 : ANIM_SPEED;
+        int expectedTicks = (int) Math.ceil((animLength / speedForTicks) * 20.0);
+        this.minTicks = Math.max(initialType == SlashType.BLOCK ? 8 : 11, expectedTicks);
+        this.maxTicks = Math.max(initialType == SlashType.BLOCK ? 15 : 18, this.minTicks + (initialType == SlashType.BLOCK ? 4 : 6));
 
         // Hide vanilla held item with placeholder to eliminate first-person equip bouncing
         if (savedWeaponItem != null && savedWeaponItem.getType() != Material.AIR) {
@@ -254,8 +258,10 @@ public class SmoothSlashTask extends BukkitRunnable {
             player.sendEquipmentChange(player, EquipmentSlot.HAND, AIR_ITEM);
         } catch (Throwable ignored) {}
 
-        // Schedule first attack hit detection (after 3 ticks)
-        scheduleHit(initialType, initialTarget);
+        // Schedule first attack hit detection (only for offensive slashes, not block)
+        if (initialType != SlashType.BLOCK) {
+            scheduleHit(initialType, initialTarget);
+        }
 
         if (swingStartCallback != null) {
             swingStartCallback.accept(initialType);
@@ -285,15 +291,29 @@ public class SmoothSlashTask extends BukkitRunnable {
         return !isCancelled() && player.isOnline() && !dummy.isDead() && modeledEntity != null && activeModel != null;
     }
 
+    public boolean isBlocking() {
+        return isValid() && slashType == SlashType.BLOCK && !animationEnded;
+    }
+
+    public static boolean isPlayerBlocking(Player player) {
+        if (player == null) return false;
+        SmoothSlashTask task = ACTIVE_TASKS.get(player.getUniqueId());
+        return task != null && task.isBlocking();
+    }
+
     /**
      * Handles incoming combo input from the player:
+     * - If nextType is BLOCK: immediately transitions into blocking stance.
      * - If swing is in wind-up (tick < COMBO_WINDOW_START_TICK): Buffers the input.
      * - If swing has crossed center (tick >= COMBO_WINDOW_START_TICK): Immediately chains to next attack.
-     * <p>
-     * Guarantees that nextType is strictly different from the current or queued attack!
      */
     public boolean handleComboInput(SlashType nextType, Entity target) {
         if (!isValid()) return false;
+
+        if (nextType == SlashType.BLOCK) {
+            chainTo(nextType, target);
+            return true;
+        }
 
         SlashType currentOrQueued = getQueuedOrCurrentSlashType();
         if (nextType == currentOrQueued) {
@@ -319,7 +339,7 @@ public class SmoothSlashTask extends BukkitRunnable {
     private SlashType pickAlternativeSlashType(SlashType avoid) {
         List<SlashType> candidates = new ArrayList<>();
         for (SlashType type : SlashType.values()) {
-            if (type != SlashType.DOWNWARD && type != avoid) {
+            if (type != SlashType.DOWNWARD && type != SlashType.BLOCK && type != avoid) {
                 if (activeModel != null && animationName != null) {
                     String anim = resolveAnimationNameCached(type, activeModel);
                     if (anim != null && anim.equalsIgnoreCase(animationName)) {
@@ -331,7 +351,7 @@ public class SmoothSlashTask extends BukkitRunnable {
         }
         if (candidates.isEmpty()) {
             for (SlashType type : SlashType.values()) {
-                if (type != avoid && type != SlashType.DOWNWARD) {
+                if (type != avoid && type != SlashType.DOWNWARD && type != SlashType.BLOCK) {
                     candidates.add(type);
                 }
             }
@@ -350,10 +370,10 @@ public class SmoothSlashTask extends BukkitRunnable {
 
         String resolvedAnim = resolveAnimationNameCached(nextType, activeModel);
 
-        // Strict Guarantee: Ensure the newly chosen animation is visually different from current
-        if (resolvedAnim != null && this.animationName != null && resolvedAnim.equalsIgnoreCase(this.animationName)) {
+        // Strict Guarantee: Ensure the newly chosen offensive animation is visually different from current
+        if (nextType != SlashType.BLOCK && resolvedAnim != null && this.animationName != null && resolvedAnim.equalsIgnoreCase(this.animationName)) {
             for (SlashType alt : SlashType.values()) {
-                if (alt == SlashType.DOWNWARD) continue;
+                if (alt == SlashType.DOWNWARD || alt == SlashType.BLOCK) continue;
                 String altAnim = resolveAnimationNameCached(alt, activeModel);
                 if (altAnim != null && !altAnim.equalsIgnoreCase(this.animationName)) {
                     nextType = alt;
@@ -375,13 +395,14 @@ public class SmoothSlashTask extends BukkitRunnable {
         double animLength = lookupAnimationDuration(activeModel, resolvedAnim);
         this.animationTotalLength = animLength;
 
-        int expectedTicks = (int) Math.ceil((animLength / ANIM_SPEED) * 20.0);
-        this.minTicks = Math.max(11, expectedTicks);
-        this.maxTicks = Math.max(18, this.minTicks + 6);
+        double speedForTicks = (nextType == SlashType.BLOCK) ? 1.0 : ANIM_SPEED;
+        int expectedTicks = (int) Math.ceil((animLength / speedForTicks) * 20.0);
+        this.minTicks = Math.max(nextType == SlashType.BLOCK ? 8 : 11, expectedTicks);
+        this.maxTicks = Math.max(nextType == SlashType.BLOCK ? 15 : 18, this.minTicks + (nextType == SlashType.BLOCK ? 4 : 6));
 
         try {
             // Blend from current bone positions into new animation in 0.10s (~2 ticks)
-            this.animProperty = activeModel.getAnimationHandler().playAnimation(resolvedAnim, 0.10, 0.10, ANIM_SPEED, true);
+            this.animProperty = activeModel.getAnimationHandler().playAnimation(resolvedAnim, 0.10, 0.10, speedForTicks, true);
             if (this.animProperty != null) {
                 try {
                     this.animProperty.setForceLoopMode(BlueprintAnimation.LoopMode.ONCE);
@@ -393,8 +414,10 @@ public class SmoothSlashTask extends BukkitRunnable {
             }
         } catch (Throwable ignored) {}
 
-        // Schedule hit detection for this combo step
-        scheduleHit(nextType, target);
+        // Schedule hit detection for offensive attacks (not for block)
+        if (nextType != SlashType.BLOCK) {
+            scheduleHit(nextType, target);
+        }
 
         if (swingStartCallback != null) {
             swingStartCallback.accept(nextType);
@@ -442,6 +465,10 @@ public class SmoothSlashTask extends BukkitRunnable {
         } else if (slashType == SlashType.DOWNWARD) {
             forwardDist = 0.65;
             rightDist = 0.16;
+            heightSub = player.isSneaking() ? HEIGHT_OFFSET_SNEAK : HEIGHT_OFFSET_NORMAL;
+        } else if (slashType == SlashType.BLOCK) {
+            forwardDist = 0.45;
+            rightDist = 0.0;
             heightSub = player.isSneaking() ? HEIGHT_OFFSET_SNEAK : HEIGHT_OFFSET_NORMAL;
         } else {
             forwardDist = FORWARD_OFFSET_BASE;
@@ -496,6 +523,10 @@ public class SmoothSlashTask extends BukkitRunnable {
             targetFwd = 0.65 + 0.16 * lungeFactor;
             targetRight = 0.16;
             targetHeight = player.isSneaking() ? HEIGHT_OFFSET_SNEAK : HEIGHT_OFFSET_NORMAL;
+        } else if (slashType == SlashType.BLOCK) {
+            targetFwd = 0.45;
+            targetRight = 0.0;
+            targetHeight = player.isSneaking() ? HEIGHT_OFFSET_SNEAK : HEIGHT_OFFSET_NORMAL;
         } else {
             targetFwd = FORWARD_OFFSET_BASE + FORWARD_OFFSET_LUNGE * lungeFactor;
             targetRight = 0.0;
@@ -549,7 +580,7 @@ public class SmoothSlashTask extends BukkitRunnable {
     }
 
     public static String resolveAnimationNameCached(SlashType type, ActiveModel model) {
-        if (model == null) return "left_slash";
+        if (model == null) return type == SlashType.BLOCK ? "Block_Sword" : "left_slash";
         String modelName = model.getBlueprint() != null ? model.getBlueprint().getName() : "default";
         String cacheKey = modelName + ":" + type.name();
 
@@ -558,7 +589,7 @@ public class SmoothSlashTask extends BukkitRunnable {
 
     private static String resolveAnimationName(SlashType type, ActiveModel model) {
         if (model.getBlueprint() == null || model.getBlueprint().getAnimations().isEmpty()) {
-            return "idle";
+            return type == SlashType.BLOCK ? "Block_Sword" : "idle";
         }
 
         Set<String> available = model.getBlueprint().getAnimations().keySet();
@@ -570,6 +601,7 @@ public class SmoothSlashTask extends BukkitRunnable {
             case DIAGONAL_RIGHT -> "right_swing";
             case DOWNWARD -> "topswing";
             case STABBING_ATTACK -> "stabbing_attack";
+            case BLOCK -> "Block_Sword";
         };
 
         for (String name : available) {
@@ -586,6 +618,14 @@ public class SmoothSlashTask extends BukkitRunnable {
         }
 
         switch (type) {
+            case BLOCK -> {
+                for (String name : available) {
+                    String lower = name.toLowerCase();
+                    if (lower.contains("block") || lower.contains("parry") || lower.contains("guard") || lower.contains("defend")) {
+                        return name;
+                    }
+                }
+            }
             case DIAGONAL_LEFT, HORIZONTAL_LEFT -> {
                 for (String name : available) {
                     String lower = name.toLowerCase();
@@ -688,7 +728,11 @@ public class SmoothSlashTask extends BukkitRunnable {
 
         if (animProperty != null) {
             try {
-                animProperty.setSpeed(calculateSlashEasingSpeed(progress));
+                if (slashType == SlashType.BLOCK) {
+                    animProperty.setSpeed(1.0);
+                } else {
+                    animProperty.setSpeed(calculateSlashEasingSpeed(progress));
+                }
             } catch (Throwable ignored) {}
         }
 
@@ -765,8 +809,8 @@ public class SmoothSlashTask extends BukkitRunnable {
     }
 
     /**
-     * Primary entry point for playing combo slashes:
-     * Seamlessly chains into the active task if already slashing, or starts a new combo task.
+     * Primary entry point for playing combo slashes or defensive guard:
+     * Seamlessly chains into the active task if already active, or starts a new task.
      */
     public static boolean play(
             JavaPlugin plugin,
