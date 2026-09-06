@@ -17,6 +17,8 @@ import vn.haohan.lunar.mechanics.boss.warden.WardenBehavior;
 import vn.haohan.lunar.mechanics.boss.warden.WardenConstants;
 import vn.haohan.lunar.mechanics.boss.warden.WardenState;
 import vn.haohan.lunar.mechanics.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.mechanics.boss.warden.showcase.WardenShowcaseHandler;
+import vn.haohan.lunar.mechanics.boss.warden.skills.AerialSlashComboSkill;
 import vn.haohan.lunar.mechanics.boss.warden.skills.CelestialSummonSkill;
 import vn.haohan.lunar.mechanics.boss.warden.skills.ShieldBlockPushSkill;
 import vn.haohan.lunar.mechanics.boss.warden.skills.ShieldBlockSkill;
@@ -35,6 +37,11 @@ public final class WardenAIController {
     private WardenAIController() {}
 
     public static void handleBossAI(HaoHanLunarPlugin plugin, IronGolem golem, WardenState state, Random random) {
+        if (state.isShowcaseDummy) {
+            WardenShowcaseHandler.handleShowcaseTick(plugin, golem, state, random);
+            return;
+        }
+
         WardenBossBar.updateBossBar(golem, state);
         Location golemLoc = golem.getLocation();
 
@@ -59,6 +66,7 @@ public final class WardenAIController {
         if (state.summonSkillCooldown > 0) state.summonSkillCooldown--;
         if (state.shieldChargeCooldown > 0) state.shieldChargeCooldown--;
         if (state.shieldSwordSlamCooldown > 0) state.shieldSwordSlamCooldown--;
+        if (state.aerialSlashComboCooldown > 0) state.aerialSlashComboCooldown--;
         if (state.groundSlamCooldown > 0) state.groundSlamCooldown--;
         if (state.thrustCooldown > 0) state.thrustCooldown--;
         if (state.shieldBlockPushCooldown > 0) state.shieldBlockPushCooldown--;
@@ -67,6 +75,18 @@ public final class WardenAIController {
         if (state.zigZagPursuitCooldown > 0) state.zigZagPursuitCooldown--;
 
         Player target = WardenTargeting.selectBestTarget(golem, state);
+
+        // 1. ATTACK / SKILL STATE EXECUTION HAS HIGHEST PRIORITY
+        // If boss is already executing a skill/attack, it must finish the skill completely and CANNOT be interrupted
+        if (state.currentBehavior == WardenBehavior.ATTACKING || (state.currentAttack != null && !state.currentAttack.isEmpty())) {
+            state.chaseStallTimer = 0;
+            float targetYaw = (target != null) ? MathUtil.getYaw(target.getLocation().toVector().subtract(golemLoc.toVector())) : golemLoc.getYaw();
+            float targetPitch = (target != null) ? MathUtil.getPitch(target.getEyeLocation().toVector().subtract(golemLoc.clone().add(0, WardenConstants.BOSS_HEAD_HEIGHT, 0).toVector())) : 0f;
+            double distXZ = (target != null) ? MathUtil.distance(golemLoc.getX(), golemLoc.getZ(), target.getLocation().getX(), target.getLocation().getZ()) : 10.0;
+
+            WardenCombatHandler.handleAttackExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
+            return;
+        }
 
         WardenFootworkController.handleAntiWallStuckAndClip(plugin, golem, state, target);
 
@@ -123,14 +143,6 @@ public final class WardenAIController {
 
         if (state.attackCooldown > 0) {
             state.attackCooldown--;
-        }
-
-        // 1. ATTACK / SKILL STATE EXECUTION HAS HIGHEST PRIORITY
-        // If boss is already executing a skill/attack, it must finish the skill completely and CANNOT be interrupted by block
-        if (state.currentBehavior == WardenBehavior.ATTACKING || (state.currentAttack != null && !state.currentAttack.isEmpty())) {
-            state.chaseStallTimer = 0;
-            WardenCombatHandler.handleAttackExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
-            return;
         }
 
         // 2. PREDICTIVE ARROW & PROJECTILE DEFENSE (Only triggers when boss is NOT performing an attack)
@@ -239,13 +251,31 @@ public final class WardenAIController {
         }
 
         // 9. CHECK ATTACK & SKILL TRIGGERS
-        // Aerial Dual Weapon Throw & Meteor Slam: skill_shield_sword_slam (Distance 5.0m -> 28.0m, Reduced Chance ~32%)
-        if (state.attackCooldown <= 0 && state.shieldSwordSlamCooldown <= 0 && distXZ >= 5.0 && distXZ <= 28.0) {
-            if (random.nextInt(100) < 32) {
-                ShieldSwordSlamSkill.triggerShieldSwordSlamSkill(plugin, golem, state, target, random);
-                return;
+        // Mid-to-Long Range Aerial Skills: skill_aerial_slash_combo VS skill_shield_sword_slam (Distance 4.5m -> 28.0m)
+        boolean aerialSlashReady = (state.aerialSlashComboCooldown <= 0);
+        boolean shieldSlamReady = (state.shieldSwordSlamCooldown <= 0);
+
+        if (state.attackCooldown <= 0 && distXZ >= 4.5 && distXZ <= 28.0 && (aerialSlashReady || shieldSlamReady)) {
+            if (random.nextInt(100) < 45) { // 45% chance to trigger an aerial skill when in range
+                if (aerialSlashReady && shieldSlamReady) {
+                    // Random 50/50 between 4-hit sword aura combo and shield-sword slam
+                    if (random.nextBoolean()) {
+                        AerialSlashComboSkill.triggerSkill(plugin, golem, state, target, random);
+                    } else {
+                        ShieldSwordSlamSkill.triggerShieldSwordSlamSkill(plugin, golem, state, target, random);
+                    }
+                    return;
+                } else if (aerialSlashReady) {
+                    AerialSlashComboSkill.triggerSkill(plugin, golem, state, target, random);
+                    return;
+                } else {
+                    ShieldSwordSlamSkill.triggerShieldSwordSlamSkill(plugin, golem, state, target, random);
+                    return;
+                }
             } else {
-                state.shieldSwordSlamCooldown = MathUtil.secondsToTicks(3.5 + random.nextDouble() * 2.5);
+                // Short delay before evaluating again so it doesn't try every tick
+                if (aerialSlashReady) state.aerialSlashComboCooldown = MathUtil.secondsToTicks(2.5 + random.nextDouble() * 2.0);
+                if (shieldSlamReady) state.shieldSwordSlamCooldown = MathUtil.secondsToTicks(2.5 + random.nextDouble() * 2.0);
             }
         }
 

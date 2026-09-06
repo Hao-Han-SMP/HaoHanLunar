@@ -35,29 +35,31 @@ public final class ShieldBlockPushSkill {
         Location golemLoc = golem.getLocation();
         World world = golem.getWorld();
         if (world == null) return;
-        float currentYaw = golemLoc.getYaw();
 
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(golem);
 
-        // Phase 1: Rapid Facing Alignment & Defensive Shield Bracing (0 -> 0.45s)
+        // Lock facing direction at skill start: Align to target once on tick 1, then keep locked for entire skill duration
+        if (state.attackTicks == 1) {
+            golem.setRotation(targetYaw, 0f);
+            state.headPitch = 0f;
+            state.headYawLocal = 0f;
+
+            world.playSound(golemLoc, Sound.ITEM_ARMOR_EQUIP_NETHERITE, 1.6f, 0.9f);
+            world.playSound(golemLoc, Sound.ITEM_SHIELD_BLOCK, 1.4f, 1.1f);
+            WardenAudio.playCustomSound(golemLoc, "haohan:boss.shield_thud", 1.6f, 0.9f);
+        }
+
+        float lockedYaw = golem.getLocation().getYaw();
+        golem.setRotation(lockedYaw, 0f);
+
+        if (modeledEntity != null) {
+            modeledEntity.setYBodyRot(lockedYaw);
+            modeledEntity.setYHeadRot(lockedYaw);
+            modeledEntity.setXHeadRot(0f);
+        }
+
+        // Phase 1: Defensive Shield Bracing & Energy Charge (0 -> 0.45s)
         if (state.attackTicks <= state.attackHitTick) {
-            float yawDiff = MathUtil.normalizeAngle(targetYaw - currentYaw);
-            float newYaw = currentYaw + Math.signum(yawDiff) * Math.min(Math.abs(yawDiff), 16.0f);
-            newYaw = MathUtil.normalizeAngle(newYaw);
-            golem.setRotation(newYaw, state.headPitch);
-
-            if (modeledEntity != null) {
-                modeledEntity.setYBodyRot(newYaw);
-                modeledEntity.setYHeadRot(targetYaw);
-                modeledEntity.setXHeadRot(targetPitch);
-            }
-
-            if (state.attackTicks == 1) {
-                world.playSound(golemLoc, Sound.ITEM_ARMOR_EQUIP_NETHERITE, 1.6f, 0.9f);
-                world.playSound(golemLoc, Sound.ITEM_SHIELD_BLOCK, 1.4f, 1.1f);
-                WardenAudio.playCustomSound(golemLoc, "haohan:boss.shield_thud", 1.6f, 0.9f);
-            }
-
             if (state.attackTicks % 2 == 0) {
                 Location shieldFront = golemLoc.clone().add(golemLoc.getDirection().multiply(1.5)).add(0, 1.8, 0);
                 world.spawnParticle(Particle.DUST, shieldFront, 8, 0.3, 0.5, 0.3, 0.0,

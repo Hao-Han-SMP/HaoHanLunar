@@ -1,5 +1,7 @@
 package vn.haohan.lunar.mechanics.boss.warden;
 
+import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.model.ModeledEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -28,9 +30,11 @@ import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.mechanics.boss.warden.ai.WardenAITask;
 import vn.haohan.lunar.mechanics.boss.warden.skills.ShieldBlockSkill;
 import vn.haohan.lunar.mechanics.boss.warden.ui.WardenBGMManager;
+import vn.haohan.lunar.mechanics.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.mechanics.boss.warden.visual.WardenAudio;
 import vn.haohan.lunar.mechanics.boss.warden.visual.WardenTrailCaptureSystem;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +51,51 @@ public class LunarWardenMechanic implements Listener {
 
     public Map<UUID, WardenState> getBossStates() {
         return bossStates;
+    }
+
+    /**
+     * Cleans up and immediately removes all Lunar Warden bosses (including showcase dummies and fight bosses).
+     */
+    public int clearAllWardens() {
+        int count = 0;
+        for (UUID uuid : new HashSet<>(bossStates.keySet())) {
+            WardenState state = bossStates.remove(uuid);
+            if (state != null) {
+                state.cleanup();
+            }
+            Entity entity = Bukkit.getEntity(uuid);
+            if (entity != null) {
+                try {
+                    ModeledEntity me = ModelEngineAPI.getModeledEntity(entity);
+                    if (me != null) me.destroy();
+                } catch (Throwable ignored) {}
+                entity.remove();
+                count++;
+            }
+            WardenBGMManager.stopBGMForBoss(uuid);
+            WardenTrailCaptureSystem.clearHistory(uuid);
+        }
+
+        // Search all worlds for any remaining Lunar Warden golems
+        for (World world : Bukkit.getWorlds()) {
+            if (world == null) continue;
+            for (Entity e : world.getEntities()) {
+                if (e instanceof IronGolem golem) {
+                    String name = golem.getCustomName();
+                    if (name != null && (name.contains("Lunar Warden") || name.contains("The Lunar Warden"))) {
+                        try {
+                            ModeledEntity me = ModelEngineAPI.getModeledEntity(golem);
+                            if (me != null) me.destroy();
+                        } catch (Throwable ignored) {}
+                        golem.remove();
+                        count++;
+                    }
+                }
+            }
+        }
+
+        WardenEntityManager.purgeAllTempEntities();
+        return count;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)

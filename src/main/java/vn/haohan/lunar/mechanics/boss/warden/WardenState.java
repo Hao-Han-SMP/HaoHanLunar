@@ -76,6 +76,7 @@ public class WardenState {
     public int summonSkillCooldown = MathUtil.secondsToTicks(45.0);
     public int shieldChargeCooldown = MathUtil.secondsToTicks(12.0);
     public int shieldSwordSlamCooldown = MathUtil.secondsToTicks(22.0);
+    public int aerialSlashComboCooldown = MathUtil.secondsToTicks(16.0);
     public int groundSlamCooldown = MathUtil.secondsToTicks(10.0);
     public int thrustCooldown = MathUtil.secondsToTicks(6.0);
     public int shieldBlockPushCooldown = MathUtil.secondsToTicks(8.0);
@@ -100,6 +101,11 @@ public class WardenState {
     public Location lastTrackedLoc = null;
     public int cornerStuckTicks = 0;
     public int insideWallTicks = 0;
+
+    // Showcase & Dummy Mode
+    public boolean isShowcaseDummy = false;
+    public String dummyLoopSkill = null;
+    public Location anchorLocation = null;
 
     public void cleanup() {
         if (activeWarpShrinkTask != null) {

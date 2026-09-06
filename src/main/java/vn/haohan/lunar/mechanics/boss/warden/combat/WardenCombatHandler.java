@@ -15,6 +15,7 @@ import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.mechanics.boss.warden.WardenBehavior;
 import vn.haohan.lunar.mechanics.boss.warden.WardenState;
+import vn.haohan.lunar.mechanics.boss.warden.skills.AerialSlashComboSkill;
 import vn.haohan.lunar.mechanics.boss.warden.skills.CelestialSummonSkill;
 import vn.haohan.lunar.mechanics.boss.warden.skills.GroundSlamSkill;
 import vn.haohan.lunar.mechanics.boss.warden.skills.ShieldBlockPushSkill;
@@ -52,34 +53,35 @@ public final class WardenCombatHandler {
             modeledEntity.setYBodyRot(currentYaw);
         }
 
-        if (state.currentAttack.equals("skill_shield_sword_slam")) {
-            ShieldSwordSlamSkill.handleShieldSwordSlamExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
-            return;
-        }
-
-        if (state.currentAttack.equals("skill_charge_summon")) {
-            CelestialSummonSkill.handleSummonSpellExecution(plugin, golem, state, target, targetYaw, targetPitch, random);
-            return;
-        }
-
-        if (state.currentAttack.equals("skill_shield_charge")) {
-            ShieldChargeSkill.handleShieldChargeExecution(golem, state, target, targetYaw, targetPitch, distXZ, random);
-            return;
-        }
-
-        if (state.currentAttack.equals("skill_shield_block_push")) {
-            ShieldBlockPushSkill.handleShieldBlockPushExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
-            return;
-        }
-
-        if (state.currentAttack.equals("skill_shield_block")) {
-            ShieldBlockSkill.handleShieldBlockExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
-            return;
-        }
-
-        if (state.currentAttack.equals("attack_thrust_fling")) {
-            ThrustFlingSkill.handleThrustFlingExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
-            return;
+        switch (state.currentAttack) {
+            case "skill_aerial_slash_combo" -> {
+                AerialSlashComboSkill.handleExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
+                return;
+            }
+            case "skill_shield_sword_slam" -> {
+                ShieldSwordSlamSkill.handleShieldSwordSlamExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
+                return;
+            }
+            case "skill_charge_summon" -> {
+                CelestialSummonSkill.handleSummonSpellExecution(plugin, golem, state, target, targetYaw, targetPitch, random);
+                return;
+            }
+            case "skill_shield_charge" -> {
+                ShieldChargeSkill.handleShieldChargeExecution(golem, state, target, targetYaw, targetPitch, distXZ, random);
+                return;
+            }
+            case "skill_shield_block_push" -> {
+                ShieldBlockPushSkill.handleShieldBlockPushExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
+                return;
+            }
+            case "skill_shield_block" -> {
+                ShieldBlockSkill.handleShieldBlockExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
+                return;
+            }
+            case "attack_thrust_fling" -> {
+                ThrustFlingSkill.handleThrustFlingExecution(plugin, golem, state, target, targetYaw, targetPitch, distXZ, random);
+                return;
+            }
         }
 
         if (state.attackTicks < state.attackHitTick) {
@@ -176,6 +178,11 @@ public final class WardenCombatHandler {
                 state.attackTotalTicks = MathUtil.secondsToTicks(3.25);
                 state.attackHitTick = MathUtil.secondsToTicks(1.1);
                 WardenAnimationController.playModelAnimation(golem, state, attack, crossFadeTime, 0.20, 1.05, true);
+                break;
+            case "skill_aerial_slash_combo":
+                state.attackTotalTicks = AerialSlashComboSkill.TOTAL_TICKS;
+                state.attackHitTick = AerialSlashComboSkill.SLASH_1_TICK;
+                WardenAnimationController.playModelAnimation(golem, state, attack, crossFadeTime, 0.20, 1.0, true);
                 break;
             case "skill_shield_charge":
                 state.attackTotalTicks = MathUtil.secondsToTicks(2.65);

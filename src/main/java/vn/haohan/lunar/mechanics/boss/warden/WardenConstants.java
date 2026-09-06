@@ -15,7 +15,8 @@ public final class WardenConstants {
         "skill_shield_charge",
         "skill_shield_sword_slam",
         "skill_shield_block_push",
-        "skill_shield_block"
+        "skill_shield_block",
+        "skill_aerial_slash_combo"
     };
 
     // Movement speed constants (Enhanced responsiveness & fluid footwork)

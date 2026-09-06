@@ -11,8 +11,6 @@ import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -22,21 +20,31 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.mechanics.boss.warden.visual.BlockWaveRenderer;
 import vn.haohan.lunar.mechanics.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.mechanics.weapon.claymore.SmoothSlashTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,21 +58,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles custom mechanics, mace-like ground slam with block ripple wave,
- * Mace enchantments (Density, Breach, Wind Burst), and localized crescent blade wave
- * for the Lunar Claymore (Thanh Kiếm Nguyệt Thạch).
+ * Mace enchantments (Density, Breach, Wind Burst), smooth slash animation and melee cleave,
+ * and anti-loss inventory protection for the Lunar Claymore (Thanh Kiếm Nguyệt Thạch).
  */
 public class LunarClaymoreMechanic implements Listener {
 
     private final HaoHanLunarPlugin plugin;
     private static final int CMD_IDLE = 6001;
-    private static final long CRESCENT_COOLDOWN_MS = 3500L; // 3.5s internal cooldown
 
     private static final Particle.DustOptions LUNAR_CYAN = new Particle.DustOptions(Color.fromRGB(90, 225, 255), 1.6f);
-    private static final Particle.DustOptions LUNAR_WHITE = new Particle.DustOptions(Color.fromRGB(240, 250, 255), 1.4f);
 
     private final Map<UUID, Long> lastSlashTime = new ConcurrentHashMap<>();
-    private final Map<UUID, Boolean> playerComboState = new ConcurrentHashMap<>();
-    private final Map<UUID, Long> crescentCooldowns = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> playerComboStep = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> consecutiveSlashesCount = new ConcurrentHashMap<>();
+    private final Map<UUID, SmoothSlashTask.SlashType> lastSlashType = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
     public LunarClaymoreMechanic(HaoHanLunarPlugin plugin) {
@@ -98,9 +105,7 @@ public class LunarClaymoreMechanic implements Listener {
         }
         if (meta.hasDisplayName()) {
             String name = meta.getDisplayName();
-            if (name.contains("Lunar Claymore") || name.contains("Nguyệt Thạch")) {
-                return true;
-            }
+            return name.contains("Lunar Claymore") || name.contains("Nguyệt Thạch");
         }
         return false;
     }
@@ -151,9 +156,6 @@ public class LunarClaymoreMechanic implements Listener {
         };
     }
 
-    /**
-     * Anvil support: allows Mace enchantments on Lunar Claymore and prevents normal swords from getting them.
-     */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPrepareAnvil(PrepareAnvilEvent event) {
         AnvilInventory inv = event.getInventory();
@@ -164,19 +166,17 @@ public class LunarClaymoreMechanic implements Listener {
 
         boolean isLunar = isLunarClaymore(first);
 
-        // 1. Strictly block Mace enchantments from applying to or staying on normal Netherite swords / other weapons
         if (!isLunar) {
             ItemStack currentRes = event.getResult();
-            if (currentRes != null && hasAnyMaceEnchant(currentRes)) {
+            if (hasAnyMaceEnchant(currentRes)) {
                 event.setResult(null);
             }
-            if (second != null && hasAnyMaceEnchant(second)) {
+            if (hasAnyMaceEnchant(second)) {
                 event.setResult(null);
             }
             return;
         }
 
-        // 2. First item is Lunar Claymore!
         if (second == null || second.getType() == Material.AIR) return;
 
         Map<Enchantment, Integer> incomingEnchants = getStoredOrItemEnchants(second);
@@ -252,13 +252,93 @@ public class LunarClaymoreMechanic implements Listener {
         if (event.getInventory() instanceof AnvilInventory) {
             if (event.getSlotType() == InventoryType.SlotType.RESULT) {
                 ItemStack result = event.getCurrentItem();
-                if (result != null && hasAnyMaceEnchant(result) && !isLunarClaymore(result)) {
+                if (hasAnyMaceEnchant(result) && !isLunarClaymore(result)) {
                     event.setCancelled(true);
                     event.setCurrentItem(null);
                 }
             }
         }
     }
+
+    // ==========================================
+    // INVENTORY SAFETY LISTENERS DURING SLASH
+    // ==========================================
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerItemHeld(PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        if (SmoothSlashTask.isSlashing(player)) {
+            SmoothSlashTask.stopSlashing(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryClickDuringSlash(InventoryClickEvent event) {
+        if (event.getWhoClicked() instanceof Player player && SmoothSlashTask.isSlashing(player)) {
+            event.setCancelled(true);
+            player.updateInventory();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryDragDuringSlash(InventoryDragEvent event) {
+        if (event.getWhoClicked() instanceof Player player && SmoothSlashTask.isSlashing(player)) {
+            event.setCancelled(true);
+            player.updateInventory();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerDropItem(PlayerDropItemEvent event) {
+        if (SmoothSlashTask.isSlashing(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerSwapHand(PlayerSwapHandItemsEvent event) {
+        if (SmoothSlashTask.isSlashing(event.getPlayer())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryOpenDuringSlash(InventoryOpenEvent event) {
+        if (event.getPlayer() instanceof Player player && SmoothSlashTask.isSlashing(player)) {
+            SmoothSlashTask.stopSlashing(player);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onEntityPickupItemDuringSlash(EntityPickupItemEvent event) {
+        if (event.getEntity() instanceof Player player && SmoothSlashTask.isSlashing(player)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        SmoothSlashTask.stopSlashing(player);
+        lastSlashType.remove(player.getUniqueId());
+        playerComboStep.remove(player.getUniqueId());
+        consecutiveSlashesCount.remove(player.getUniqueId());
+        lastSlashTime.remove(player.getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        SmoothSlashTask.stopSlashing(player);
+        lastSlashType.remove(player.getUniqueId());
+        playerComboStep.remove(player.getUniqueId());
+        consecutiveSlashesCount.remove(player.getUniqueId());
+        lastSlashTime.remove(player.getUniqueId());
+    }
+
+    // ==========================================
+    // WEAPON MECHANIC LISTENERS
+    // ==========================================
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onPlayerInteract(PlayerInteractEvent event) {
@@ -269,15 +349,42 @@ public class LunarClaymoreMechanic implements Listener {
 
         Action action = event.getAction();
 
-        // 1. RIGHT CLICK: Play vanilla swing animation & Launch Crescent Blade Wave
+        // 1. RIGHT CLICK: Heavy Smash Mechanic (Slam to ground, shockwave, knockback)
         if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
             event.setCancelled(true);
-            player.swingHand(event.getHand()); // Trigger vanilla swing animation
-            triggerCrescentBladeWave(player);
+            if (SmoothSlashTask.isSlashing(player)) {
+                return;
+            }
+            player.swingHand(event.getHand());
+
+            UUID uuid = player.getUniqueId();
+            long now = System.currentTimeMillis();
+            long lastTime = lastSlashTime.getOrDefault(uuid, 0L);
+
+            if (now - lastTime < 1500L) { // 1.5s cooldown
+                return;
+            }
+            lastSlashTime.put(uuid, now);
+            lastSlashType.put(uuid, SmoothSlashTask.SlashType.DOWNWARD);
+            consecutiveSlashesCount.put(uuid, 0);
+
+            World world = player.getWorld();
+            world.playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.2f, 0.7f);
+            WardenAudio.playCustomSound(player.getLocation(), "haohan:weapon.claymore_swing", 1.0f, 0.8f);
+
+            SmoothSlashTask.play(
+                    plugin,
+                    player,
+                    item,
+                    SmoothSlashTask.SlashType.DOWNWARD,
+                    null,
+                    (t, e) -> performSwordSlamImpact(player, player.getLocation(), 25.0, null),
+                    null
+            );
             return;
         }
 
-        // 2. LEFT CLICK: Basic slash sound & 1-sweep particle visual
+        // 2. LEFT CLICK: Basic slash sound & visual swing
         if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
             if (action == Action.LEFT_CLICK_BLOCK) {
                 event.setCancelled(true);
@@ -300,35 +407,33 @@ public class LunarClaymoreMechanic implements Listener {
         if (fallDist > 1.2f || (player.getVelocity().getY() < -0.15 && !player.isOnGround())) {
             double bonusDamage = Math.min(Math.max(fallDist, 1.5) * 4.5, 55.0);
 
-            // Density enchantment (minecraft:density): increases slam damage per block fallen
+            // Density enchantment (minecraft:density)
             int densityLvl = getMaceEnchantLevel(item, "density");
             if (densityLvl > 0) {
                 double densityBonus = Math.max(fallDist, 1.0) * (densityLvl * 1.5);
                 bonusDamage += densityBonus;
             }
 
-            // Breach enchantment (minecraft:breach): penetrates target's armor
+            // Breach enchantment (minecraft:breach)
             int breachLvl = getMaceEnchantLevel(item, "breach");
             if (breachLvl > 0 && target instanceof LivingEntity livingTarget) {
                 double armor = 0;
                 var attr = livingTarget.getAttribute(Attribute.ARMOR);
                 if (attr != null) armor = attr.getValue();
                 if (armor > 0) {
-                    double armorPenetration = 0.15 * breachLvl; // 15% - 60%
+                    double armorPenetration = 0.15 * breachLvl;
                     double breachBonus = Math.min(armor * armorPenetration * 1.2, 24.0);
                     bonusDamage += breachBonus;
                 }
             }
 
             event.setDamage(event.getDamage() + bonusDamage);
-
-            // Cancel fall damage
             player.setFallDistance(0.0f);
 
-            // Wind Burst enchantment (minecraft:wind_burst): launches player into the air on smash hit
+            // Wind Burst enchantment (minecraft:wind_burst)
             int windBurstLvl = getMaceEnchantLevel(item, "wind_burst");
+            Vector vel = player.getVelocity();
             if (windBurstLvl > 0) {
-                Vector vel = player.getVelocity();
                 vel.setY(0.70 + (windBurstLvl * 0.25));
                 player.setVelocity(vel);
 
@@ -343,89 +448,289 @@ public class LunarClaymoreMechanic implements Listener {
                     world.spawnParticle(Particle.CLOUD, impactLoc, 12, 0.4, 0.4, 0.4, 0.1);
                 }
             } else {
-                // Default mace upward bounce recoil
-                Vector vel = player.getVelocity();
                 vel.setY(0.48);
                 player.setVelocity(vel);
             }
 
-            // Ground slam impact effect with block ripple waves at target location
             Location impactLoc = target.getLocation();
             performSwordSlamImpact(player, impactLoc, bonusDamage, target);
         } else {
-            // Normal ground attack: Breach still gives armor penetration bonus
-            int breachLvl = getMaceEnchantLevel(item, "breach");
-            if (breachLvl > 0 && target instanceof LivingEntity livingTarget) {
-                double armor = 0;
-                var attr = livingTarget.getAttribute(Attribute.ARMOR);
-                if (attr != null) armor = attr.getValue();
-                if (armor > 0) {
-                    double breachBonus = Math.min(armor * (0.15 * breachLvl) * 0.6, 12.0);
-                    event.setDamage(event.getDamage() + breachBonus);
-                }
-            }
+            // Normal ground attack: Cancel vanilla damage and vanilla sweep attack so custom attack takes full control!
+            event.setDamage(0.0);
+            event.setCancelled(true);
             performSlashEffect(player, target);
         }
     }
 
+    /**
+     * Executes the fluid combo sequence:
+     * Seamlessly chains into the active ModelEngine model or buffers input for rhythmic fluidity.
+     * <p>
+     * Logic đòn Chặt (DOWNWARD):
+     * - Chỉ được phép xuất hiện sau khi người chơi đã chém liên tục ít nhất 5 lần (consecutiveSlashes >= 5).
+     * - Tỷ lệ xuất hiện của đòn Chặt giảm xuống thấp (~18% cơ hội khi đã đủ điều kiện).
+     * - Sau khi tung đòn Chặt, bộ đếm reset về 0 (buộc phải chém tiếp ít nhất 5 lần nữa mới có thể ra đòn Chặt tiếp).
+     * <p>
+     * Logic Non-Duplicate:
+     * - Đòn tiếp theo bắt buộc KHÁC đòn trước đó (SlashType khác nhau).
+     * - Hoạt ảnh ModelEngine của đòn tiếp theo cũng bắt buộc KHÁC với hoạt ảnh vừa chạy.
+     */
     private void performSlashEffect(Player player, Entity primaryTarget) {
         UUID uuid = player.getUniqueId();
         long now = System.currentTimeMillis();
 
         long lastTime = lastSlashTime.getOrDefault(uuid, 0L);
-        if (now - lastTime < 350L) {
+        // Minimum anti-spam interval (160ms = ~3 ticks) to allow instant buffering and snappy responsiveness
+        if (now - lastTime < 160L) {
             return;
         }
 
-        boolean lastWasRight = playerComboState.getOrDefault(uuid, false);
-        boolean isRightSlash = (now - lastTime < 1400L) ? !lastWasRight : true;
+        int combo = playerComboStep.getOrDefault(uuid, 0);
+        int consecutiveSlashes = consecutiveSlashesCount.getOrDefault(uuid, 0);
 
-        playerComboState.put(uuid, isRightSlash);
+        if (now - lastTime > 1200L) {
+            combo = 0; // Reset combo counter if player paused longer than 1.2s
+            consecutiveSlashes = 0;
+            lastSlashType.remove(uuid);
+        }
+
+        SmoothSlashTask existing = SmoothSlashTask.getActiveTask(uuid);
+        SmoothSlashTask.SlashType previous = null;
+        String currentAnimName = null;
+        if (existing != null && existing.isValid()) {
+            previous = existing.getQueuedOrCurrentSlashType();
+            currentAnimName = existing.getAnimationName();
+        }
+        if (previous == null) {
+            previous = lastSlashType.get(uuid);
+        }
+
+        // Danh sách các đòn chém thường:
+        // 1. Không bao gồm DOWNWARD (chỉ kích hoạt sau khi đã đủ ít nhất 5 lần chém liên tục)
+        // 2. Bắt buộc KHÁC đòn trước đó (candidate != previous)
+        // 3. Bắt buộc hoạt ảnh ModelEngine không được trùng lặp với hoạt ảnh vừa chạy
+        List<SmoothSlashTask.SlashType> normalCandidates = new ArrayList<>();
+        for (SmoothSlashTask.SlashType candidate : SmoothSlashTask.SlashType.values()) {
+            if (candidate == SmoothSlashTask.SlashType.DOWNWARD || candidate == previous) {
+                continue;
+            }
+            if (existing != null && existing.getActiveModel() != null && currentAnimName != null) {
+                String candidateAnim = SmoothSlashTask.resolveAnimationNameCached(candidate, existing.getActiveModel());
+                if (candidateAnim != null && candidateAnim.equalsIgnoreCase(currentAnimName)) {
+                    continue; // Bỏ qua nếu ánh xạ tới đúng cùng một animation trong ModelEngine
+                }
+            }
+            normalCandidates.add(candidate);
+        }
+
+        // Fallback dự phòng nếu bộ animation của model bị giới hạn
+        if (normalCandidates.isEmpty()) {
+            for (SmoothSlashTask.SlashType candidate : SmoothSlashTask.SlashType.values()) {
+                if (candidate != SmoothSlashTask.SlashType.DOWNWARD && candidate != previous) {
+                    normalCandidates.add(candidate);
+                }
+            }
+        }
+        if (normalCandidates.isEmpty()) {
+            normalCandidates.add(previous == SmoothSlashTask.SlashType.HORIZONTAL_LEFT
+                    ? SmoothSlashTask.SlashType.HORIZONTAL_RIGHT
+                    : SmoothSlashTask.SlashType.HORIZONTAL_LEFT);
+        }
+
+        SmoothSlashTask.SlashType type;
+        // Đòn chặt (DOWNWARD) chỉ được xuất hiện sau ít nhất 5 lần chém liên tục
+        // Và tỷ lệ xuất hiện giảm xuống còn khoảng 18% cơ hội
+        boolean canChop = (consecutiveSlashes >= 5) && (previous != SmoothSlashTask.SlashType.DOWNWARD);
+        if (canChop && random.nextFloat() < 0.18f) {
+            type = SmoothSlashTask.SlashType.DOWNWARD;
+            consecutiveSlashes = 0; // Reset để bắt đầu tích lũy lại ít nhất 5 lần chém mới có đòn chặt tiếp theo
+        } else {
+            type = normalCandidates.get(random.nextInt(normalCandidates.size()));
+            consecutiveSlashes++;
+        }
+
+        consecutiveSlashesCount.put(uuid, consecutiveSlashes);
+        lastSlashType.put(uuid, type);
+        playerComboStep.put(uuid, combo + 1);
         lastSlashTime.put(uuid, now);
 
+        SmoothSlashTask.play(
+                plugin,
+                player,
+                player.getInventory().getItemInMainHand(),
+                type,
+                primaryTarget,
+                (executedType, hitTarget) -> executeLunarAttack(player, hitTarget, executedType),
+                executedType -> playSlashSound(player, executedType)
+        );
+    }
+
+    private void playSlashSound(Player player, SmoothSlashTask.SlashType type) {
         Location loc = player.getLocation();
         World world = loc.getWorld();
+        if (world == null) return;
 
-        if (world != null) {
-            world.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.2f, isRightSlash ? 0.9f : 1.1f);
-            world.playSound(loc, Sound.ITEM_TRIDENT_THROW, SoundCategory.PLAYERS, 0.6f, 1.8f);
-            WardenAudio.playCustomSound(loc, "haohan:weapon.claymore_swing", 1.0f, isRightSlash ? 1.0f : 1.15f);
-
-            spawnSingleSweepParticle(player);
-            performLunarCleave(player, primaryTarget);
+        switch (type) {
+            case DOWNWARD -> {
+                world.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.2f, 0.75f);
+                world.playSound(loc, Sound.ITEM_MACE_SMASH_AIR, SoundCategory.PLAYERS, 1.1f, 1.1f);
+                WardenAudio.playCustomSound(loc, "haohan:weapon.claymore_swing", 1.1f, 0.85f);
+            }
+            case STABBING_ATTACK -> {
+                world.playSound(loc, Sound.ITEM_TRIDENT_THROW, SoundCategory.PLAYERS, 1.1f, 1.6f);
+                world.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 0.9f, 1.3f);
+                WardenAudio.playCustomSound(loc, "haohan:weapon.claymore_swing", 1.0f, 1.3f);
+            }
+            default -> {
+                world.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.2f, 1.0f);
+                world.playSound(loc, Sound.ITEM_TRIDENT_THROW, SoundCategory.PLAYERS, 0.6f, 1.8f);
+                WardenAudio.playCustomSound(loc, "haohan:weapon.claymore_swing", 1.0f, 1.1f);
+            }
         }
     }
 
-    private void spawnSingleSweepParticle(Player player) {
-        Location eyeLoc = player.getEyeLocation();
-        Vector dir = eyeLoc.getDirection().normalize();
-        World world = eyeLoc.getWorld();
-        if (world == null) return;
-
-        Location center = eyeLoc.clone().add(dir.multiply(2.2));
-        world.spawnParticle(Particle.SWEEP_ATTACK, center, 1, 0, 0, 0, 0);
+    /**
+     * Routes attack hit detection according to attack type:
+     * - Left/Right slashes: Wide AoE cleave, slightly shorter range (3.2m), standard damage (16.0)
+     * - Downward strike: High single-target damage (26.0), no AoE
+     * - Stabbing attack: Furthest range (5.0m), standard single-target damage (16.0), no AoE
+     */
+    private void executeLunarAttack(Player player, Entity primaryTarget, SmoothSlashTask.SlashType type) {
+        switch (type) {
+            case DOWNWARD -> executeDownwardStrike(player, primaryTarget);
+            case STABBING_ATTACK -> executeStabbingAttack(player, primaryTarget);
+            default -> executeSlashCleave(player, primaryTarget);
+        }
     }
 
-    private void performLunarCleave(Player player, Entity primaryTarget) {
+    /**
+     * Left/Right Slashes: Wide AoE sweep cleave with slightly reduced range (~3.2m).
+     */
+    private void executeSlashCleave(Player player, Entity primaryTarget) {
         Location eyeLoc = player.getEyeLocation();
         Vector dir = eyeLoc.getDirection().normalize();
+        World world = player.getWorld();
 
-        for (Entity entity : player.getNearbyEntities(3.5, 3.5, 3.5)) {
-            if (!(entity instanceof LivingEntity target) || entity == player || entity == primaryTarget) {
+        double slashRange = 3.2;
+        Location sweepLoc = eyeLoc.clone().add(dir.clone().multiply(1.6)).subtract(0, 0.3, 0);
+        world.playSound(sweepLoc, Sound.ENTITY_PLAYER_ATTACK_STRONG, SoundCategory.PLAYERS, 1.3f, 0.95f);
+
+        for (Entity entity : player.getNearbyEntities(slashRange, 2.5, slashRange)) {
+            if (!(entity instanceof LivingEntity target) || entity == player || target.isDead()) {
                 continue;
             }
-            Vector toTarget = target.getLocation().add(0, 1, 0).toVector().subtract(eyeLoc.toVector()).normalize();
-            if (dir.dot(toTarget) > 0.45) {
+            Vector toTarget = target.getLocation().add(0, 1, 0).toVector().subtract(eyeLoc.toVector());
+            double dist = toTarget.length();
+            if (dist > slashRange) {
+                continue;
+            }
+            toTarget.normalize();
+            if (dir.dot(toTarget) > 0.35) {
+                target.setNoDamageTicks(0);
                 target.damage(16.0, player);
-                Vector knockback = dir.clone().setY(0.2).multiply(0.6);
+                Vector knockback = dir.clone().setY(0.25).multiply(0.60);
                 target.setVelocity(target.getVelocity().add(knockback));
             }
         }
     }
 
     /**
-     * Sword Slam impact effect, Block Display ripple waves, and AOE shockwave.
+     * Downward Strike: Heavy overhead chop dealing high damage (26.0) to a SINGLE target (NO AoE).
      */
+    private void executeDownwardStrike(Player player, Entity primaryTarget) {
+        Location eyeLoc = player.getEyeLocation();
+        Vector dir = eyeLoc.getDirection().normalize();
+        World world = player.getWorld();
+
+        LivingEntity targetToHit = null;
+
+        if (primaryTarget instanceof LivingEntity living && living.isValid() && !living.isDead() && living != player) {
+            if (eyeLoc.distance(living.getEyeLocation()) <= 3.4) {
+                targetToHit = living;
+            }
+        }
+
+        if (targetToHit == null) {
+            RayTraceResult result = world.rayTraceEntities(
+                    eyeLoc,
+                    dir,
+                    3.3,
+                    0.50,
+                    e -> e instanceof LivingEntity && e != player && !e.isDead() && !e.isInvulnerable()
+            );
+            if (result != null && result.getHitEntity() instanceof LivingEntity hit) {
+                targetToHit = hit;
+            } else {
+                double bestDot = 0.70;
+                for (Entity entity : player.getNearbyEntities(3.3, 2.5, 3.3)) {
+                    if (!(entity instanceof LivingEntity candidate) || entity == player || candidate.isDead()) {
+                        continue;
+                    }
+                    Vector toTarget = candidate.getEyeLocation().toVector().subtract(eyeLoc.toVector()).normalize();
+                    double dot = dir.dot(toTarget);
+                    if (dot > bestDot) {
+                        bestDot = dot;
+                        targetToHit = candidate;
+                    }
+                }
+            }
+        }
+
+        Location strikeLoc = eyeLoc.clone().add(dir.clone().multiply(1.8));
+        world.playSound(strikeLoc, Sound.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 1.4f, 0.8f);
+        world.playSound(strikeLoc, Sound.ITEM_MACE_SMASH_GROUND_HEAVY, SoundCategory.PLAYERS, 1.0f, 1.3f);
+
+        if (targetToHit != null) {
+            targetToHit.setNoDamageTicks(0);
+            targetToHit.damage(26.0, player);
+
+            Vector knockback = dir.clone().multiply(0.35).setY(-0.25);
+            targetToHit.setVelocity(targetToHit.getVelocity().add(knockback));
+        }
+    }
+
+    /**
+     * Stabbing Attack: Forward piercing thrust with the furthest range (5.0m),
+     * normal damage (16.0), and single target only (NO AoE).
+     */
+    private void executeStabbingAttack(Player player, Entity primaryTarget) {
+        Location eyeLoc = player.getEyeLocation();
+        Vector dir = eyeLoc.getDirection().normalize();
+        World world = player.getWorld();
+
+        LivingEntity targetToHit = null;
+
+        RayTraceResult result = world.rayTraceEntities(
+                eyeLoc,
+                dir,
+                5.0,
+                0.45,
+                e -> e instanceof LivingEntity && e != player && !e.isDead() && !e.isInvulnerable()
+        );
+        if (result != null && result.getHitEntity() instanceof LivingEntity hit) {
+            targetToHit = hit;
+        } else if (primaryTarget instanceof LivingEntity living && living.isValid() && !living.isDead() && living != player) {
+            if (eyeLoc.distance(living.getLocation()) <= 5.0) {
+                Vector toTarget = living.getEyeLocation().toVector().subtract(eyeLoc.toVector()).normalize();
+                if (dir.dot(toTarget) > 0.60) {
+                    targetToHit = living;
+                }
+            }
+        }
+
+        Location thrustTip = eyeLoc.clone().add(dir.clone().multiply(2.5));
+        world.playSound(thrustTip, Sound.ITEM_TRIDENT_THROW, SoundCategory.PLAYERS, 1.2f, 1.5f);
+        world.playSound(thrustTip, Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 1.1f, 1.2f);
+
+        if (targetToHit != null) {
+            targetToHit.setNoDamageTicks(0);
+            targetToHit.damage(16.0, player);
+
+            Vector knockback = dir.clone().multiply(0.70).setY(0.15);
+            targetToHit.setVelocity(targetToHit.getVelocity().add(knockback));
+        }
+    }
+
     private void performSwordSlamImpact(Player player, Location impactLoc, double slamDamage, Entity primaryTarget) {
         World world = impactLoc.getWorld();
         if (world == null) return;
@@ -441,7 +746,7 @@ public class LunarClaymoreMechanic implements Listener {
         world.spawnParticle(Particle.BLOCK, impactLoc.clone().add(0, 0.2, 0), 75, 1.4, 0.4, 1.4, Material.STONE.createBlockData());
         world.spawnParticle(Particle.SWEEP_ATTACK, impactLoc.clone().add(0, 0.5, 0), 3, 0.8, 0.1, 0.8, 0.0);
 
-        // Trigger Block Ripple Wave around impact point (bề mặt block bị đập nảy lên theo gợn sóng)
+        // Trigger Block Ripple Wave
         triggerGroundBlockRipple(impactLoc);
 
         // Circular Shockwave expansion ring
@@ -456,7 +761,6 @@ public class LunarClaymoreMechanic implements Listener {
             world.spawnParticle(Particle.ELECTRIC_SPARK, pLoc, 1, 0.05, 0.05, 0.05, 0.05);
         }
 
-        // AOE Shockwave Damage & Knockback to surrounding entities
         double aoeRadius = 5.0;
         double aoeDmg = Math.max(10.0, slamDamage * 0.65);
 
@@ -465,14 +769,21 @@ public class LunarClaymoreMechanic implements Listener {
                 continue;
             }
             living.damage(aoeDmg, player);
-            Vector knockback = nearby.getLocation().toVector().subtract(impactLoc.toVector()).setY(0).normalize().multiply(0.85).setY(0.42);
-            nearby.setVelocity(nearby.getVelocity().add(knockback));
+            Vector diff = nearby.getLocation().toVector().subtract(impactLoc.toVector()).setY(0);
+            Vector knockback;
+            if (diff.lengthSquared() > 0) {
+                knockback = diff.normalize().multiply(0.85).setY(0.42);
+            } else {
+                knockback = new Vector(0, 0.42, 0);
+            }
+            Vector currVel = nearby.getVelocity();
+            if (Double.isFinite(knockback.getX()) && Double.isFinite(knockback.getY()) && Double.isFinite(knockback.getZ())
+                && Double.isFinite(currVel.getX()) && Double.isFinite(currVel.getY()) && Double.isFinite(currVel.getZ())) {
+                nearby.setVelocity(currVel.add(knockback));
+            }
         }
     }
 
-    /**
-     * Spawns ground block ripple wave popping up from the ground in concentric rings with smooth easing.
-     */
     private void triggerGroundBlockRipple(Location slamCenter) {
         BlockWaveRenderer.spawnConcentricWave(
                 plugin,
@@ -484,142 +795,5 @@ public class LunarClaymoreMechanic implements Listener {
                 0.28,
                 random
         );
-    }
-
-    /**
-     * Right-click ability: Launches a short-range localized Crescent Blade Wave (Kiếm Khí Bán Nguyệt).
-     */
-    private void triggerCrescentBladeWave(Player player) {
-        UUID uuid = player.getUniqueId();
-        long now = System.currentTimeMillis();
-        long lastUsed = crescentCooldowns.getOrDefault(uuid, 0L);
-
-        // Internal per-player cooldown (No Netherite sword visual cooldown applied to regular swords)
-        if (now - lastUsed < CRESCENT_COOLDOWN_MS) {
-            double remainingSec = Math.ceil((CRESCENT_COOLDOWN_MS - (now - lastUsed)) / 100.0) / 10.0;
-            player.sendActionBar(Component.text("§c⏳ Kiếm Khí đang hồi chiêu (" + remainingSec + "s)..."));
-            return;
-        }
-
-        crescentCooldowns.put(uuid, now);
-        player.sendActionBar(Component.text("§b✦ Kiếm Khí Nguyệt Thạch!"));
-
-        Location eyeLoc = player.getEyeLocation();
-        Vector dir = eyeLoc.getDirection().setY(0).normalize();
-        if (dir.lengthSquared() < 0.01) {
-            dir = player.getLocation().getDirection().setY(0).normalize();
-        }
-
-        World world = player.getWorld();
-        Location startLoc = player.getLocation().add(0, 0.5, 0);
-
-        // Sound effects
-        world.playSound(startLoc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.PLAYERS, 1.4f, 0.8f);
-        world.playSound(startLoc, Sound.ITEM_TRIDENT_THUNDER, SoundCategory.PLAYERS, 0.8f, 1.5f);
-        WardenAudio.playCustomSound(startLoc, "haohan:boss.arcslash", 1.4f, 1.2f);
-
-        // Shorter, punchier blade wave
-        new PlayerCrescentBladeWaveTask(player, startLoc, dir).runTaskTimer(plugin, 0L, 1L);
-    }
-
-    /**
-     * Projectile task for short-range Crescent Blade Wave (~10 blocks).
-     */
-    private static class PlayerCrescentBladeWaveTask extends BukkitRunnable {
-        private final Player player;
-        private final Location current;
-        private final Vector dir;
-        private final Vector cross;
-        private final Set<UUID> hitTargets = new HashSet<>();
-        private int step = 0;
-        private static final int MAX_STEPS = 8; // Reduced range: 8 steps (~10 blocks)
-
-        private static final double ARC_RADIUS = 2.4; // Tighter crescent arc
-        private static final double MAX_ANGLE = Math.toRadians(65.0);
-        private static final int ARC_POINTS = 9;
-
-        public PlayerCrescentBladeWaveTask(Player player, Location origin, Vector direction) {
-            this.player = player;
-            this.current = origin.clone();
-            this.dir = direction.clone().setY(0).normalize();
-            this.cross = new Vector(-this.dir.getZ(), 0, this.dir.getX()).normalize();
-        }
-
-        @Override
-        public void run() {
-            if (!player.isOnline() || current.getWorld() == null || step >= MAX_STEPS) {
-                cancel();
-                return;
-            }
-
-            step++;
-            current.add(dir.clone().multiply(1.25));
-
-            World world = current.getWorld();
-            Location center = current.clone();
-            Location circleCenter = center.clone().subtract(dir.clone().multiply(ARC_RADIUS));
-
-            List<Location> arcPoints = new ArrayList<>(ARC_POINTS);
-
-            for (int i = 0; i < ARC_POINTS; i++) {
-                double progress = (double) i / (double) (ARC_POINTS - 1);
-                double angle = -MAX_ANGLE + (progress * 2.0 * MAX_ANGLE);
-
-                double cos = Math.cos(angle);
-                double sin = Math.sin(angle);
-
-                Vector offset = dir.clone().multiply(ARC_RADIUS * cos)
-                        .add(cross.clone().multiply(ARC_RADIUS * sin));
-
-                Location pt = circleCenter.clone().add(offset).add(0, 0.4, 0);
-                arcPoints.add(pt);
-
-                // Sharp crescent sweep particles
-                if (i % 2 == 0) {
-                    world.spawnParticle(Particle.SWEEP_ATTACK, pt, 1, 0, 0, 0, 0);
-                }
-
-                // Glowing lunar energy dust
-                world.spawnParticle(Particle.DUST, pt, 1, 0.04, 0.06, 0.04, 0.0, (i % 2 == 0) ? LUNAR_WHITE : LUNAR_CYAN);
-
-                // Electric sparks at edges and peak
-                if (i == 0 || i == ARC_POINTS - 1 || i == ARC_POINTS / 2) {
-                    world.spawnParticle(Particle.ELECTRIC_SPARK, pt, 1, 0.04, 0.04, 0.04, 0.04);
-                }
-            }
-
-            // Sound along wave path
-            if (step % 2 == 0) {
-                world.playSound(center, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 1.0f, 1.3f);
-            }
-
-            // Deal damage and knockback to enemies hit by the wave
-            for (Entity entity : world.getNearbyEntities(center, 3.2, 2.5, 3.2)) {
-                if (!(entity instanceof LivingEntity target) || entity == player || target.isDead()) {
-                    continue;
-                }
-                if (hitTargets.contains(target.getUniqueId())) {
-                    continue;
-                }
-
-                Location tLoc = target.getLocation();
-                boolean isHit = false;
-                for (Location pt : arcPoints) {
-                    if (tLoc.distanceSquared(pt) <= 1.8 * 1.8) {
-                        isHit = true;
-                        break;
-                    }
-                }
-
-                if (isHit) {
-                    hitTargets.add(target.getUniqueId());
-                    target.damage(16.0, player);
-                    Vector knockback = dir.clone().multiply(0.75).setY(0.35);
-                    target.setVelocity(target.getVelocity().add(knockback));
-                    world.spawnParticle(Particle.CRIT, target.getLocation().add(0, 1, 0), 12, 0.3, 0.3, 0.3, 0.1);
-                    world.playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.2f, 1.2f);
-                }
-            }
-        }
     }
 }

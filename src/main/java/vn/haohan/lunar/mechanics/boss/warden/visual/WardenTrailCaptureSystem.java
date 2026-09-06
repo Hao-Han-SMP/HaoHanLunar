@@ -8,9 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.IronGolem;
-import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.mechanics.boss.warden.WardenConstants;
 import vn.haohan.lunar.mechanics.boss.warden.WardenState;
@@ -23,10 +21,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * ModelEngine Trail rendering for weapon slashes.
- * Renders high-fidelity sword trail during slash attack animations.
+ * Captures the 3D position of the sword blade in real-time
+ * and passes the ribbon geometry to the TrailRenderer.
  */
-public class WardenTrailCaptureSystem implements Listener {
+public class WardenTrailCaptureSystem {
+
     private final JavaPlugin plugin;
 
     public WardenTrailCaptureSystem(JavaPlugin plugin) {
@@ -134,51 +133,28 @@ public class WardenTrailCaptureSystem implements Listener {
             UUID uuid = entry.getKey();
             Deque<TrailPoint> history = entry.getValue();
 
-            history.removeIf(p -> now - p.captureTime > 550);
+            // Expire old trail points (> 260ms)
+            while (!history.isEmpty() && (now - history.peekFirst().captureTime) > 260) {
+                history.removeFirst();
+            }
 
-            Entity boss = bossEntities.get(uuid);
-            if (boss == null || !boss.isValid() || boss.isDead()) {
+            Entity entity = bossEntities.get(uuid);
+            if (entity == null || !entity.isValid() || entity.isDead() || history.isEmpty()) {
                 clearHistory(uuid);
                 continue;
             }
 
-            if (history.isEmpty()) {
-                clearHistory(uuid);
-                continue;
-            }
-
-            TrailRenderer renderer = renderers.get(uuid);
-            if (renderer == null) {
-                renderer = new TrailRenderer(boss);
-                renderers.put(uuid, renderer);
-            }
-
-            TrailPoint[] arr = new TrailPoint[12];
-            int idx = 0;
-            for (TrailPoint tp : history) {
-                if (idx < 12) {
-                    arr[idx++] = tp;
-                }
-            }
-
-            renderer.updateSegments(arr);
+            TrailRenderer renderer = renderers.computeIfAbsent(uuid, k -> new TrailRenderer(entity));
+            renderer.updateSegments(history.toArray(new TrailPoint[0]));
         }
-
-        renderers.entrySet().removeIf(entry -> {
-            boolean active = historyBuffers.containsKey(entry.getKey());
-            if (!active) {
-                entry.getValue().destroy();
-            }
-            return !active;
-        });
     }
 
     public static void clearHistory(UUID uuid) {
         historyBuffers.remove(uuid);
-        bossEntities.remove(uuid);
-        TrailRenderer tr = renderers.remove(uuid);
-        if (tr != null) {
-            tr.destroy();
+        TrailRenderer r = renderers.remove(uuid);
+        if (r != null) {
+            r.destroy();
         }
+        bossEntities.remove(uuid);
     }
 }

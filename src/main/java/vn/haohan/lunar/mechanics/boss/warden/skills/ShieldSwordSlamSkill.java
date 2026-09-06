@@ -77,7 +77,7 @@ public final class ShieldSwordSlamSkill {
 
             world.spawnParticle(Particle.PORTAL, golemLoc.clone().add(0, 1.5, 0), 35, 0.5, 1.0, 0.5, 0.4);
             world.spawnParticle(Particle.DUST, golemLoc.clone().add(0, 1.0, 0), 25, 0.4, 0.8, 0.4, 0.0,
-                    new Particle.DustOptions(Color.fromRGB(80, 200, 255), 1.8f));
+                                new Particle.DustOptions(Color.fromRGB(80, 200, 255), 1.8f));
             world.playSound(golemLoc, Sound.ENTITY_ENDERMAN_TELEPORT, 1.8f, 1.1f);
             WardenAudio.playCustomSound(golemLoc, "haohan:boss.mortalblade_whoosh", 1.6f, 1.3f);
 
@@ -127,13 +127,13 @@ public final class ShieldSwordSlamSkill {
 
                     Location bloodLoc = impaledPlayer.getLocation().add(0, 0.9, 0);
                     world.spawnParticle(Particle.DUST, bloodLoc, 20, 0.25, 0.35, 0.25, 0.0,
-                            new Particle.DustOptions(Color.MAROON, 1.9f));
+                                        new Particle.DustOptions(Color.MAROON, 1.9f));
                     world.spawnParticle(Particle.DUST, bloodLoc, 15, 0.2, 0.25, 0.2, 0.0,
-                            new Particle.DustOptions(Color.RED, 1.7f));
+                                        new Particle.DustOptions(Color.RED, 1.7f));
                     world.spawnParticle(Particle.CRIMSON_SPORE, bloodLoc, 12, 0.3, 0.3, 0.3, 0.08);
                     world.spawnParticle(Particle.SWEEP_ATTACK, bloodLoc, 1, 0.2, 0.1, 0.2, 0);
                     world.spawnParticle(Particle.BLOCK, bloodLoc, 8, 0.2, 0.2, 0.2, 0.1,
-                            Material.REDSTONE_BLOCK.createBlockData());
+                                        Material.REDSTONE_BLOCK.createBlockData());
                 }
             } else {
                 state.impaledTargetUUID = null;
@@ -246,7 +246,7 @@ public final class ShieldSwordSlamSkill {
 
                 world.spawnParticle(Particle.SONIC_BOOM, golemLoc.clone().add(0, 0.5, 0), 1, 0, 0, 0, 0);
                 world.spawnParticle(Particle.DUST, golemLoc.clone().add(0, 0.8, 0), 16, 0.4, 0.6, 0.4, 0.0,
-                        new Particle.DustOptions(Color.fromRGB(90, 220, 255), 2.5f));
+                                    new Particle.DustOptions(Color.fromRGB(90, 220, 255), 2.5f));
             }
 
             // Strict ground check: ONLY impact when feet physically reach ground level
@@ -276,7 +276,7 @@ public final class ShieldSwordSlamSkill {
                     impaledPlayer.playSound(impaledPlayer.getLocation(), Sound.ITEM_TRIDENT_RETURN, 1.8f, 0.8f);
                     world.spawnParticle(Particle.SWEEP_ATTACK, impaledPlayer.getLocation().add(0, 1.2, 0), 2, 0.3, 0.2, 0.3, 0);
                     world.spawnParticle(Particle.DUST, impaledPlayer.getLocation().add(0, 1.0, 0), 20, 0.4, 0.5, 0.4, 0.0,
-                            new Particle.DustOptions(Color.fromRGB(180, 20, 20), 1.8f));
+                                        new Particle.DustOptions(Color.fromRGB(180, 20, 20), 1.8f));
                 }
                 state.impaledTargetUUID = null;
             }
@@ -301,7 +301,7 @@ public final class ShieldSwordSlamSkill {
 
             world.spawnParticle(Particle.SWEEP_ATTACK, golemLoc.clone().add(0, 1.2, 0), 3, 0.5, 0.2, 0.5, 0);
             world.spawnParticle(Particle.DUST, golemLoc.clone().add(0, 1.0, 0), 20, 0.6, 0.3, 0.6, 0.0,
-                    new Particle.DustOptions(Color.fromRGB(80, 220, 255), 2.0f));
+                                new Particle.DustOptions(Color.fromRGB(80, 220, 255), 2.0f));
         }
 
         // PHASE 6: RECOVERY & TRANSITION BACK TO IDLE (5.70s)
@@ -448,7 +448,7 @@ public final class ShieldSwordSlamSkill {
                         shieldEntity.teleport(recallLoc);
 
                         world.spawnParticle(Particle.DUST, shieldEntity.getLocation(), 2, 0.1, 0.1, 0.1, 0.0,
-                                new Particle.DustOptions(Color.fromRGB(80, 210, 255), 1.2f));
+                                            new Particle.DustOptions(Color.fromRGB(80, 210, 255), 1.2f));
                     }
                 }
             }.runTaskTimer(plugin, 1L, 1L);
@@ -539,7 +539,7 @@ public final class ShieldSwordSlamSkill {
 
                         // Trailing particles
                         world.spawnParticle(Particle.DUST, current, 3, 0.2, 0.2, 0.2, 0.0,
-                                new Particle.DustOptions(Color.fromRGB(80, 200, 255), 1.5f));
+                                            new Particle.DustOptions(Color.fromRGB(80, 200, 255), 1.5f));
 
                         if (step % 2 == 0) {
                             world.playSound(current, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.2f, 1.9f);
@@ -555,9 +555,9 @@ public final class ShieldSwordSlamSkill {
 
                         world.spawnParticle(Particle.FLASH, targetGround.clone().add(0, 0.5, 0), 1, 0.1, 0.1, 0.0, Color.WHITE);
                         world.spawnParticle(Particle.DUST, targetGround.clone().add(0, 0.5, 0), 45, 0.6, 0.5, 0.6, 0.0,
-                                new Particle.DustOptions(Color.fromRGB(180, 15, 15), 2.2f));
+                                            new Particle.DustOptions(Color.fromRGB(180, 15, 15), 2.2f));
                         world.spawnParticle(Particle.DUST, targetGround.clone().add(0, 0.5, 0), 30, 0.4, 0.4, 0.4, 0.0,
-                                new Particle.DustOptions(Color.fromRGB(120, 5, 5), 1.8f));
+                                            new Particle.DustOptions(Color.fromRGB(120, 5, 5), 1.8f));
                         world.spawnParticle(Particle.CRIMSON_SPORE, targetGround.clone().add(0, 0.8, 0), 25, 0.5, 0.6, 0.5, 0.1);
 
                         for (Player p : world.getPlayers()) {
@@ -597,7 +597,7 @@ public final class ShieldSwordSlamSkill {
                         swordEntity.teleport(recallLoc);
 
                         world.spawnParticle(Particle.DUST, swordEntity.getLocation().clone().subtract(0, 0.5, 0), 3, 0.2, 0.2, 0.2, 0.0,
-                                new Particle.DustOptions(Color.fromRGB(80, 200, 255), 1.5f));
+                                            new Particle.DustOptions(Color.fromRGB(80, 200, 255), 1.5f));
                     }
                 }
             }.runTaskTimer(plugin, 1L, 1L);
@@ -634,7 +634,7 @@ public final class ShieldSwordSlamSkill {
         world.spawnParticle(Particle.EXPLOSION, safeLand.clone().add(0, 0.5, 0), 2, 0.4, 0.1, 0.4, 0);
         world.spawnParticle(Particle.SWEEP_ATTACK, safeLand.clone().add(0, 0.4, 0), 6, 1.5, 0.2, 1.5, 0);
         world.spawnParticle(Particle.DUST, safeLand.clone().add(0, 0.3, 0), 60, 2.5, 0.4, 2.5, 0.0,
-                new Particle.DustOptions(Color.fromRGB(90, 220, 255), 2.2f));
+                            new Particle.DustOptions(Color.fromRGB(90, 220, 255), 2.2f));
 
         Block groundBlock = safeLand.clone().subtract(0, 0.2, 0).getBlock();
         BlockData bData = (!groundBlock.isPassable() && groundBlock.getType().isSolid()) ? groundBlock.getBlockData() : Material.GRAY_CONCRETE.createBlockData();
@@ -672,5 +672,4 @@ public final class ShieldSwordSlamSkill {
             }
         }
     }
-
 }
