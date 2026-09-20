@@ -28,12 +28,22 @@ repositories {
     }
 }
 
+configurations {
+    validatorClasspath
+}
+
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
     compileOnly 'com.github.Hao-Han-SMP:HaoHanItemCore:main-SNAPSHOT'
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
+    validatorClasspath 'org.yaml:snakeyaml:2.2'
+
+    testImplementation 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    testImplementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'org.yaml:snakeyaml:2.2'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -43,6 +53,21 @@ tasks.withType(JavaCompile).configureEach {
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
         options.release.set(targetJavaVersion)
     }
+}
+
+tasks.register('compileValidator', JavaCompile) {
+    source = fileTree('src/main/java/vn/haohan/lunar/core/system/validator')
+    classpath = configurations.validatorClasspath
+    destinationDirectory = layout.buildDirectory.dir('classes/validator')
+}
+
+tasks.register('validateContent', JavaExec) {
+    group = 'verification'
+    description = 'Validates content schemas and cross-references'
+    dependsOn 'compileValidator'
+    classpath = files(layout.buildDirectory.dir('classes/validator'), configurations.validatorClasspath)
+    mainClass = 'vn.haohan.lunar.core.system.validator.ContentLintTool'
+    args = ['src/main/resources']
 }
 
 test {

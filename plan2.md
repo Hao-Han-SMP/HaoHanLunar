@@ -105,11 +105,11 @@ Không triển khai mù quáng toàn bộ chức năng của MythicMobs. Mọi t
 - Threat decay & Cleanup:
   * Điểm threat tự động giảm theo tỷ lệ cấu hình nếu mục tiêu chạy trốn hoặc không tương tác sau N tick (`threatDecayPerSecond`).
   * Xóa mục tiêu khỏi bảng khi mục tiêu chết, chuyển thế giới hoặc logout.
-- Event: Bắn `LunarMobTargetChangeEvent` (Cancellable) khi boss chuẩn bị chuyển sang mục tiêu mới.
+- Event: Bắn `MobTargetChangeEvent` (Cancellable) khi boss chuẩn bị chuyển sang mục tiêu mới.
 
 **Prompt triển khai:**
 
-> Mở rộng hệ thống Threat Table cho ActiveLunarMob với các tính năng: cộng điểm theo damage, heal đồng đội, khoảng cách gần, và mechanic taunt (cưỡng chế đổi target). Triển khai cơ chế suy giảm threat theo thời gian (decay) khi mục tiêu chạy xa hoặc không gây sát thương. Phát ra sự kiện `LunarMobTargetChangeEvent` (cancellable) khi boss đổi target. Tự động dọn dẹp mục tiêu khi người chơi chết, thoát game hoặc chuyển world. Viết unit test cho: tính toán điểm thù hận, thứ tự ưu tiên, taunt override, và dọn dẹp khi player disconnect.
+> Mở rộng hệ thống Threat Table cho ActiveLunarMob với các tính năng: cộng điểm theo damage, heal đồng đội, khoảng cách gần, và mechanic taunt (cưỡng chế đổi target). Triển khai cơ chế suy giảm threat theo thời gian (decay) khi mục tiêu chạy xa hoặc không gây sát thương. Phát ra sự kiện `MobTargetChangeEvent` (cancellable) khi boss đổi target. Tự động dọn dẹp mục tiêu khi người chơi chết, thoát game hoặc chuyển world. Viết unit test cho: tính toán điểm thù hận, thứ tự ưu tiên, taunt override, và dọn dẹp khi player disconnect.
 
 **Tiêu chí nghiệm thu:** Boss ưu tiên đánh người chơi có threat cao nhất; cơ chế taunt hoạt động tức thì; không còn rò rỉ UUID khi người chơi logout.
 
@@ -517,13 +517,13 @@ Danh sách 18+ options bắt buộc trong `MobOptionDefinition`:
 **Chi tiết kiến trúc:**
 - Package: `vn.haohan.lunar.api.v1.event`
 - Các event cốt lõi:
-  * `LunarMobSpawnEvent` (Cancellable)
-  * `LunarMobDeathEvent` (Lấy được killer, damage record, drop table)
-  * `LunarSkillPreCastEvent` (Cancellable, thay đổi được power hoặc target)
-  * `LunarSkillPostCastEvent`
-  * `LunarMobDamageEvent` (Cancellable, can thiệp DamageContext)
-  * `LunarMobPhaseChangeEvent` (Cancellable)
-  * `LunarLootGenerateEvent` (Can thiệp danh sách item rơi)
+  * `MobSpawnEvent` (Cancellable)
+  * `MobDeathEvent` (Lấy được killer, damage record, drop table)
+  * `SkillPreCastEvent` (Cancellable, thay đổi được power hoặc target)
+  * `SkillPostCastEvent`
+  * `MobDamageEvent` (Cancellable, can thiệp DamageContext)
+  * `MobPhaseChangeEvent` (Cancellable)
+  * `LootGenerateEvent` (Can thiệp danh sách item rơi)
 
 **Prompt triển khai:**
 

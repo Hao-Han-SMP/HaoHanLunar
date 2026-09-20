@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.loot.pity;
+package vn.haohan.lunar.api.system.loot.pity;
 
 import java.util.Objects;
 import java.util.UUID;

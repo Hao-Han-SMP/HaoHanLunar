@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.skill;
 
+import vn.haohan.lunar.api.system.combat.skill.*;
+
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;

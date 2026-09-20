@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.visual;
+package vn.haohan.lunar.core.features.boss.warden.visual;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -10,9 +10,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.plugin.java.JavaPlugin;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenBladeCalculator;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenBladeCalculator;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

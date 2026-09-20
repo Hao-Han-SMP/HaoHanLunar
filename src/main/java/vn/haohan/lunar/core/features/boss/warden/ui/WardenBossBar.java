@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.ui;
+package vn.haohan.lunar.core.features.boss.warden.ui;
 
 import vn.haohan.lunar.api.system.util.MathUtil;
 import net.kyori.adventure.bossbar.BossBar;
@@ -10,8 +10,8 @@ import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,8 +31,8 @@ public final class WardenBossBar {
         }
 
         double maxHp = WardenConstants.BOSS_MAX_HEALTH;
-        if (golem.getAttribute(Attribute.MAX_HEALTH) != null) {
-            maxHp = golem.getAttribute(Attribute.MAX_HEALTH).getValue();
+        if (golem.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
+            maxHp = golem.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
         }
         double currentHp = MathUtil.clamp(golem.getHealth(), 0.0, maxHp);
 

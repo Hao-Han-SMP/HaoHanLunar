@@ -1,11 +1,11 @@
-package vn.haohan.lunar.api.loot;
+package vn.haohan.lunar.api.system.loot;
 
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.combat.skill.condition.ConditionContext;
-import vn.haohan.lunar.api.combat.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.api.combat.skill.condition.ConditionResult;
-import vn.haohan.lunar.api.loot.luck.LuckModifier;
-import vn.haohan.lunar.api.combat.skill.CooldownRegistry;
+import vn.haohan.lunar.api.system.combat.skill.condition.ConditionContext;
+import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
+import vn.haohan.lunar.api.system.combat.skill.condition.ConditionResult;
+import vn.haohan.lunar.api.system.loot.luck.LuckModifier;
+import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 
 import java.util.List;
 import java.util.Map;

@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.loot;
 
+import vn.haohan.lunar.api.system.loot.*;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -10,15 +12,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.integration.bridge.item.HaoHanItemBridge;
-import vn.haohan.lunar.core.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.core.loot.pity.PityManager;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
+import vn.haohan.lunar.api.system.loot.pity.PityManager;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

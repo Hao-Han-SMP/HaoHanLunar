@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.spawner.random;
+package vn.haohan.lunar.api.system.spawner.random;
 
 /**
  * Strategy for random mob spawning and replacement.

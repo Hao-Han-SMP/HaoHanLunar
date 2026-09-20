@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.showcase;
+package vn.haohan.lunar.core.features.boss.warden.showcase;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -17,16 +17,16 @@ import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.LunarWardenMechanic;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.CrescentBladeWaveTask;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.WardenCombatHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.*;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenLocationUtil;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenVFX;
 import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.combat.CrescentBladeWaveTask;
+import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.core.features.boss.warden.skills.*;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenLocationUtil;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenVFX;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -144,7 +144,7 @@ public final class WardenShowcaseHandler {
 
                 // Spawn burst dust on appearance
                 world.spawnParticle(Particle.DUST, spawnLoc.clone().add(0, 1.5, 0), 25, 0.8, 1.0, 0.8, 0.0,
-                        new Particle.DustOptions(Color.fromRGB(90, 220, 255), 2.0f));
+                                    new Particle.DustOptions(Color.fromRGB(90, 220, 255), 2.0f));
                 world.spawnParticle(Particle.FLASH, spawnLoc.clone().add(0, 1.5, 0), 1, 0.1, 0.1, 0.1, 0.0, Color.WHITE);
 
             } catch (Throwable t) {
@@ -160,7 +160,7 @@ public final class WardenShowcaseHandler {
 
     private static void applyScaleAttribute(IronGolem golem, double scale) {
         try {
-            AttributeInstance instance = golem.getAttribute(Attribute.SCALE);
+            AttributeInstance instance = golem.getAttribute(Attribute.GENERIC_SCALE);
             if (instance != null) {
                 instance.setBaseValue(scale);
                 return;

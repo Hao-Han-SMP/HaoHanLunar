@@ -1,13 +1,13 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.ai;
+package vn.haohan.lunar.core.features.boss.warden.ai;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.scheduler.BukkitRunnable;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.LunarWardenMechanic;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.ui.BossBarShatterTask;
+import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.ui.BossBarShatterTask;
 
 import java.util.Random;
 

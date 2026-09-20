@@ -15,11 +15,20 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
+import vn.haohan.lunar.api.manager.MobManager;
 import vn.haohan.lunar.api.presentation.audio.SpatialAudioEngine;
+import vn.haohan.lunar.api.presentation.display.orchestration.*;
+import vn.haohan.lunar.api.presentation.particle.geometric.ParticleChoreographer;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraAttachment;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraDefinition;
+import vn.haohan.lunar.api.system.world.environment.EnvironmentalFieldTracker;
+import vn.haohan.lunar.api.system.world.hazard.HazardZoneDefinition;
+import vn.haohan.lunar.api.system.world.hazard.HazardZoneTracker;
+import vn.haohan.lunar.api.system.world.totem.TotemDefinition;
+import vn.haohan.lunar.api.system.world.totem.TotemManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.system.world.environment.EnvironmentalFieldTracker;
+import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraRegistry;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraScheduler;
 import vn.haohan.lunar.api.system.combat.skill.aura.StackMode;
@@ -28,12 +37,6 @@ import vn.haohan.lunar.api.system.combat.cc.CCState;
 import vn.haohan.lunar.api.mob.disguise.DisguiseData;
 import vn.haohan.lunar.api.mob.disguise.DisguiseManager;
 import vn.haohan.lunar.api.mob.disguise.DisguiseType;
-import vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge;
-import vn.haohan.lunar.core.subsystem.mob.MobManager;
-import vn.haohan.lunar.api.system.world.hazard.HazardZoneDefinition;
-import vn.haohan.lunar.api.system.world.hazard.HazardZoneTracker;
-import vn.haohan.lunar.api.system.world.totem.TotemDefinition;
-import vn.haohan.lunar.api.system.world.totem.TotemManager;
 import vn.haohan.lunar.api.mob.pack.PackCoordinationService;
 import vn.haohan.lunar.api.mob.signal.MobSignalBus;
 import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
@@ -48,16 +51,10 @@ import vn.haohan.lunar.api.system.combat.skill.complex.ChainEngine;
 import vn.haohan.lunar.api.system.combat.skill.complex.OrbitalEngine;
 import vn.haohan.lunar.api.system.combat.skill.complex.SlashEngine;
 import org.bukkit.Material;
-import vn.haohan.lunar.api.presentation.display.orchestration.ActiveDisplaySession;
-import vn.haohan.lunar.api.presentation.display.orchestration.DisplayEntityManager;
-import vn.haohan.lunar.api.presentation.display.orchestration.DisplaySpawnOptions;
-import vn.haohan.lunar.api.presentation.display.orchestration.DisplayTransformOptions;
-import vn.haohan.lunar.api.presentation.display.orchestration.DisplayType;
-import vn.haohan.lunar.api.presentation.particle.geometric.ParticleChoreographer;
 import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
-import vn.haohan.lunar.api.system.variable.VariableManager;
-import vn.haohan.lunar.api.system.variable.VariableScope;
-import vn.haohan.lunar.api.system.variable.VariableValue;
+import vn.haohan.lunar.core.system.variable.VariableManager;
+import vn.haohan.lunar.core.system.variable.VariableScope;
+import vn.haohan.lunar.core.system.variable.VariableValue;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,7 +66,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiPredicate;
-import vn.haohan.lunar.api.system.util.SafeExpressionEvaluator;
+import vn.haohan.lunar.core.system.util.SafeExpressionEvaluator;
 
 /** Safe MVP mechanic registry. Arbitrary command execution is intentionally absent. */
 public final class MechanicRegistry {
@@ -89,7 +86,7 @@ public final class MechanicRegistry {
     private EnvironmentalFieldTracker fieldTracker = new EnvironmentalFieldTracker();
     private MobSignalBus signalBus = new MobSignalBus();
     private PackCoordinationService packService = new PackCoordinationService();
-    private MobManager mobManager;
+    private LunarMobManager mobManager;
     private DisguiseManager disguiseManager = new DisguiseManager();
     public DisguiseManager disguiseManager() { return disguiseManager; }
     public void setDisguiseManager(DisguiseManager manager) { if (manager != null) this.disguiseManager = manager; }
@@ -106,8 +103,8 @@ public final class MechanicRegistry {
     public void setSignalBus(MobSignalBus bus) { if (bus != null) this.signalBus = bus; }
     public PackCoordinationService packService() { return packService; }
     public void setPackService(PackCoordinationService service) { if (service != null) this.packService = service; }
-    public MobManager mobManager() { return mobManager; }
-    public void setMobManager(MobManager mobManager) { this.mobManager = mobManager; }
+    public LunarMobManager mobManager() { return mobManager; }
+    public void setMobManager(LunarMobManager mobManager) { this.mobManager = mobManager; }
 
 
     public TotemManager totemManager() { return totemManager; }

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.skills;
+package vn.haohan.lunar.core.features.boss.warden.skills;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ModeledEntity;
@@ -14,11 +14,11 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenBehavior;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.WardenCombatHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAnimationController;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAnimationController;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 import vn.haohan.lunar.api.system.util.MathUtil;
 
 import java.util.Random;
@@ -120,7 +120,7 @@ public final class ShieldBlockPushSkill {
                         // Reduced shield push damage by 20% (18.0 -> 14.4)
                         WardenCombatHandler.applyCombatDamage(victim, 14.4, golem);
 
-                        // Powerful directional push back
+                        // Directional knockback
                         Vector outwardVel = pushDir.clone().multiply(1.35).setY(0.38);
                         victim.setVelocity(outwardVel);
 

@@ -30,7 +30,7 @@ public final class PackAggroCoordinator {
      * @param candidates collection of candidate mobs (e.g., from mob manager or local area)
      * @return number of pack members alerted
      */
-    public int broadcastAggro(ActiveMob sourceMob, LivingEntity attacker, Collection<ActiveMob> candidates) {
+    public int broadcastAggro(ActiveMob sourceMob, LivingEntity attacker, Collection<? extends ActiveMob> candidates) {
         if (sourceMob == null || attacker == null || candidates == null || candidates.isEmpty()) {
             return 0;
         }

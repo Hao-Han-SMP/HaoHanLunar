@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.presentation.display.orchestration;
+package vn.haohan.lunar.api.presentation.display.orchestration;
 
 import org.bukkit.entity.Display;
 

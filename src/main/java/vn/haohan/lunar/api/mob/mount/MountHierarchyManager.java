@@ -2,16 +2,15 @@ package vn.haohan.lunar.api.mob.mount;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
 /**
- * Manages hierarchical mount, passenger, and vehicle relationships for ActiveLunarMob instances.
+ * Manages hierarchical mount, passenger, and vehicle relationships for ActiveMob instances.
  * Handles automatic mounting on spawn, safe dismount velocity, and berserk state on rider death.
  */
 public final class MountHierarchyManager {
@@ -30,14 +29,14 @@ public final class MountHierarchyManager {
      * Automatically spawns and binds mounts and riders defined in the mob's YAML configuration.
      *
      * @param mob the primary mob instance
-     * @param spawner callback capable of spawning child ActiveLunarMob instances by mob ID
+     * @param spawner callback capable of spawning child ActiveMob instances by mob ID
      */
-    public void linkMountAndRiders(ActiveLunarMob mob, Function<String, ActiveLunarMob> spawner) {
+    public void linkMountAndRiders(ActiveMob mob, Function<String, ActiveMob> spawner) {
         if (mob == null || spawner == null) return;
 
         // 1. Check if mob configures a Mount (this mob rides the mount)
         mob.definition().mountId().ifPresent(mountId -> {
-            ActiveLunarMob mountMob = spawner.apply(mountId);
+            ActiveMob mountMob = spawner.apply(mountId);
             if (mountMob != null) {
                 mount(mob, mountMob);
             }
@@ -45,7 +44,7 @@ public final class MountHierarchyManager {
 
         // 2. Check if mob configures Riders (other mobs ride on top of this mob)
         for (String riderId : mob.definition().riderIds()) {
-            ActiveLunarMob riderMob = spawner.apply(riderId);
+            ActiveMob riderMob = spawner.apply(riderId);
             if (riderMob != null) {
                 mount(riderMob, mob);
             }
@@ -55,7 +54,7 @@ public final class MountHierarchyManager {
     /**
      * Binds a rider onto a mount.
      */
-    public boolean mount(ActiveLunarMob rider, ActiveLunarMob mount) {
+    public boolean mount(ActiveMob rider, ActiveMob mount) {
         if (rider == null || mount == null || rider.entityId().equals(mount.entityId())) {
             return false;
         }
@@ -72,12 +71,12 @@ public final class MountHierarchyManager {
     /**
      * Safely dismounts a rider from its current vehicle.
      */
-    public boolean dismount(ActiveLunarMob rider, LunarMobManager mobManager) {
+    public boolean dismount(ActiveMob rider, LunarMobManager mobManager) {
         if (rider == null) return false;
 
         UUID mountId = rider.mountUUID();
         if (mountId != null && mobManager != null) {
-            ActiveLunarMob mount = mobManager.get(mountId);
+            ActiveMob mount = mobManager.get(mountId);
             if (mount != null) {
                 try {
                     mount.entity().removePassenger(rider.entity());
@@ -100,14 +99,14 @@ public final class MountHierarchyManager {
      *
      * @return number of passengers ejected
      */
-    public int ejectPassengers(ActiveLunarMob vehicle, LunarMobManager mobManager) {
+    public int ejectPassengers(ActiveMob vehicle, LunarMobManager mobManager) {
         if (vehicle == null) return 0;
 
         int count = 0;
         Set<UUID> riders = vehicle.riderUUIDs();
         for (UUID riderId : riders) {
             if (mobManager != null) {
-                ActiveLunarMob rider = mobManager.get(riderId);
+                ActiveMob rider = mobManager.get(riderId);
                 if (rider != null) {
                     rider.setMountUUID(null);
                     try {
@@ -133,13 +132,13 @@ public final class MountHierarchyManager {
      */
     public void handleEntityDeath(LivingEntity deadEntity, LunarMobManager mobManager) {
         if (deadEntity == null || mobManager == null) return;
-        ActiveLunarMob deadMob = mobManager.get(deadEntity.getUniqueId());
+        ActiveMob deadMob = mobManager.get(deadEntity.getUniqueId());
         if (deadMob == null) return;
 
         // Case 1: Dead mob is a Mount
         if (!deadMob.riderUUIDs().isEmpty()) {
             for (UUID riderId : deadMob.riderUUIDs()) {
-                ActiveLunarMob rider = mobManager.get(riderId);
+                ActiveMob rider = mobManager.get(riderId);
                 if (rider != null) {
                     rider.setMountUUID(null);
                     try {
@@ -154,7 +153,7 @@ public final class MountHierarchyManager {
         // Case 2: Dead mob is a Rider
         UUID mountId = deadMob.mountUUID();
         if (mountId != null) {
-            ActiveLunarMob mount = mobManager.get(mountId);
+            ActiveMob mount = mobManager.get(mountId);
             if (mount != null && !mount.entity().isDead()) {
                 mount.riderUUIDs().remove(deadMob.entityId());
                 if (mount.riderUUIDs().isEmpty()) {

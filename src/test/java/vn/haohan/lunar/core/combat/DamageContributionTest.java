@@ -1,9 +1,11 @@
 package vn.haohan.lunar.core.combat;
 
+import vn.haohan.lunar.api.system.combat.*;
+
 import org.bukkit.entity.*;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.combat.reward.BossVictorySummary;
-import vn.haohan.lunar.core.combat.reward.RewardTier;
+import vn.haohan.lunar.api.system.combat.reward.BossVictorySummary;
+import vn.haohan.lunar.api.system.combat.reward.RewardTier;
 
 import java.lang.reflect.Proxy;
 import java.util.List;
@@ -165,10 +167,10 @@ class DamageContributionTest {
         assertEquals("PlayerA", summary.topDamagers().get(0).playerName());
 
         String banner = summary.renderAsciiBox();
-        assertTrue(banner.contains("CHIẾN THẮNG: LUNAR WARDEN"));
-        assertTrue(banner.contains("MVP Sát Thương: PlayerA"));
-        assertTrue(banner.contains("Hạng 2: PlayerB"));
-        assertTrue(banner.contains("Hạng 3: PlayerC"));
+        assertTrue(banner.contains("CHI\u1ebeN TH\u1eaeNG: LUNAR WARDEN"));
+        assertTrue(banner.contains("MVP S\u00e1t Th\u01b0\u01a1ng: PlayerA"));
+        assertTrue(banner.contains("H\u1ea1ng 2: PlayerB"));
+        assertTrue(banner.contains("H\u1ea1ng 3: PlayerC"));
     }
 
     @Test

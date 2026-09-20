@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.util;
+package vn.haohan.lunar.core.features.boss.warden.util;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ModeledEntity;
@@ -19,8 +19,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Robust lifecycle manager for all temporary skill entities (BlockDisplays, ItemDisplays, ArmorStands, etc.).
- * Ensures entities are NEVER saved to chunk files and are cleanly purged on reload, restart, chunk load, or crash recovery.
+ * Lifecycle manager for temporary skill entities (displays, markers, stands).
+ * Ensures temporary entities are non-persistent and purged on reload, chunk load, or world unload.
  */
 public final class WardenEntityManager implements Listener {
 

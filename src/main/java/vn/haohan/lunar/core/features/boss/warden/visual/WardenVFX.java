@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.visual;
+package vn.haohan.lunar.core.features.boss.warden.visual;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -17,8 +17,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Vector3f;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
 
 import java.util.Map;
 import java.util.UUID;

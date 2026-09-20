@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.skills;
+package vn.haohan.lunar.core.features.boss.warden.skills;
 
 import org.bukkit.Color;
 import org.bukkit.GameMode;
@@ -9,10 +9,10 @@ import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.WardenCombatHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenLocationUtil;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenVFX;
+import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenLocationUtil;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenVFX;
 import vn.haohan.lunar.api.system.util.MathUtil;
 
 import java.util.HashSet;

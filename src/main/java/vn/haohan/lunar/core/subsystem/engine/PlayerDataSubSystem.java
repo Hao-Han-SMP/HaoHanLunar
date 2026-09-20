@@ -1,15 +1,15 @@
 package vn.haohan.lunar.core.subsystem.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.system.data.PlayerLunarDataManager;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.system.data.PlayerDataManager;
 
 /**
  * SubSystem managing persistence and in-memory caches of player lunar progression.
  */
 public final class PlayerDataSubSystem implements LunarSubSystem {
 
-    private PlayerLunarDataManager dataManager;
+    private PlayerDataManager dataManager;
 
     @Override
     public String name() {
@@ -23,7 +23,7 @@ public final class PlayerDataSubSystem implements LunarSubSystem {
 
     @Override
     public void init(HaoHanLunarPlugin plugin) {
-        dataManager = new PlayerLunarDataManager(plugin);
+        dataManager = new PlayerDataManager(plugin);
     }
 
     @Override
@@ -33,7 +33,7 @@ public final class PlayerDataSubSystem implements LunarSubSystem {
         }
     }
 
-    public PlayerLunarDataManager getDataManager() {
+    public PlayerDataManager getDataManager() {
         return dataManager;
     }
 }

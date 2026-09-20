@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.world.totem;
+package vn.haohan.lunar.api.system.world.totem;
 
 import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
@@ -10,7 +10,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import vn.haohan.lunar.api.skill.target.TargetRef;
+import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 
 import java.util.Collection;
 import java.util.Collections;

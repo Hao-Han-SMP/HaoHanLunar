@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.config;
+package vn.haohan.lunar.api.system.config;
 
 import java.util.List;
 

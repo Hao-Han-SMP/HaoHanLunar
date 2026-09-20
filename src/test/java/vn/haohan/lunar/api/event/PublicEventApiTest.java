@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.v1.event;
+package vn.haohan.lunar.api.event;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -9,13 +9,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.combat.DamageType;
+import vn.haohan.lunar.api.system.combat.DamageType;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.skill.SkillDefinition;
-import vn.haohan.lunar.core.skill.SkillTrigger;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;

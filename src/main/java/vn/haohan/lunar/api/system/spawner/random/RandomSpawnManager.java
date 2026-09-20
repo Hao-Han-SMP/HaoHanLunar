@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.spawner.random;
+package vn.haohan.lunar.api.system.spawner.random;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -11,9 +11,11 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.core.subsystem.mob.MobManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.spawner.random.RandomSpawnRule;
+import vn.haohan.lunar.api.system.spawner.random.SpawnAction;
 
 import java.util.Comparator;
 import java.util.List;
@@ -33,7 +35,7 @@ import java.util.function.BiConsumer;
 public final class RandomSpawnManager implements Listener {
 
     private final MobDefinitionRegistry mobDefinitions;
-    private final MobManager mobManager;
+    private final LunarMobManager mobManager;
     private final Map<String, RandomSpawnRule> rules = new ConcurrentHashMap<>();
 
     private boolean globalEnabled = false;
@@ -48,7 +50,7 @@ public final class RandomSpawnManager implements Listener {
 
     private BiConsumer<String, Location> customSpawner;
 
-    public RandomSpawnManager(MobDefinitionRegistry mobDefinitions, MobManager mobManager) {
+    public RandomSpawnManager(MobDefinitionRegistry mobDefinitions, LunarMobManager mobManager) {
         this.mobDefinitions = mobDefinitions;
         this.mobManager = mobManager;
     }
@@ -156,76 +158,81 @@ public final class RandomSpawnManager implements Listener {
             return;
         }
 
-        String biomeKey = resolveBiomeKey(loc);
-        double y = loc.getY();
+        totalAttempts.incrementAndGet();
 
-        // 1. Check DENY rules first (e.g. forbid vanilla mobs in lunar dimensions or forbidden biomes)
-        List<RandomSpawnRule> denyRules = getActiveRules(SpawnAction.DENY);
-        for (RandomSpawnRule rule : denyRules) {
-            if (!rule.matchesWorld(world)) continue;
-            if (!rule.matchesBiome(biomeKey)) continue;
-            if (!rule.matchesElevation(y)) continue;
-            if (!rule.matchesReason(reason)) continue;
-
-            if (rule.rollChance(random)) {
-                totalAttempts.incrementAndGet();
-                deniedSpawns.incrementAndGet();
-                event.setCancelled(true);
-                return;
-            }
+        // 1. Check mob cap
+        if (isMobCapReached(world)) {
+            mobCapSkips.incrementAndGet();
+            return;
         }
 
-        // 2. Check REPLACE rules
-        List<RandomSpawnRule> replaceRules = getActiveRules(SpawnAction.REPLACE);
-        for (RandomSpawnRule rule : replaceRules) {
-            if (!rule.matchesWorld(world)) continue;
-            if (!rule.matchesBiome(biomeKey)) continue;
-            if (!rule.matchesElevation(y)) continue;
-            if (!rule.matchesReason(reason)) continue;
+        // 2. Evaluate rules
+        String biomeKey = resolveBiomeKey(loc);
 
-            totalAttempts.incrementAndGet();
-
-            if (isMobCapReached(world)) {
-                mobCapSkips.incrementAndGet();
-                return;
+        for (RandomSpawnRule rule : getActiveRules(null)) {
+            if (!rule.matchesWorld(world)) {
+                continue;
+            }
+            if (!rule.matchesBiome(biomeKey)) {
+                continue;
+            }
+            if (!rule.matchesElevation(loc.getY())) {
+                continue;
+            }
+            if (!rule.matchesReason(reason)) {
+                continue;
             }
 
-            if (rule.rollChance(random)) {
-                event.setCancelled(true);
+            // Roll chance
+            if (!rule.rollChance(random)) {
+                continue;
+            }
 
-                // Preserve yaw, pitch, velocity if available
-                Location spawnLoc = loc.clone();
-                Vector velocity = null;
-                Entity vanilla = event.getEntity();
-                if (vanilla != null) {
-                    spawnLoc.setYaw(vanilla.getLocation().getYaw());
-                    spawnLoc.setPitch(vanilla.getLocation().getPitch());
-                    try {
-                        velocity = vanilla.getVelocity();
-                    } catch (Throwable ignored) {}
+            switch (rule.action()) {
+                case DENY -> {
+                    event.setCancelled(true);
+                    deniedSpawns.incrementAndGet();
+                    return;
                 }
-
-                spawnMob(rule.mobId(), spawnLoc, velocity);
-                successfulSpawns.incrementAndGet();
-                return;
+                case REPLACE -> {
+                    event.setCancelled(true);
+                    deniedSpawns.incrementAndGet();
+                    spawnCustomMob(rule.mobId(), loc, null);
+                    successfulSpawns.incrementAndGet();
+                    return;
+                }
+                case ADD -> {
+                    spawnCustomMob(rule.mobId(), loc, null);
+                    successfulSpawns.incrementAndGet();
+                    return;
+                }
             }
         }
     }
 
     public boolean isMobCapReached(World world) {
-        if (world == null) return false;
-        try {
-            int count = world.getLivingEntities().size();
-            return count >= mobCapLimit;
-        } catch (Throwable ignored) {
-            return false;
+        if (mobManager != null && mobManager.activeCount() >= mobCapLimit) {
+            return true;
         }
+        if (world != null) {
+            try {
+                return world.getLivingEntities().size() >= mobCapLimit;
+            } catch (Throwable ignored) {
+            }
+        }
+        return false;
     }
-
-    private void spawnMob(String mobId, Location location, Vector velocity) {
-        if (customSpawner != null) {
-            customSpawner.accept(mobId, location);
+    private void spawnCustomMob(String mobId, Location location, Vector velocity) {
+        if (mobId == null || location == null) {
             return;
+        }
+
+        if (customSpawner != null) {
+            try {
+                customSpawner.accept(mobId, location);
+                return;
+            } catch (Throwable ignored) {
+            }
         }
 
         if (mobDefinitions == null || mobManager == null || location.getWorld() == null) {

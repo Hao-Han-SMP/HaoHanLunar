@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.visual;
+package vn.haohan.lunar.core.features.boss.warden.visual;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
@@ -6,8 +6,8 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import com.ticxo.modelengine.api.model.bone.ModelBone;
 import org.bukkit.entity.IronGolem;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
 
 import java.util.Map;
 

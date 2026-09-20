@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.loot;
+package vn.haohan.lunar.api.system.loot;
 
 /**
  * Configuration options for loot drop behavior and visual effects.

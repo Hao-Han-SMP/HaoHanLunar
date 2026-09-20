@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.system.data;
+package vn.haohan.lunar.core.system.data;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;

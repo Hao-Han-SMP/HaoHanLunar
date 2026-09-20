@@ -1,7 +1,7 @@
-package vn.haohan.lunar.core.presentation.particle.geometric;
+package vn.haohan.lunar.api.presentation.particle.geometric;
 
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.api.system.util.FastMath;
+import vn.haohan.lunar.core.system.util.FastMath;
 
 import java.util.ArrayList;
 import java.util.List;

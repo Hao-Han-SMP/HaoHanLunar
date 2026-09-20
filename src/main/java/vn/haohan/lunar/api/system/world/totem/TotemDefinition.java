@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.world.totem;
+package vn.haohan.lunar.api.system.world.totem;
 
 import java.util.Locale;
 import java.util.Map;

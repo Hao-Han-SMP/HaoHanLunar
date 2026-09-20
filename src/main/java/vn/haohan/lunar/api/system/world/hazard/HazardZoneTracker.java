@@ -1,10 +1,10 @@
-package vn.haohan.lunar.api.world.hazard;
+package vn.haohan.lunar.api.system.world.hazard;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.skill.target.TargetRef;
+import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.spawner.fixed;
 
+import vn.haohan.lunar.api.system.spawner.fixed.*;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -10,9 +12,9 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;

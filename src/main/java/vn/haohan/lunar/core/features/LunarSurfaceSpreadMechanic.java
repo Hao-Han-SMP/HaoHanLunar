@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features;
+package vn.haohan.lunar.core.features;
 
 import org.bukkit.Location;
 import org.bukkit.Material;

@@ -1,6 +1,6 @@
-package vn.haohan.lunar.api.loot.pity.storage;
+package vn.haohan.lunar.api.system.loot.pity.storage;
 
-import vn.haohan.lunar.api.loot.pity.PityRecord;
+import vn.haohan.lunar.api.system.loot.pity.PityRecord;
 
 import java.io.File;
 import java.sql.Connection;

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.spawner.fixed;
+package vn.haohan.lunar.api.system.spawner.fixed;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -14,8 +14,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import vn.haohan.lunar.api.manager.SpawnerManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.subsystem.mob.MobManager;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 
@@ -36,13 +36,13 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
     private static final NamespacedKey SPAWNER_ID_KEY = new NamespacedKey("haohan", "spawner_id");
 
     private final MobDefinitionRegistry mobDefinitions;
-    private final MobManager mobManager;
+    private final LunarMobManager mobManager;
     private final Map<String, LunarFixedSpawner> spawners = new ConcurrentHashMap<>();
 
     private LunarFixedSpawner.SpawnerCallback customSpawnerCallback;
     private LunarFixedSpawner.ProximityChecker customProximityChecker;
 
-    public FixedSpawnerManager(MobDefinitionRegistry mobDefinitions, MobManager mobManager) {
+    public FixedSpawnerManager(MobDefinitionRegistry mobDefinitions, LunarMobManager mobManager) {
         this.mobDefinitions = mobDefinitions;
         this.mobManager = mobManager;
     }
@@ -53,7 +53,7 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
 
     public void register(SpawnerDefinition definition) {
         Objects.requireNonNull(definition, "Spawner definition must not be null");
-        spawners.put(definition.id(), new LunarFixedSpawner(definition));
+        spawners.put(definition.id(), new LunarFixedSpawner(definition, mobDefinitions, mobManager));
     }
 
     public void register(LunarFixedSpawner spawner) {

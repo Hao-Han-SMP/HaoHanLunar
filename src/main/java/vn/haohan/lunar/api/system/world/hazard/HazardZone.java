@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.world.hazard;
+package vn.haohan.lunar.api.system.world.hazard;
 
 import org.bukkit.Location;
 

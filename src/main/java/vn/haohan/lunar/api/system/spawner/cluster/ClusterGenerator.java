@@ -36,8 +36,8 @@ public final class ClusterGenerator {
      * @param center             center coordinates
      * @param localMobCap        maximum allowed mobs in the local area/chunk
      * @param currentEntityCount current number of living entities in the local area
-     * @param spawner            delegate responsible for instantiating the ActiveMob
-     * @return ClusterSpawnResult
+     * @param spawner            callback function instantiating the ActiveMob instance
+     * @return result containing spawned leader and minions, or failure reason
      */
     public ClusterSpawnResult generate(
             ClusterDefinition definition,

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.mob;
+package vn.haohan.lunar.api.mob;
 
 import java.util.Locale;
 import java.util.Objects;

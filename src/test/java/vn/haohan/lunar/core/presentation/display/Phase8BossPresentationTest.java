@@ -1,4 +1,6 @@
-package vn.haohan.lunar.core.presentation.display;
+package vn.haohan.lunar.api.presentation.display;
+
+import vn.haohan.lunar.api.presentation.display.*;
 
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
@@ -9,22 +11,22 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.presentation.audio.SpatialAudioEngine;
-import vn.haohan.lunar.core.presentation.display.bossbar.LunarBossBar;
-import vn.haohan.lunar.core.presentation.display.bossbar.LunarBossBarTracker;
-import vn.haohan.lunar.core.presentation.display.dialogue.HaoHanDisplayUIBridge;
-import vn.haohan.lunar.core.presentation.display.nameplate.LunarNameplate;
-import vn.haohan.lunar.core.skill.mechanic.MechanicContext;
-import vn.haohan.lunar.core.skill.mechanic.MechanicRegistry;
+import vn.haohan.lunar.api.presentation.audio.SpatialAudioEngine;
+import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBar;
+import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBarTracker;
+import vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge;
+import vn.haohan.lunar.api.presentation.display.nameplate.LunarNameplate;
+import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
+import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.skill.SkillCastContext;
-import vn.haohan.lunar.core.skill.SkillDefinition;
-import vn.haohan.lunar.core.skill.SkillTrigger;
-import vn.haohan.lunar.core.skill.target.TargetRef;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
+import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
+import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -140,7 +142,7 @@ class Phase8BossPresentationTest {
         AtomicBoolean providerCalled = new AtomicBoolean(false);
         HaoHanDisplayUIBridge.DisplayUIProvider mockProvider = new HaoHanDisplayUIBridge.DisplayUIProvider() {
             @Override
-            public boolean showSpeechBubble(ActiveLunarMob mob, HaoHanDisplayUIBridge.BubbleOptions options) {
+            public boolean showSpeechBubble(vn.haohan.lunar.core.subsystem.mob.ActiveMob mob, HaoHanDisplayUIBridge.BubbleOptions options) {
                 providerCalled.set(true);
                 return true;
             }

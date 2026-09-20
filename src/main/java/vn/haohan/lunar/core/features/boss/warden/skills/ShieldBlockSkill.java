@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.skills;
+package vn.haohan.lunar.core.features.boss.warden.skills;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ModeledEntity;
@@ -15,11 +15,11 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenBehavior;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.WardenCombatHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAnimationController;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAnimationController;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 import vn.haohan.lunar.api.system.util.MathUtil;
 
 import java.util.Random;

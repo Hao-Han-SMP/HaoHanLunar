@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.system.item;
+package vn.haohan.lunar.core.system.item;
 
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.itemcore.api.item.ItemDefinition;
@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.SmithingTransformRecipe;
 import org.bukkit.plugin.Plugin;
+
 
 import java.util.List;
 import java.util.Map;
@@ -220,8 +221,8 @@ public class LunarItems {
         }
 
         private static void registerOxygenTank(vn.haohan.itemcore.api.item.ItemRegistry registry,
-                        OxygenTankBehavior behavior, String size, String displayName,
-                        int tier, int capacity, int chargeTicks, int customModelData) {
+                                               OxygenTankBehavior behavior, String size, String displayName,
+                                               int tier, int capacity, int chargeTicks, int customModelData) {
                 registry.register(ItemDefinition.builder("haohan:oxygen_tank_" + size)
                                 .material(Material.CARROT_ON_A_STICK)
                                 .displayName(displayName)

@@ -1,20 +1,22 @@
 package vn.haohan.lunar.core.world.hazard;
 
+import vn.haohan.lunar.api.system.world.hazard.*;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.skill.mechanic.MechanicContext;
-import vn.haohan.lunar.core.skill.mechanic.MechanicRegistry;
+import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
+import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.skill.SkillCastContext;
-import vn.haohan.lunar.core.skill.SkillDefinition;
-import vn.haohan.lunar.core.skill.SkillTrigger;
-import vn.haohan.lunar.core.skill.target.TargetRef;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
+import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
+import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;

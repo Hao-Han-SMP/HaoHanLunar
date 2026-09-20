@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.loot.instanced;
+package vn.haohan.lunar.api.system.loot.instanced;
 
 import java.util.Map;
 import java.util.Objects;

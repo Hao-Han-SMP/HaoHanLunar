@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.skills;
+package vn.haohan.lunar.core.features.boss.warden.skills;
 
 import org.bukkit.Color;
 import org.bukkit.GameMode;
@@ -14,9 +14,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.WardenCombatHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.BlockWaveRenderer;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.core.features.boss.warden.visual.BlockWaveRenderer;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 
 import java.util.Random;
 

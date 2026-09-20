@@ -11,9 +11,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.system.command.LunarMobCommand;
+import vn.haohan.lunar.api.system.command.LunarMobCommand;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
@@ -42,8 +42,8 @@ class Phase9CustomItemAndSkillTest {
                 "Material", "NETHERITE_SWORD",
                 "Display", "<gradient:#ff4500:#8a2be2><b>Lunar Eclipse Blade</b></gradient>",
                 "Lore", List.of(
-                        "<gray>Thanh kiếm rèn từ mảnh vỡ Mặt Trăng.",
-                        "<yellow>Kỹ năng chủ động: <gold>Nguyệt Trảm (Chuột phải)"
+                        "<gray>Thanh kiáº¿m rÃ¨n tá»« máº£nh vá»¡ Máº·t TrÄƒng.",
+                        "<yellow>Ká»¹ nÄƒng chá»§ Ä‘á»™ng: <gold>Nguyá»‡t Tráº£m (Chuá»™t pháº£i)"
                 ),
                 "CustomModelData", 10501,
                 "Rarity", "EPIC",

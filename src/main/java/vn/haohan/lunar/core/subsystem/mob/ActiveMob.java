@@ -5,16 +5,17 @@ import vn.haohan.lunar.api.mob.Mob;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionId;
 import vn.haohan.lunar.api.mob.ai.antistuck.AntiStuckController;
-import vn.haohan.lunar.api.combat.DamageModifierTable;
-import vn.haohan.lunar.api.combat.ImmunityTable;
-import vn.haohan.lunar.api.combat.cc.CrowdControlTracker;
-import vn.haohan.lunar.api.combat.threat.ThreatTable;
+import vn.haohan.lunar.api.system.combat.DamageModifierTable;
+import vn.haohan.lunar.api.system.combat.ImmunityTable;
+import vn.haohan.lunar.api.system.combat.cc.CrowdControlTracker;
+import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.api.mob.disguise.DisguiseData;
 import vn.haohan.lunar.api.mob.stat.StatHolder;
-import vn.haohan.lunar.api.skill.interrupt.CancellationToken;
-import vn.haohan.lunar.api.skill.interrupt.InterruptReason;
-import vn.haohan.lunar.api.presentation.display.bossbar.BossBarTracker;
+import vn.haohan.lunar.api.system.combat.skill.interrupt.CancellationToken;
+import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
+import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBarTracker;
 import vn.haohan.lunar.api.mob.options.MobOptions;
+import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import java.util.Objects;
 import java.util.Set;
@@ -24,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Actively managed in-game instance of a custom Lunar mob.
  */
-public final class ActiveMob implements Mob {
+public class ActiveMob implements Mob {
 
     private final UUID entityId;
     private final MobDefinitionId definitionId;
@@ -40,7 +41,7 @@ public final class ActiveMob implements Mob {
     private final ThreatTable threatTable;
     private volatile MobOptions options;
     private volatile UUID parentUUID;
-    private final BossBarTracker bossBars = new BossBarTracker();
+    private final LunarBossBarTracker bossBars = new LunarBossBarTracker();
     private volatile UUID mountUUID;
     private final Set<UUID> riderUUIDs = ConcurrentHashMap.newKeySet();
     private volatile boolean berserk;
@@ -112,7 +113,7 @@ public final class ActiveMob implements Mob {
     public UUID parentUUID() { return parentUUID; }
     public void setParentUUID(UUID parentUUID) { this.parentUUID = parentUUID; }
 
-    public BossBarTracker bossBars() { return bossBars; }
+    public LunarBossBarTracker bossBars() { return bossBars; }
 
     public UUID mountUUID() { return mountUUID; }
     public void setMountUUID(UUID mountUUID) { this.mountUUID = mountUUID; }
@@ -217,7 +218,7 @@ public final class ActiveMob implements Mob {
     }
 
     @Override
-    public void trigger(vn.haohan.lunar.api.skill.SkillTrigger trigger) {
+    public void trigger(vn.haohan.lunar.api.system.combat.skill.SkillTrigger trigger) {
         // Trigger hook for public API
     }
 

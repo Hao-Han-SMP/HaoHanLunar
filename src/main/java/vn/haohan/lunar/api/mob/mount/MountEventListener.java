@@ -7,8 +7,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityDismountEvent;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Objects;
 
@@ -36,14 +36,14 @@ public final class MountEventListener implements Listener {
         Entity vehicle = event.getDismounted();
 
         if (dismounted instanceof LivingEntity livingRider) {
-            ActiveLunarMob riderMob = mobManager.get(livingRider.getUniqueId());
+            ActiveMob riderMob = mobManager.get(livingRider.getUniqueId());
             if (riderMob != null) {
                 riderMob.setMountUUID(null);
             }
         }
 
         if (vehicle instanceof LivingEntity livingVehicle) {
-            ActiveLunarMob mountMob = mobManager.get(livingVehicle.getUniqueId());
+            ActiveMob mountMob = mobManager.get(livingVehicle.getUniqueId());
             if (mountMob != null && dismounted instanceof LivingEntity livingRider) {
                 mountMob.riderUUIDs().remove(livingRider.getUniqueId());
             }

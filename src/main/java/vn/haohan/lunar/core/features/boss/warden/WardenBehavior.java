@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden;
+package vn.haohan.lunar.core.features.boss.warden;
 
 public enum WardenBehavior {
     ADVANCE,

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden;
+package vn.haohan.lunar.core.features.boss.warden;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ModeledEntity;
@@ -27,12 +27,12 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.inventory.ItemStack;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.ai.WardenAITask;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.ShieldBlockSkill;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.ui.WardenBGMManager;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenEntityManager;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenTrailCaptureSystem;
+import vn.haohan.lunar.core.features.boss.warden.ai.WardenAITask;
+import vn.haohan.lunar.core.features.boss.warden.skills.ShieldBlockSkill;
+import vn.haohan.lunar.core.features.boss.warden.ui.WardenBGMManager;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 
 import java.util.HashSet;

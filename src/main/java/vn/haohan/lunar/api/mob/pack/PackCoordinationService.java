@@ -4,12 +4,10 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -40,7 +38,7 @@ public final class PackCoordinationService {
      * @param mobManager   the mob registry
      * @return number of allies alerted
      */
-    public int broadcastDistressCall(ActiveLunarMob caller, LivingEntity attacker, double radius,
+    public int broadcastDistressCall(ActiveMob caller, LivingEntity attacker, double radius,
                                      double threatShare, LunarMobManager mobManager) {
         if (caller == null || attacker == null || mobManager == null || caller.entity() == null) {
             return 0;
@@ -56,10 +54,10 @@ public final class PackCoordinationService {
         if (callerThreat <= 0.0) {
             callerThreat = 100.0;
         }
-        double sharedThreat = callerThreat * Math.max(0.1, Math.min(1.0, threatShare));
+        double sharedThreat = callerThreat * Math.clamp(threatShare, 0.1, 1.0);
 
         int alertedCount = 0;
-        for (ActiveLunarMob candidate : mobManager.snapshot()) {
+        for (ActiveMob candidate : mobManager.snapshot()) {
             if (candidate == null || candidate.entityId().equals(caller.entityId())) {
                 continue;
             }
@@ -89,7 +87,7 @@ public final class PackCoordinationService {
      * @param neighbors other nearby active mobs
      * @return separation vector (zero if no close neighbors)
      */
-    public Vector computeSeparationVector(ActiveLunarMob subject, Collection<ActiveLunarMob> neighbors) {
+    public Vector computeSeparationVector(ActiveMob subject, Collection<ActiveMob> neighbors) {
         if (subject == null || subject.entity() == null || neighbors == null || neighbors.isEmpty()) {
             return new Vector(0, 0, 0);
         }
@@ -101,7 +99,7 @@ public final class PackCoordinationService {
         Vector force = new Vector(0, 0, 0);
         int neighborsCount = 0;
 
-        for (ActiveLunarMob neighbor : neighbors) {
+        for (ActiveMob neighbor : neighbors) {
             if (neighbor == null || neighbor.entityId().equals(subject.entityId())) continue;
             if (neighbor.entity() == null || !neighbor.entity().isValid() || neighbor.entity().isDead()) continue;
 

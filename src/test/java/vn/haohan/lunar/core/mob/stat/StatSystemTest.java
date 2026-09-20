@@ -1,5 +1,9 @@
 package vn.haohan.lunar.core.mob.stat;
 
+import vn.haohan.lunar.api.integration.bridge.placeholder.PlaceholderResolver;
+
+import vn.haohan.lunar.api.mob.stat.*;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
@@ -8,17 +12,16 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.combat.DamageContext;
-import vn.haohan.lunar.core.combat.DamagePipeline;
-import vn.haohan.lunar.core.combat.DamageResult;
+import vn.haohan.lunar.api.system.combat.DamageContext;
+import vn.haohan.lunar.api.system.combat.DamagePipeline;
+import vn.haohan.lunar.api.system.combat.DamageResult;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.integration.placeholder.LunarPlaceholderResolver;
-import vn.haohan.lunar.core.skill.CooldownRegistry;
-import vn.haohan.lunar.core.skill.SkillDefinition;
-import vn.haohan.lunar.core.skill.SkillTrigger;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
+import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -68,7 +71,7 @@ class StatSystemTest {
                         health[0] = (double) args[0];
                         yield null;
                     }
-                    case "getAttribute" -> (args.length > 0 && (Objects.equals(args[0], Attribute.MAX_HEALTH) || String.valueOf(args[0]).contains("MAX_HEALTH"))) ? maxHealthAttr : null;
+                    case "getAttribute" -> (args.length > 0 && (Objects.equals(args[0], Attribute.GENERIC_MAX_HEALTH) || String.valueOf(args[0]).contains("MAX_HEALTH"))) ? maxHealthAttr : null;
                     case "getLocation" -> new Location(mockWorld, 0, 64, 0);
                     case "getWorld" -> mockWorld;
                     case "isValid" -> true;
@@ -241,7 +244,7 @@ class StatSystemTest {
         mob.stats().setBase(StatType.LIFESTEAL, 0.15);
 
         String template = "Boss Info: DMG=<caster.stat.damage>, CRIT=<caster.stat.crit_chance>, STEAL=<caster.stat.lifesteal>";
-        String resolved = LunarPlaceholderResolver.resolve(template, mob, null, null);
+        String resolved = PlaceholderResolver.resolve(template, mob, null, null);
 
         assertEquals("Boss Info: DMG=150, CRIT=0.35, STEAL=0.15", resolved);
     }

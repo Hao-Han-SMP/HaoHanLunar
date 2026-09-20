@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.lunar.boss.warden;
 
+import vn.haohan.lunar.core.features.boss.warden.*;
+
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
@@ -7,9 +9,9 @@ import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.skill.SkillCastContext;
-import vn.haohan.lunar.api.skill.SkillDefinition;
-import vn.haohan.lunar.api.skill.SkillTrigger;
+import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
+import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

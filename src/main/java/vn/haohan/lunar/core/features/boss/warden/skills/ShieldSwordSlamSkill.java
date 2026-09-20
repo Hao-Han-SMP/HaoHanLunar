@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.skills;
+package vn.haohan.lunar.core.features.boss.warden.skills;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -29,16 +29,16 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenBehavior;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.WardenCombatHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenEntityManager;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenLocationUtil;
+import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenLocationUtil;
 import vn.haohan.lunar.api.system.util.MathUtil;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.BlockWaveRenderer;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAnimationController;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.visual.BlockWaveRenderer;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAnimationController;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 
 import java.util.Optional;
 import java.util.Random;

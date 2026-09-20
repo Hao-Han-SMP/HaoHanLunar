@@ -1,5 +1,6 @@
-package vn.haohan.lunar.core.subsystem.features;
+package vn.haohan.lunar.core.features;
 
+import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 import org.bukkit.Bukkit;
@@ -164,13 +165,13 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     public void applyLunarAttributes(LivingEntity entity) {
         if (entity.getScoreboardTags().contains("hh_lunar_physic")) return;
 
-        applyModifier(entity, Attribute.GRAVITY, -0.8343, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
-        applyModifier(entity, Attribute.SAFE_FALL_DISTANCE, 15.0, AttributeModifier.Operation.ADD_NUMBER);
-        applyModifier(entity, Attribute.FALL_DAMAGE_MULTIPLIER, -0.8, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
-        applyModifier(entity, Attribute.ATTACK_KNOCKBACK, 0.75, AttributeModifier.Operation.ADD_NUMBER);
+        applyModifier(entity, Attribute.GENERIC_GRAVITY, -0.8343, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+        applyModifier(entity, Attribute.GENERIC_SAFE_FALL_DISTANCE, 15.0, AttributeModifier.Operation.ADD_NUMBER);
+        applyModifier(entity, Attribute.GENERIC_FALL_DAMAGE_MULTIPLIER, -0.8, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+        applyModifier(entity, Attribute.GENERIC_ATTACK_KNOCKBACK, 0.75, AttributeModifier.Operation.ADD_NUMBER);
 
         if (entity instanceof Player player) {
-            applyModifier(player, Attribute.BLOCK_BREAK_SPEED, -0.2, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+            applyModifier(player, Attribute.PLAYER_BLOCK_BREAK_SPEED, -0.2, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
         }
 
         entity.addScoreboardTag("hh_lunar_physic");
@@ -179,13 +180,13 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     public void removeLunarAttributes(LivingEntity entity) {
         if (!entity.getScoreboardTags().contains("hh_lunar_physic")) return;
 
-        removeModifier(entity, Attribute.GRAVITY);
-        removeModifier(entity, Attribute.SAFE_FALL_DISTANCE);
-        removeModifier(entity, Attribute.FALL_DAMAGE_MULTIPLIER);
-        removeModifier(entity, Attribute.ATTACK_KNOCKBACK);
+        removeModifier(entity, Attribute.GENERIC_GRAVITY);
+        removeModifier(entity, Attribute.GENERIC_SAFE_FALL_DISTANCE);
+        removeModifier(entity, Attribute.GENERIC_FALL_DAMAGE_MULTIPLIER);
+        removeModifier(entity, Attribute.GENERIC_ATTACK_KNOCKBACK);
 
         if (entity instanceof Player player) {
-            removeModifier(player, Attribute.BLOCK_BREAK_SPEED);
+            removeModifier(player, Attribute.PLAYER_BLOCK_BREAK_SPEED);
             // Also reset mining modifiers just in case
             plugin.getMiningMechanic().resetMiningModifiers(player);
         }
@@ -223,7 +224,19 @@ public class GravityMechanic implements Listener, LunarSubSystem {
 
     private boolean isSpacesuitPart(ItemStack item, String expectedModel) {
         if (item == null || !item.hasItemMeta()) return false;
-        NamespacedKey model = item.getItemMeta().getItemModel();
-        return model != null && model.toString().equals(expectedModel);
+        try {
+            var itemService = HaoHanItemCore.get().getItemService();
+            if (itemService != null && itemService.isItem(item, expectedModel)) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        int expectedCmd = switch (expectedModel) {
+            case "haohan:spacesuit_helmet" -> 1001;
+            case "haohan:spacesuit_chestplate" -> 1002;
+            case "haohan:spacesuit_leggings" -> 1003;
+            case "haohan:spacesuit_boots" -> 1004;
+            default -> -1;
+        };
+        return expectedCmd != -1 && item.getItemMeta().hasCustomModelData() && item.getItemMeta().getCustomModelData() == expectedCmd;
     }
 }

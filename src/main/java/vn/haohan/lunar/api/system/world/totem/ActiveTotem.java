@@ -1,9 +1,9 @@
-package vn.haohan.lunar.api.world.totem;
+package vn.haohan.lunar.api.system.world.totem;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.skill.target.TargetRef;
+import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 
 import java.util.Objects;
 import java.util.UUID;

@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.spawner.random;
 
+import vn.haohan.lunar.api.system.spawner.random.*;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;

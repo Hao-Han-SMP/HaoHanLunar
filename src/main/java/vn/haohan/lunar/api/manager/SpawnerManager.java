@@ -1,17 +1,19 @@
 package vn.haohan.lunar.api.manager;
 
 /**
- * Public interface for managing world spawners.
+ * Manages fixed and dynamic mob spawners in active worlds.
  */
 public interface SpawnerManager {
 
     /**
-     * Ticks spawner instances.
+     * Executes periodic spawner updates, evaluating spawn timers, conditions, and mob caps.
      */
     void tick();
 
     /**
-     * @return Number of active registered spawners.
+     * Returns the number of actively registered spawners.
+     *
+     * @return active spawner count
      */
     int activeSpawnerCount();
 }

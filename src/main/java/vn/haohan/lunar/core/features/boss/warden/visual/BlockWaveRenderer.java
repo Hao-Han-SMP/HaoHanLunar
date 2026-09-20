@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.visual;
+package vn.haohan.lunar.core.features.boss.warden.visual;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,9 +14,9 @@ import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenEntityManager;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenLocationUtil;
 import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenLocationUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;

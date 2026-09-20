@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden;
+package vn.haohan.lunar.core.features.boss.warden;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.entity.data.IEntityData;
@@ -16,9 +16,9 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.ui.WardenBossBar;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAnimationController;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.ui.WardenBossBar;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAnimationController;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 
 public final class WardenSpawner {
     private WardenSpawner() {}
@@ -100,7 +100,7 @@ public final class WardenSpawner {
             golem = loc.getWorld().spawn(loc, IronGolem.class, entity -> {
                 entity.setCustomName("§c§lThe Lunar Warden");
                 entity.setCustomNameVisible(true);
-                var maxHealth = entity.getAttribute(Attribute.MAX_HEALTH);
+                var maxHealth = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                 if (maxHealth != null) {
                     maxHealth.setBaseValue(WardenConstants.BOSS_MAX_HEALTH);
                 }
@@ -108,20 +108,20 @@ public final class WardenSpawner {
                 entity.setAware(false);
                 entity.setInvisible(true);
 
-                if (entity.getAttribute(Attribute.MOVEMENT_SPEED) != null) {
-                    entity.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.0);
+                if (entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED) != null) {
+                    entity.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.0);
                 }
 
                 try {
-                    if (entity.getAttribute(Attribute.STEP_HEIGHT) != null) {
-                        entity.getAttribute(Attribute.STEP_HEIGHT).setBaseValue(3.0);
+                    if (entity.getAttribute(Attribute.GENERIC_STEP_HEIGHT) != null) {
+                        entity.getAttribute(Attribute.GENERIC_STEP_HEIGHT).setBaseValue(3.0);
                     }
                 } catch (Throwable ignored) {}
 
                 applyScaleAttribute(entity, 3.4);
             });
 
-            var maxHealthAttr = golem.getAttribute(Attribute.MAX_HEALTH);
+            var maxHealthAttr = golem.getAttribute(Attribute.GENERIC_MAX_HEALTH);
             if (maxHealthAttr != null) {
                 maxHealthAttr.setBaseValue(WardenConstants.BOSS_MAX_HEALTH);
             }
@@ -196,7 +196,7 @@ public final class WardenSpawner {
 
     private static void applyScaleAttribute(IronGolem golem, double scale) {
         try {
-            AttributeInstance instance = golem.getAttribute(Attribute.SCALE);
+            AttributeInstance instance = golem.getAttribute(Attribute.GENERIC_SCALE);
             if (instance != null) {
                 instance.setBaseValue(scale);
                 return;

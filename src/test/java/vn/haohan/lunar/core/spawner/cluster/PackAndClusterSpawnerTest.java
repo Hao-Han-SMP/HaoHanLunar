@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.spawner.cluster;
 
+import vn.haohan.lunar.api.spawner.cluster.*;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -8,9 +10,9 @@ import org.bukkit.entity.Mob;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.mob.MobAttributeDefinition;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
+import vn.haohan.lunar.api.mob.MobAttributeDefinition;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -80,7 +82,7 @@ class PackAndClusterSpawnerTest {
         UUID leaderId = result.leader().entityId();
         assertNull(result.leader().parentUUID());
 
-        for (ActiveLunarMob minion : result.minions()) {
+        for (vn.haohan.lunar.core.subsystem.mob.ActiveMob minion : result.minions()) {
             assertEquals("goblin_grunt", minion.definitionId().value());
             assertEquals(leaderId, minion.parentUUID(), "Minion must reference leader UUID as parent");
         }

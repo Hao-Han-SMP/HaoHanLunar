@@ -1,8 +1,8 @@
-package vn.haohan.lunar.api.spawner.random;
+package vn.haohan.lunar.api.system.spawner.random;
 
 import org.bukkit.World;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import vn.haohan.lunar.api.combat.skill.condition.Condition;
+import vn.haohan.lunar.api.system.combat.skill.condition.Condition;
 
 import java.util.Collections;
 import java.util.List;

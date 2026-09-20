@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.ui;
+package vn.haohan.lunar.core.features.boss.warden.ui;
 
 import org.bukkit.Bukkit;
 import org.bukkit.SoundCategory;
@@ -12,8 +12,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.LunarWardenMechanic;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
 
 import java.util.Map;
 import java.util.UUID;

@@ -2,8 +2,8 @@ package vn.haohan.lunar.api.system.combat.skill.targeter.impl;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
-import vn.haohan.lunar.api.integration.modelengine.BoneLocationResolver;
-import vn.haohan.lunar.api.integration.modelengine.DefaultBoneLocationResolver;
+import vn.haohan.lunar.api.integration.bridge.modelengine.BoneLocationResolver;
+import vn.haohan.lunar.api.integration.bridge.modelengine.DefaultBoneLocationResolver;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
 

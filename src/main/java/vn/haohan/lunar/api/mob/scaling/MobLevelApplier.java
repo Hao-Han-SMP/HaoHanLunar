@@ -37,14 +37,14 @@ public final class MobLevelApplier {
     }
 
     /**
-     * Applies level scaling attributes to the entity safely.
+     * Applies level scaling attributes to the entity.
      */
     public static void applyScaling(LivingEntity entity, LevelScalingDefinition scaling, int level) {
         if (entity == null || scaling == null) return;
         setLevel(entity, level);
 
         try {
-            AttributeInstance maxHealthAttr = entity.getAttribute(Attribute.MAX_HEALTH);
+            AttributeInstance maxHealthAttr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
             if (maxHealthAttr != null) {
                 double base = maxHealthAttr.getBaseValue();
                 double scaled = scaling.calculateHealth(base, level);
@@ -54,7 +54,7 @@ public final class MobLevelApplier {
         } catch (Throwable ignored) {}
 
         try {
-            AttributeInstance attackDmgAttr = entity.getAttribute(Attribute.ATTACK_DAMAGE);
+            AttributeInstance attackDmgAttr = entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
             if (attackDmgAttr != null) {
                 double base = attackDmgAttr.getBaseValue();
                 double scaled = scaling.calculateDamage(base, level);
@@ -63,7 +63,7 @@ public final class MobLevelApplier {
         } catch (Throwable ignored) {}
 
         try {
-            AttributeInstance armorAttr = entity.getAttribute(Attribute.ARMOR);
+            AttributeInstance armorAttr = entity.getAttribute(Attribute.GENERIC_ARMOR);
             if (armorAttr != null) {
                 double base = armorAttr.getBaseValue();
                 double scaled = scaling.calculateArmor(base, level);

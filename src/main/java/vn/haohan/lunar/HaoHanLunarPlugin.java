@@ -1,21 +1,5 @@
 package vn.haohan.lunar;
 
-import vn.haohan.lunar.core.system.data.PlayerLunarDataManager;
-import vn.haohan.lunar.core.system.item.LunarItems;
-import vn.haohan.lunar.core.survival.GravityMechanic;
-import vn.haohan.lunar.core.survival.MiningMechanic;
-import vn.haohan.lunar.core.survival.OxygenMechanic;
-import vn.haohan.lunar.core.survival.VisualMechanic;
-import vn.haohan.lunar.core.survival.BeaconShieldMechanic;
-import vn.haohan.lunar.core.survival.LunarSurfaceSpreadMechanic;
-import vn.haohan.lunar.core.survival.TelescopeMechanic;
-import vn.haohan.lunar.core.survival.boss.warden.LunarWardenMechanic;
-import vn.haohan.lunar.core.survival.boss.warden.WardenSpawner;
-import vn.haohan.lunar.core.survival.boss.warden.showcase.WardenShowcaseHandler;
-import vn.haohan.lunar.core.survival.boss.warden.visual.WardenTrailCaptureSystem;
-import vn.haohan.lunar.core.survival.LunarClaymoreMechanic;
-import vn.haohan.lunar.core.survival.weapon.claymore.SmoothSlashTask;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -25,13 +9,34 @@ import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import vn.haohan.lunar.core.system.data.PlayerDataManager;
+import vn.haohan.lunar.core.system.item.LunarItems;
+import vn.haohan.lunar.core.features.GravityMechanic;
+import vn.haohan.lunar.core.features.OxygenMechanic;
+import vn.haohan.lunar.core.features.MiningMechanic;
+import vn.haohan.lunar.core.features.VisualMechanic;
+import vn.haohan.lunar.core.features.beacon.BeaconShieldMechanic;
+import vn.haohan.lunar.core.features.LunarSurfaceSpreadMechanic;
+import vn.haohan.lunar.core.features.TelescopeMechanic;
+import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
+import vn.haohan.lunar.core.features.boss.warden.WardenSpawner;
+import vn.haohan.lunar.core.features.boss.warden.showcase.WardenShowcaseHandler;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
+import vn.haohan.lunar.core.features.LunarClaymoreMechanic;
+import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
+
 import java.util.List;
 
+/**
+ * Main Paper plugin entry point for HaoHanLunar.
+ * Coordinates plugin lifecycle, subsystem initialization, command registration,
+ * and the primary 1-tick repeating update loop.
+ */
 public final class HaoHanLunarPlugin extends JavaPlugin {
 
     private static HaoHanLunarPlugin instance;
 
-    private PlayerLunarDataManager lunarDataManager;
+    private PlayerDataManager lunarDataManager;
     private GravityMechanic gravityMechanic;
     private OxygenMechanic oxygenMechanic;
     private MiningMechanic miningMechanic;
@@ -42,6 +47,11 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private LunarWardenMechanic lunarWardenMechanic;
     private LunarClaymoreMechanic lunarClaymoreMechanic;
 
+    /**
+     * Returns the singleton plugin instance.
+     *
+     * @return active plugin instance
+     */
     public static HaoHanLunarPlugin getInstance() {
         return instance;
     }
@@ -52,7 +62,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         saveDefaultConfig();
 
         // Initialize managers
-        lunarDataManager = new PlayerLunarDataManager(this);
+        lunarDataManager = new PlayerDataManager(this);
 
         // Register custom items with HaoHanItemCore API
         try {
@@ -86,8 +96,8 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(telescopeMechanic, this);
         pm.registerEvents(lunarClaymoreMechanic, this);
         try {
-            vn.haohan.lunar.core.world.pin.PinManager.get().load(getDataFolder().toPath().resolve("regions.yml"));
-            pm.registerEvents(new vn.haohan.lunar.core.world.pin.PinBoundaryListener(), this);
+            vn.haohan.lunar.api.system.world.pin.PinManager.get().load(getDataFolder().toPath().resolve("regions.yml"));
+            pm.registerEvents(new vn.haohan.lunar.api.system.world.pin.PinBoundaryListener(), this);
         } catch (Throwable t) {
             getLogger().warning("Could not load regions.yml: " + t.getMessage());
         }
@@ -235,6 +245,11 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         }, 1L, 1L);
 
+        // Initialize Lunar SubSystems and commands
+        vn.haohan.lunar.core.subsystem.LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem());
+        vn.haohan.lunar.core.subsystem.LunarSubSystems.init(this);
+        vn.haohan.lunar.core.command.LunarCommands.init(this);
+
         getLogger().info("HaoHanLunar plugin successfully enabled and hooks registered!");
     }
 
@@ -275,13 +290,15 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         }
 
-                try {
-            vn.haohan.lunar.core.world.pin.PinManager.get().save(getDataFolder().toPath().resolve("regions.yml"));
+        try {
+            vn.haohan.lunar.api.system.world.pin.PinManager.get().save(getDataFolder().toPath().resolve("regions.yml"));
         } catch (Throwable ignored) {}
+
+        vn.haohan.lunar.core.subsystem.LunarSubSystems.disable(this);
         getLogger().info("HaoHanLunar plugin successfully disabled.");
     }
 
-    public PlayerLunarDataManager getLunarDataManager() {
+    public PlayerDataManager getLunarDataManager() {
         return lunarDataManager;
     }
 

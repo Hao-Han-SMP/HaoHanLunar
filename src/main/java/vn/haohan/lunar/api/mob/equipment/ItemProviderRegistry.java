@@ -1,7 +1,8 @@
 package vn.haohan.lunar.api.mob.equipment;
 
 import org.bukkit.inventory.ItemStack;
-import vn.haohan.lunar.core.integration.bridge.item.HaoHanItemBridge;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.item.ItemProvider;
 
 import java.util.Locale;
 import java.util.Map;
@@ -12,9 +13,9 @@ import java.util.function.Function;
 
 /**
  * Registry and resolver for item generation across custom mob equipment and drops.
- * Delegates safely to HaoHanItemBridge and allows additional prefix hooks.
+ * Delegates to HaoHanItemBridge and allows additional prefix hooks.
  */
-public final class ItemProviderRegistry implements vn.haohan.lunar.api.item.ItemProvider {
+public final class ItemProviderRegistry implements ItemProvider {
 
     private final Map<String, Function<String, ItemStack>> customResolvers = new ConcurrentHashMap<>();
 
@@ -31,7 +32,7 @@ public final class ItemProviderRegistry implements vn.haohan.lunar.api.item.Item
     }
 
     /**
-     * Resolves an item ID string into an ItemStack safely.
+     * Resolves an item ID string into an ItemStack.
      * Examples:
      * - "DIAMOND_SWORD" -> Bukkit Material / HaoHanItemBridge
      * - "haohan:dark_scythe" -> custom resolver or HaoHanItemBridge
@@ -61,7 +62,7 @@ public final class ItemProviderRegistry implements vn.haohan.lunar.api.item.Item
             }
         }
 
-        // Delegate to HaoHanItemBridge which handles test mock factories and material matching safely
+        // Delegate to HaoHanItemBridge which handles test mock factories and material matching
         return HaoHanItemBridge.get().createItemStack(trimmed, 1);
     }
 }

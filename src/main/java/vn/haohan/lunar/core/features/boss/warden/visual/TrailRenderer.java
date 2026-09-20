@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.visual;
+package vn.haohan.lunar.core.features.boss.warden.visual;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -16,9 +16,9 @@ import vn.haohan.lunar.api.system.util.MathUtil;
 import java.util.Optional;
 
 /**
- * High-fidelity 3D ruled-surface trail renderer for Lunar Warden.
+ * 3D ruled-surface trail renderer for Lunar Warden.
  * Resamples sword trajectory via Centripetal Catmull-Rom splines, aligns 4-vertex quadrilateral segments
- * with seamless miter compensation and dynamic crescent tapering purely via ModelEngine 3D bones.
+ * with miter compensation and dynamic crescent tapering purely via ModelEngine 3D bones.
  */
 public class TrailRenderer {
 
@@ -184,7 +184,7 @@ public class TrailRenderer {
             dirZ.cross(dirX, dirY);
             dirY.normalize();
 
-            // Length scaling: compensate outer arc curve to ensure seamless connection without triangular gaps
+            // Length scaling: compensate outer arc curve to prevent triangular gaps between segments
             float length = Math.max(chordLength, tipSweepDist) * 1.08f;
 
             // Dynamic aerodynamic crescent tapering:
@@ -202,9 +202,9 @@ public class TrailRenderer {
 
             SimpleManualAnimator anim = new SimpleManualAnimator();
             anim.getPosition().set(pos);
-            Object rotObj = anim.getRotation();
-            if (rotObj instanceof Quaternionf) {
-                ((Quaternionf) rotObj).set(rot);
+            Quaternionf rotObj = anim.getRotation();
+            if (rotObj != null) {
+                rotObj.set(rot);
             }
             anim.getScale().set(length, Math.max(0.15f, taperFactor), width);
             bone.setManualAnimator(anim);

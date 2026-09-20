@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.ui;
+package vn.haohan.lunar.core.features.boss.warden.ui;
 
 import net.kyori.adventure.bossbar.BossBar;
 import org.bukkit.Bukkit;

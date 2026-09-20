@@ -2,8 +2,6 @@ package vn.haohan.lunar.api.system.combat.skill.targeter;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.combat.skill.targeter.impl.*;
-import vn.haohan.lunar.api.skill.targeter.impl.*;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.targeter.impl.*;
 

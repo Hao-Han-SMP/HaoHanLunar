@@ -2,13 +2,12 @@ package vn.haohan.lunar.api.mob.signal;
 
 import org.bukkit.Location;
 import org.bukkit.World;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 
 /**
@@ -20,8 +19,8 @@ public final class MobSignalBus {
     public static final int MAX_CASCADE_DEPTH = 3;
 
     public record SignalDelivery(
-            ActiveLunarMob sender,
-            ActiveLunarMob recipient,
+            ActiveMob sender,
+            ActiveMob recipient,
             String signal,
             int cascadeDepth
     ) {}
@@ -41,7 +40,7 @@ public final class MobSignalBus {
      * @param cascadeDepth current cascade recursion level
      * @return true if successfully delivered without depth violation
      */
-    public boolean sendSignal(ActiveLunarMob sender, ActiveLunarMob recipient, String signal, int cascadeDepth) {
+    public boolean sendSignal(ActiveMob sender, ActiveMob recipient, String signal, int cascadeDepth) {
         if (recipient == null || signal == null || signal.isBlank()) return false;
         if (cascadeDepth > MAX_CASCADE_DEPTH) {
             // Drop signal and halt cascade to protect server tick rate
@@ -70,7 +69,7 @@ public final class MobSignalBus {
      * @param cascadeDepth current cascade recursion level
      * @return number of mobs that received the signal
      */
-    public int broadcastSignal(ActiveLunarMob sender, String signal, double radius, String targetFilter,
+    public int broadcastSignal(ActiveMob sender, String signal, double radius, String targetFilter,
                                LunarMobManager mobManager, int cascadeDepth) {
         if (sender == null || sender.entity() == null || mobManager == null) return 0;
         if (cascadeDepth > MAX_CASCADE_DEPTH) return 0;
@@ -83,7 +82,7 @@ public final class MobSignalBus {
         String filter = targetFilter != null ? targetFilter.trim().toUpperCase(Locale.ROOT) : "ALL";
         int deliveredCount = 0;
 
-        for (ActiveLunarMob candidate : mobManager.snapshot()) {
+        for (ActiveMob candidate : mobManager.snapshot()) {
             if (candidate == null || candidate.entity() == null || !candidate.entity().isValid() || candidate.entity().isDead()) {
                 continue;
             }
@@ -107,7 +106,7 @@ public final class MobSignalBus {
         return deliveredCount;
     }
 
-    private boolean matchesFilter(ActiveLunarMob sender, ActiveLunarMob candidate, String filter) {
+    private boolean matchesFilter(ActiveMob sender, ActiveMob candidate, String filter) {
         return switch (filter) {
             case "ALL" -> true;
             case "OTHERS" -> !candidate.entityId().equals(sender.entityId());

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.weapon.claymore;
+package vn.haohan.lunar.core.features.weapon.claymore;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.BlueprintAnimation;
@@ -21,7 +21,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenEntityManager;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,20 +35,16 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
- * Ultra-smooth continuous combo slash visual task using ModelEngine.
+ * Continuous combo slash visual task using ModelEngine.
  * <p>
- * Key features & optimizations:
+ * Key features:
  * 1. Model & Entity Reuse: Reuses the existing ArmorStand and ActiveModel throughout combos.
- *    Does NOT destroy/recreate entities during combo transitions, eliminating all micro-stutters.
- * 2. Seamless Animation Blending (Cross-Fade): Blends animations across swings with lerpIn=0.10s,
- *    creating fluid weapon flow from slashes to thrusts and chops.
- * 3. Zero Re-equip Jitter: Keeps weapon hand hidden for the entire combo duration.
- *    Only restores original sword when player stops attacking, completely avoiding the Minecraft
- *    1st-person "drop and raise" item-equip bouncing animation.
- * 4. Input Buffering & Early Combo Cancel Window: Opens combo chaining window at tick 5 (0.25s),
- *    and buffers clicks made during swing anticipation so attacks automatically chain on rhythm.
- * 5. Strict Non-Duplicate Guarantee: Guarantees that neither the SlashType nor the underlying
- *    ModelEngine animation repeats back-to-back.
+ *    Does not destroy or recreate entities during transitions.
+ * 2. Animation Blending (Cross-Fade): Blends animations across swings with lerpIn=0.10s.
+ * 3. Zero Re-equip Jitter: Keeps weapon hand hidden for the combo duration.
+ *    Restores original sword only when attack sequence finishes.
+ * 4. Input Buffering: Opens combo chaining window at tick 5 (0.25s) and buffers inputs during swing windup.
+ * 5. Strict Non-Duplicate Guarantee: Ensures neither the SlashType nor the animation repeats back-to-back.
  * 6. Defensive Guard (Block_Sword): Supports dedicated defensive guard stance on right-click.
  */
 public class SmoothSlashTask extends BukkitRunnable {
@@ -361,7 +357,7 @@ public class SmoothSlashTask extends BukkitRunnable {
     }
 
     /**
-     * Seamlessly transitions the active model to the next attack in the combo.
+     * Transitions the active model to the next attack in the combo using cross-fade blending.
      * Uses ModelEngine's animation blending (lerpIn=0.10s) without destroying the entity.
      * Guarantees that the visual animation is strictly different from the previous one.
      */
@@ -810,7 +806,7 @@ public class SmoothSlashTask extends BukkitRunnable {
 
     /**
      * Primary entry point for playing combo slashes or defensive guard:
-     * Seamlessly chains into the active task if already active, or starts a new task.
+     * Chains into the active task if already running, or starts a new task.
      */
     public static boolean play(
             JavaPlugin plugin,

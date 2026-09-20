@@ -1,8 +1,10 @@
 package vn.haohan.lunar.core.mob;
 
+import vn.haohan.lunar.api.mob.*;
+
 import org.bukkit.entity.EntityType;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.system.config.LunarYamlLoader;
+import vn.haohan.lunar.api.system.config.LunarYamlLoader;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features;
+package vn.haohan.lunar.core.features;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
@@ -81,7 +81,7 @@ public class MiningMechanic implements Listener, LunarSubSystem {
     }
 
     private void updateMiningAttributes(Player player, boolean lookingAtOre) {
-        var instance = player.getAttribute(Attribute.BLOCK_BREAK_SPEED);
+        var instance = player.getAttribute(Attribute.PLAYER_BLOCK_BREAK_SPEED);
         if (instance == null)
             return;
 
@@ -116,7 +116,7 @@ public class MiningMechanic implements Listener, LunarSubSystem {
     }
 
     public void resetMiningModifiers(Player player) {
-        var instance = player.getAttribute(Attribute.BLOCK_BREAK_SPEED);
+        var instance = player.getAttribute(Attribute.PLAYER_BLOCK_BREAK_SPEED);
         if (instance != null) {
             instance.removeModifier(slowMiningKey);
             instance.removeModifier(noMiningKey);

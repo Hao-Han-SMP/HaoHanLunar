@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden;
+package vn.haohan.lunar.core.features.boss.warden;
 
 import org.bukkit.entity.EntityType;
 import vn.haohan.lunar.api.system.config.ConfigLoadException;

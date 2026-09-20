@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.presentation.display.dialogue;
+package vn.haohan.lunar.api.presentation.display.dialogue;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -7,7 +7,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.TextDisplay;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +35,7 @@ public final class HaoHanDisplayUIBridge {
     ) {}
 
     public interface DisplayUIProvider {
-        boolean showSpeechBubble(ActiveLunarMob mob, BubbleOptions options);
+        boolean showSpeechBubble(ActiveMob mob, BubbleOptions options);
         void cancelSpeechBubble(UUID mobId);
     }
 
@@ -56,7 +56,7 @@ public final class HaoHanDisplayUIBridge {
     /**
      * Spawns a speech bubble above the mob, respecting provider delegation and fallback.
      */
-    public static ActiveBubbleSession displayBubble(ActiveLunarMob mob, BubbleOptions options) {
+    public static ActiveBubbleSession displayBubble(ActiveMob mob, BubbleOptions options) {
         if (mob == null || options == null) return null;
         UUID mobId = mob.entityId();
 

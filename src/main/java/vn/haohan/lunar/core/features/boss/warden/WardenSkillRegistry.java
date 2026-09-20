@@ -1,6 +1,6 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden;
+package vn.haohan.lunar.core.features.boss.warden;
 
-import vn.haohan.lunar.api.skill.SkillCastContext;
+import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

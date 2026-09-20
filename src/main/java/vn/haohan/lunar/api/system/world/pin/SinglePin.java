@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.world.pin;
+package vn.haohan.lunar.api.system.world.pin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

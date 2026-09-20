@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.util;
+package vn.haohan.lunar.core.features.boss.warden.util;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ModeledEntity;
@@ -8,7 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.util.Vector;
 import org.joml.Vector3f;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
 
 /**
  * 3D blade geometry calculator from hilt base to blade tip.

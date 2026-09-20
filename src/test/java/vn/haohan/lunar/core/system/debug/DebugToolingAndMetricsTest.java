@@ -3,13 +3,13 @@ package vn.haohan.lunar.core.system.debug;
 import org.bukkit.command.CommandSender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import vn.haohan.lunar.core.system.command.LunarMobCommand;
-import vn.haohan.lunar.core.system.config.ConfigValidationReport;
+import vn.haohan.lunar.api.system.command.LunarMobCommand;
+import vn.haohan.lunar.api.system.config.ConfigValidationReport;
 import vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics;
 import vn.haohan.lunar.core.system.debug.trace.SkillTracer;
 import vn.haohan.lunar.core.system.debug.validator.ConfigValidationService;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 
 import java.io.IOException;
 import java.lang.reflect.Proxy;
@@ -53,9 +53,9 @@ class DebugToolingAndMetricsTest {
 
         String summary = result.formatSummary("mobs");
         assertTrue(summary.contains("=== Lunar Validation Report: MOBS ==="));
-        assertTrue(summary.contains("Total files scanned: §f3"));
-        assertTrue(summary.contains("Valid files: §f1"));
-        assertTrue(summary.contains("Errors: §f2"));
+        assertTrue(summary.contains("Total files scanned: \u00a7f3"));
+        assertTrue(summary.contains("Valid files: \u00a7f1"));
+        assertTrue(summary.contains("Errors: \u00a7f2"));
     }
 
     @Test
@@ -117,7 +117,7 @@ class DebugToolingAndMetricsTest {
 
         String report = metrics.formatReport("SkillScheduler");
         assertTrue(report.contains("SkillScheduler"));
-        assertTrue(report.contains("P95: §e95.00ms"));
+        assertTrue(report.contains("P95: \u00a7e95.00ms"));
     }
 
     @Test

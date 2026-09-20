@@ -6,7 +6,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Objects;
 
@@ -15,7 +15,7 @@ import java.util.Objects;
  */
 public final class DynamicScalingService {
 
-    public int countValidPlayers(ActiveLunarMob mob, double radius) {
+    public int countValidPlayers(ActiveMob mob, double radius) {
         if (mob == null || mob.entity() == null || mob.entity().isDead()) {
             return 0;
         }
@@ -45,7 +45,7 @@ public final class DynamicScalingService {
         return gm != GameMode.CREATIVE && gm != GameMode.SPECTATOR;
     }
 
-    public DynamicScalingResult computeScaling(ActiveLunarMob mob, int rawPlayerCount) {
+    public DynamicScalingResult computeScaling(ActiveMob mob, int rawPlayerCount) {
         if (mob == null) {
             return DynamicScalingResult.UNCHANGED;
         }
@@ -66,7 +66,7 @@ public final class DynamicScalingService {
         return new DynamicScalingResult(rawPlayerCount, effectivePlayers, healthMultiplier, damageMultiplier, cooldownReduction);
     }
 
-    public DynamicScalingResult applyScaling(ActiveLunarMob mob, int playerCount) {
+    public DynamicScalingResult applyScaling(ActiveMob mob, int playerCount) {
         Objects.requireNonNull(mob, "Mob must not be null");
         LivingEntity entity = mob.entity();
         if (entity == null || entity.isDead()) {
@@ -83,7 +83,7 @@ public final class DynamicScalingService {
         if (mob.baseDamage() <= 0) {
             double baseDmg = 5.0;
             try {
-                AttributeInstance dmgAttr = entity.getAttribute(Attribute.ATTACK_DAMAGE);
+                AttributeInstance dmgAttr = entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
                 if (dmgAttr != null) {
                     baseDmg = dmgAttr.getBaseValue();
                 }
@@ -100,7 +100,7 @@ public final class DynamicScalingService {
         double newMaxHealth = Math.max(1.0, mob.baseMaxHealth() * result.healthMultiplier());
 
         try {
-            AttributeInstance maxHealthAttr = entity.getAttribute(Attribute.MAX_HEALTH);
+            AttributeInstance maxHealthAttr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
             if (maxHealthAttr != null) {
                 maxHealthAttr.setBaseValue(newMaxHealth);
             }
@@ -112,7 +112,7 @@ public final class DynamicScalingService {
         }
 
         try {
-            AttributeInstance dmgAttr = entity.getAttribute(Attribute.ATTACK_DAMAGE);
+            AttributeInstance dmgAttr = entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
             if (dmgAttr != null) {
                 dmgAttr.setBaseValue(mob.baseDamage() * result.damageMultiplier());
             }
@@ -132,7 +132,7 @@ public final class DynamicScalingService {
         return result;
     }
 
-    public DynamicScalingResult updateMobScaling(ActiveLunarMob mob) {
+    public DynamicScalingResult updateMobScaling(ActiveMob mob) {
         if (mob == null || mob.definition().dynamicScaling().isEmpty() || !mob.definition().dynamicScaling().get().enabled()) {
             return DynamicScalingResult.UNCHANGED;
         }

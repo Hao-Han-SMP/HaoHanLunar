@@ -7,81 +7,107 @@ import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 import java.util.UUID;
 
 /**
- * Public interface representing an actively managed custom Lunar mob in the world.
+ * Represents an active custom mob instance in the world.
  */
 public interface Mob {
 
     /**
-     * @return The Minecraft Entity UUID.
+     * Returns the Minecraft entity unique identifier.
+     *
+     * @return the entity UUID
      */
     UUID entityId();
 
     /**
-     * Standard Bukkit UniqueId alias.
+     * Alias for {@link #entityId()} matching Bukkit conventions.
+     *
+     * @return the entity UUID
      */
     default UUID getUniqueId() {
         return entityId();
     }
 
     /**
-     * @return The underlying Bukkit LivingEntity instance.
+     * Returns the underlying Bukkit living entity instance.
+     *
+     * @return the living entity
      */
     LivingEntity entity();
 
     /**
-     * Standard Bukkit LivingEntity alias.
+     * Alias for {@link #entity()} matching Bukkit conventions.
+     *
+     * @return the living entity
      */
     default LivingEntity getEntity() {
         return entity();
     }
 
     /**
-     * @return The configured mob type identifier (e.g. "void_crawler").
+     * Returns the mob type identifier (e.g. {@code "void_crawler"}).
+     *
+     * @return the mob type ID
      */
     String mobId();
 
     /**
-     * @return The mob's current level.
+     * Returns the mob's current combat level.
+     *
+     * @return the current level
      */
     int level();
 
     /**
-     * Sets the mob's level and reapplies dynamic attribute scaling.
+     * Sets the mob's level and reapplies attribute scaling formulas.
+     *
+     * @param level the new level to assign
      */
     void setLevel(int level);
 
     /**
-     * @return Current behavioral stance (e.g. "default", "enraged").
+     * Returns the current behavioral stance identifier (e.g. {@code "default"}, {@code "enraged"}).
+     *
+     * @return the current stance string
      */
     String stance();
 
     /**
-     * Updates the behavioral stance.
+     * Updates the mob's behavioral stance.
+     *
+     * @param stance the new stance identifier
      */
     void setStance(String stance);
 
     /**
-     * @return The threat table tracking player hostility.
+     * Returns the threat table tracking entity hostility and targeting scores.
+     *
+     * @return the threat table
      */
     ThreatTable threatTable();
 
     /**
-     * @return True if the entity is valid, alive, and in a loaded world chunk.
+     * Checks whether the underlying entity is non-null, valid, alive, and within a loaded chunk.
+     *
+     * @return true if the mob is currently active and alive
      */
     boolean isValid();
 
     /**
-     * Triggers skills configured for the given trigger event.
+     * Triggers all skills configured for the specified combat or lifecycle event.
+     *
+     * @param trigger the trigger event
      */
     void trigger(SkillTrigger trigger);
 
     /**
-     * Manually triggers an execution of the given skill chain by ID.
+     * Executes the skill identified by name immediately on this mob.
+     *
+     * @param skillName the identifier of the skill to cast
      */
     void castSkill(String skillName);
 
     /**
-     * Safely despawns and cleans up this mob instance.
+     * Despawns the mob, removing the entity from the world and clearing its runtime state.
      */
     void despawn();
 }

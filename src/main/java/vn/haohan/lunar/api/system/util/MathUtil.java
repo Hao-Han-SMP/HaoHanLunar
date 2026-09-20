@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.util;
+package vn.haohan.lunar.api.system.util;
 
 import org.bukkit.Location;
 import org.bukkit.util.Vector;

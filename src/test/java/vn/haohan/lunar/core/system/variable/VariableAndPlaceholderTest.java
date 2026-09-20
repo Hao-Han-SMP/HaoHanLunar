@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.system.variable;
 
+import vn.haohan.lunar.api.integration.bridge.placeholder.PlaceholderResolver;
+
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -14,12 +16,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.integration.placeholder.LunarPlaceholderResolver;
-import vn.haohan.lunar.core.skill.SkillCastContext;
-import vn.haohan.lunar.core.skill.SkillDefinition;
-import vn.haohan.lunar.core.skill.SkillTrigger;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
+import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 
 import java.lang.reflect.Proxy;
 import java.util.Collections;
@@ -182,7 +183,7 @@ class VariableAndPlaceholderTest {
                 "Vars: Global=<global.var.blood_moon>, Caster=<caster.var.rage>, Target=<target.var.bounty>, Cast=<cast.var.combo>. " +
                 "Math: <skill.calc.10 * 5 + 2>";
 
-        String result = LunarPlaceholderResolver.resolve(template, context, targetPlayer, variableManager);
+        String result = PlaceholderResolver.resolve(template, context, targetPlayer, variableManager);
 
         assertTrue(result.contains("Boss Lunar Boss (ID: lunar_boss) stance=enraged HP=500/500"));
         assertTrue(result.contains("Target HeroPlayer distance=10.0"));
@@ -196,7 +197,7 @@ class VariableAndPlaceholderTest {
         variableManager.getGlobal().set("b", "<global.var.a>");
 
         String template = "Loop: <global.var.a>";
-        String result = LunarPlaceholderResolver.resolve(template, (ActiveLunarMob) null, null, variableManager);
+        String result = PlaceholderResolver.resolve(template, (ActiveLunarMob) null, null, variableManager);
         assertFalse(result.isEmpty());
     }
 

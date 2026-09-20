@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.mob;
 
+import vn.haohan.lunar.api.mob.*;
+
 import org.bukkit.entity.EntityType;
 import org.junit.jupiter.api.Test;
 

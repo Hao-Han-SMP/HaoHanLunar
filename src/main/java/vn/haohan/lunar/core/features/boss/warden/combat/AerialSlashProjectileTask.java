@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.combat;
+package vn.haohan.lunar.core.features.boss.warden.combat;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -27,8 +27,8 @@ import org.joml.Matrix3f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import vn.haohan.itemcore.api.HaoHanItemCore;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.util.WardenEntityManager;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 import vn.haohan.lunar.api.system.util.MathUtil;
 
 import java.util.HashSet;

@@ -1,8 +1,8 @@
-package vn.haohan.lunar.core.mob;
+package vn.haohan.lunar.api.mob;
 
 import org.bukkit.entity.EntityType;
-import vn.haohan.lunar.core.mob.equipment.MobEquipmentDefinition;
-import vn.haohan.lunar.core.mob.scaling.DynamicScalingDefinition;
+import vn.haohan.lunar.api.mob.equipment.MobEquipmentDefinition;
+import vn.haohan.lunar.api.mob.scaling.DynamicScalingDefinition;
 
 import java.util.List;
 import java.util.Map;

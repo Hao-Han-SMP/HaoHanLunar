@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features;
+package vn.haohan.lunar.core.features;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
@@ -29,6 +29,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
+/**
+ * Manages Lunar dimension visual effects, including biome-specific ambient particles
+ * and integration with SkyboxEngine for dynamic atmospheric shaders.
+ */
 public class VisualMechanic implements Listener, LunarSubSystem {
 
     private static final String DEFAULT_LUNAR_WORLD_KEY = "haohan:lunar";
@@ -118,7 +122,7 @@ public class VisualMechanic implements Listener, LunarSubSystem {
             }
         }
 
-        // Periodically verify and update skyboxes to seamlessly handle biome transitions (every 20 ticks = 1 second)
+        // Verify and update player skyboxes on biome transitions (every 20 ticks)
         skyboxCheckCounter++;
         if (skyboxCheckCounter >= 20) {
             skyboxCheckCounter = 0;
@@ -219,7 +223,7 @@ public class VisualMechanic implements Listener, LunarSubSystem {
 
         switch (biome) {
             case "haohan:lunar_terrae":
-                player.spawnParticle(Particle.FIREFLY, loc, 4, 10, 3, 10, 0.01);
+                player.spawnParticle(Particle.DUST, loc, 4, 10, 3, 10, 0.01);
                 break;
             case "haohan:lunar_maria":
                 var blackDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 1.5f);

@@ -19,8 +19,8 @@ import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.EntityMountEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Objects;
 
@@ -35,13 +35,13 @@ public final class MobOptionsListener implements Listener {
         this.mobManager = Objects.requireNonNull(mobManager, "LunarMobManager must not be null");
     }
 
-    private ActiveLunarMob getMob(Entity entity) {
+    private ActiveMob getMob(Entity entity) {
         if (entity == null) return null;
         return mobManager.get(entity.getUniqueId());
     }
 
     private MobOptions getOptions(Entity entity) {
-        ActiveLunarMob mob = getMob(entity);
+        ActiveMob mob = getMob(entity);
         if (mob == null) return null;
         return mob.options();
     }

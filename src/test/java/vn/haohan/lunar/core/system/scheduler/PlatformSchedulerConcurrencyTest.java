@@ -5,12 +5,12 @@ import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.combat.threat.ThreatTable;
+import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
 
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -121,7 +121,7 @@ class PlatformSchedulerConcurrencyTest {
 
                         mobManager.register(mob);
                         mobManager.get(mobId);
-                        Collection<ActiveLunarMob> snapshot = mobManager.snapshot();
+                        Collection<vn.haohan.lunar.core.subsystem.mob.ActiveMob> snapshot = mobManager.snapshot();
                         assertNotNull(snapshot);
                         if (random.nextBoolean()) {
                             mobManager.unregister(mobId);

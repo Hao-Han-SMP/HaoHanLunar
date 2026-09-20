@@ -1,5 +1,6 @@
 package vn.haohan.lunar.api.system.combat;
 
+import org.bukkit.attribute.Attribute;
 import vn.haohan.lunar.api.manager.CombatManager;
 import vn.haohan.lunar.api.mob.Mob;
 
@@ -119,7 +120,7 @@ public final class DamagePipeline implements CombatManager {
                         double current = entity.getHealth();
                         double max = Double.MAX_VALUE;
                         try {
-                            var attr = entity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH);
+                            var attr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                             if (attr != null) {
                                 max = attr.getValue();
                             }

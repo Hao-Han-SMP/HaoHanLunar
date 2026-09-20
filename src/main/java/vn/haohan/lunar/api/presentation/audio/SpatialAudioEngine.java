@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.presentation.audio;
+package vn.haohan.lunar.api.presentation.audio;
 
 import org.bukkit.Location;
 import org.bukkit.SoundCategory;

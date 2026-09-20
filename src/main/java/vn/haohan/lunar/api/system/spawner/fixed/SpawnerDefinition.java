@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.spawner.fixed;
+package vn.haohan.lunar.api.system.spawner.fixed;
 
 import org.bukkit.Location;
 

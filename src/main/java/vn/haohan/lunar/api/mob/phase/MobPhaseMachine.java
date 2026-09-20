@@ -1,7 +1,7 @@
 package vn.haohan.lunar.api.mob.phase;
 
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
-import vn.haohan.lunar.core.skill.CooldownRegistry;
+import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Comparator;
 import java.util.List;
@@ -37,7 +37,7 @@ public final class MobPhaseMachine {
     /**
      * Legacy update method based on health ratios.
      */
-    public PhaseTransitionResult update(ActiveLunarMob mob, double health, double maxHealth, long tick) {
+    public PhaseTransitionResult update(ActiveMob mob, double health, double maxHealth, long tick) {
         return update(PhaseContext.ofHealth(mob, health, maxHealth, tick));
     }
 
@@ -46,7 +46,7 @@ public final class MobPhaseMachine {
      */
     public PhaseTransitionResult update(PhaseContext context) {
         Objects.requireNonNull(context, "PhaseContext must not be null");
-        ActiveLunarMob mob = context.mob();
+        ActiveMob mob = context.mob();
         double health = context.health();
         double maxHealth = context.maxHealth();
 
@@ -124,7 +124,7 @@ public final class MobPhaseMachine {
         return count;
     }
 
-    public record PhaseSkill(ActiveLunarMob mob, String skillId, boolean entering) { }
+    public record PhaseSkill(ActiveMob mob, String skillId, boolean entering) { }
 
     public record PhaseTransitionResult(boolean changed, MobPhaseState previous,
                                         MobPhaseState current, String error) {

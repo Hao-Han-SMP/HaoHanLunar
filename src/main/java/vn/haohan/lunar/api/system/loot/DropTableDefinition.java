@@ -1,12 +1,12 @@
-package vn.haohan.lunar.api.loot;
+package vn.haohan.lunar.api.system.loot;
 
 import org.bukkit.inventory.ItemStack;
-import vn.haohan.lunar.api.combat.skill.CooldownRegistry;
-import vn.haohan.lunar.api.combat.skill.condition.ConditionContext;
-import vn.haohan.lunar.api.integration.bridge.item.HaoHanItemBridge;
-import vn.haohan.lunar.api.combat.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.api.loot.luck.LuckModifier;
-import vn.haohan.lunar.api.loot.pity.PityManager;
+import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
+import vn.haohan.lunar.api.system.combat.skill.condition.ConditionContext;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
+import vn.haohan.lunar.api.system.loot.luck.LuckModifier;
+import vn.haohan.lunar.api.system.loot.pity.PityManager;
 
 import java.util.ArrayList;
 import java.util.List;

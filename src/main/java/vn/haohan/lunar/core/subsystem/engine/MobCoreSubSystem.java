@@ -2,8 +2,9 @@ package vn.haohan.lunar.core.subsystem.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.LunarAPI;
+import vn.haohan.lunar.api.manager.MobManager;
 import vn.haohan.lunar.api.system.combat.DamagePipeline;
-import vn.haohan.lunar.api.integration.bridge.item.HaoHanItemBridge;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.mob.equipment.ItemProviderRegistry;
@@ -11,23 +12,23 @@ import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
-import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
 import vn.haohan.lunar.api.system.config.ConfigValidationReport;
+import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
 import vn.haohan.lunar.core.command.LunarCommands;
 import vn.haohan.lunar.core.command.MobCommand;
 import vn.haohan.lunar.core.command.commands.LunarMobSubsystemCommand;
-import vn.haohan.lunar.core.subsystem.mob.MobManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 
 import java.util.Collections;
 
 /**
- * SubSystem responsible for initializing the core mob runtime, skill engine, combat pipeline,
- * and binding them to the public {@link LunarAPI} facade.
+ * Subsystem initializing the mob runtime, skill engine, and combat pipeline,
+ * then binding them to the public {@link LunarAPI} service locator.
  */
 public final class MobCoreSubSystem implements LunarSubSystem {
 
-    private MobManager mobManager;
+    private LunarMobManager mobManager;
     private MobDefinitionRegistry mobRegistry;
     private SkillRegistry skillRegistry;
     private DamagePipeline damagePipeline;
@@ -51,7 +52,7 @@ public final class MobCoreSubSystem implements LunarSubSystem {
 
     @Override
     public void init(HaoHanLunarPlugin plugin) {
-        mobManager = new MobManager();
+        mobManager = new LunarMobManager();
         mobRegistry = new MobDefinitionRegistry();
         skillRegistry = new SkillRegistry();
         damagePipeline = new DamagePipeline();
@@ -84,7 +85,31 @@ public final class MobCoreSubSystem implements LunarSubSystem {
                 () -> new ConfigValidationReport(Collections.emptyList()),
                 (mob, sig) -> {}
         );
-        LunarCommands.register(new LunarMobSubsystemCommand(mobCommand));
+LunarCommands.register(new LunarMobSubsystemCommand(mobCommand));
+
+        // Register event listeners
+        var pm = plugin.getServer().getPluginManager();
+        pm.registerEvents(mobManager, plugin);
+        pm.registerEvents(fixedSpawnerManager, plugin);
+        pm.registerEvents(dropManager, plugin);
+    }
+
+    private long currentTick = 0L;
+
+    @Override
+    public boolean isTickable() {
+        return true;
+    }
+
+    @Override
+    public void tick() {
+        currentTick++;
+        if (fixedSpawnerManager != null) {
+            fixedSpawnerManager.tickAll(currentTick);
+        }
+        if (mobManager != null && currentTick % 20L == 0L) {
+            mobManager.cleanupInvalidEntities();
+        }
     }
 
     @Override
@@ -95,7 +120,7 @@ public final class MobCoreSubSystem implements LunarSubSystem {
         }
     }
 
-    public MobManager getMobManager() {
+    public LunarMobManager getMobManager() {
         return mobManager;
     }
 

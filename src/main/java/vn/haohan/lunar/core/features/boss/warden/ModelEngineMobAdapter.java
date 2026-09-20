@@ -1,10 +1,10 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden;
+package vn.haohan.lunar.core.features.boss.warden;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.core.subsystem.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +28,7 @@ public final class ModelEngineMobAdapter {
         this.errorLogger = Objects.requireNonNull(errorLogger, "Error logger must not be null");
     }
 
-    public boolean attach(ActiveLunarMob activeMob, String modelId) {
+    public boolean attach(ActiveMob activeMob, String modelId) {
         Objects.requireNonNull(activeMob, "Active mob must not be null");
         if (modelId == null || modelId.isBlank()) {
             errorLogger.accept("Cannot attach ModelEngine model: model ID is blank");
@@ -47,7 +47,7 @@ public final class ModelEngineMobAdapter {
         }
     }
 
-    public void destroy(ActiveLunarMob activeMob) {
+    public void destroy(ActiveMob activeMob) {
         if (activeMob != null) destroy(activeMob.entity());
     }
 

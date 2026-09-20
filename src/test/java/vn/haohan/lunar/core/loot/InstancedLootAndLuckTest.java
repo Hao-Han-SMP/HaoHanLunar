@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.loot;
 
+import vn.haohan.lunar.api.system.loot.*;
+
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -10,9 +12,9 @@ import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.integration.bridge.item.HaoHanItemBridge;
-import vn.haohan.lunar.core.loot.instanced.InstancedDropTracker;
-import vn.haohan.lunar.core.loot.luck.LuckModifier;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.loot.instanced.InstancedDropTracker;
+import vn.haohan.lunar.api.system.loot.luck.LuckModifier;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

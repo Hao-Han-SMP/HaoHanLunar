@@ -1,4 +1,6 @@
-package vn.haohan.lunar.core.mob.ai.antistuck;
+package vn.haohan.lunar.api.mob.ai.antistuck;
+
+import vn.haohan.lunar.api.mob.ai.antistuck.*;
 
 import org.bukkit.Location;
 import org.bukkit.World;

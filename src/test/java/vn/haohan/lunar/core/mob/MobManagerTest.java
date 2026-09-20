@@ -1,7 +1,9 @@
 package vn.haohan.lunar.core.mob;
 
-import vn.haohan.lunar.core.subsystem.mob.ActiveLunarMob;
-import vn.haohan.lunar.core.subsystem.mob.LunarMobIdentity;
+import vn.haohan.lunar.api.mob.*;
+
+import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
 
 import org.bukkit.entity.EntityType;

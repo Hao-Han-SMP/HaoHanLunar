@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.ai;
+package vn.haohan.lunar.core.features.boss.warden.ai;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -6,7 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,7 +36,7 @@ public final class WardenTargeting {
 
         List<Player> lowHealthPlayers = new ArrayList<>();
         for (Player p : nearbyPlayers) {
-            double maxHp = p.getAttribute(Attribute.MAX_HEALTH) != null ? p.getAttribute(Attribute.MAX_HEALTH).getValue() : 20.0;
+            double maxHp = p.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null ? p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() : 20.0;
             double hp = p.getHealth();
             double hpRatio = hp / maxHp;
 

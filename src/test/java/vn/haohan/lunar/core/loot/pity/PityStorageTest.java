@@ -1,10 +1,12 @@
-package vn.haohan.lunar.core.loot.pity;
+package vn.haohan.lunar.api.system.loot.pity;
+
+import vn.haohan.lunar.api.system.loot.pity.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import vn.haohan.lunar.core.loot.pity.storage.FlatfilePityStorage;
-import vn.haohan.lunar.core.loot.pity.storage.SqlitePityStorage;
+import vn.haohan.lunar.api.system.loot.pity.storage.FlatfilePityStorage;
+import vn.haohan.lunar.api.system.loot.pity.storage.SqlitePityStorage;
 
 import java.io.File;
 import java.nio.file.Path;

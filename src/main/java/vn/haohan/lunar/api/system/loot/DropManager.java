@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.loot;
+package vn.haohan.lunar.api.system.loot;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Item;
@@ -12,13 +12,13 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.manager.LootManager;
-import vn.haohan.lunar.api.integration.bridge.item.HaoHanItemBridge;
-import vn.haohan.lunar.api.combat.threat.ThreatTable;
-import vn.haohan.lunar.api.combat.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.api.loot.instanced.InstancedDropTracker;
-import vn.haohan.lunar.api.loot.pity.PityManager;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
+import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
+import vn.haohan.lunar.api.system.loot.instanced.InstancedDropTracker;
+import vn.haohan.lunar.api.system.loot.pity.PityManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.subsystem.mob.MobManager;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 
@@ -43,7 +43,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class DropManager implements LootManager, Listener {
 
     private final MobDefinitionRegistry mobDefinitions;
-    private final MobManager mobManager;
+    private final LunarMobManager mobManager;
     private final HaoHanItemBridge itemBridge;
     private final ConditionRegistry conditionRegistry;
     private final PityManager pityManager = new PityManager();
@@ -58,7 +58,7 @@ public final class DropManager implements LootManager, Listener {
     }
 
     public DropManager(MobDefinitionRegistry mobDefinitions,
-                       MobManager mobManager,
+                       LunarMobManager mobManager,
                        HaoHanItemBridge itemBridge,
                        ConditionRegistry conditionRegistry) {
         this.mobDefinitions = Objects.requireNonNull(mobDefinitions, "Mob definitions must not be null");
@@ -198,7 +198,7 @@ public final class DropManager implements LootManager, Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onEntityDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
-        ActiveMob mob = mobManager.get(entity.getUniqueId());
+        ActiveMob mob = mobManager != null ? mobManager.get(entity.getUniqueId()) : null;
         if (mob == null) {
             return;
         }

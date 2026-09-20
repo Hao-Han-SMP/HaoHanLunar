@@ -1,9 +1,9 @@
-package vn.haohan.lunar.api.system.item;
+package vn.haohan.lunar.core.system.item;
 
 import vn.haohan.itemcore.api.item.ItemBehavior;
 import vn.haohan.itemcore.api.item.ItemContext;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.api.system.data.PlayerLunarData;
+import vn.haohan.lunar.core.system.data.PlayerLunarData;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

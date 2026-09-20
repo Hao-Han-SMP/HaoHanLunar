@@ -1,13 +1,14 @@
 package vn.haohan.lunar.api.mob.persistence;
 
 import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Optional;
 
@@ -26,9 +27,9 @@ public final class MobPersistenceManager {
     }
 
     /**
-     * Saves runtime state of ActiveLunarMob to PDC before chunk unload or server shutdown.
+     * Saves runtime state of ActiveMob to PDC before chunk unload or server shutdown.
      */
-    public static void saveState(ActiveLunarMob mob) {
+    public static void saveState(ActiveMob mob) {
         if (mob == null || mob.entity() == null || !mob.entity().isValid()) {
             return;
         }
@@ -42,9 +43,9 @@ public final class MobPersistenceManager {
     }
 
     /**
-     * Restores saved runtime state (health, stance) onto an ActiveLunarMob after chunk load.
+     * Restores saved runtime state (health, stance) onto an ActiveMob after chunk load.
      */
-    public static void restoreState(ActiveLunarMob mob) {
+    public static void restoreState(ActiveMob mob) {
         if (mob == null || mob.entity() == null) {
             return;
         }
@@ -56,7 +57,7 @@ public final class MobPersistenceManager {
         if (savedHealth != null && savedHealth > 0.0) {
             double targetHealth = savedHealth;
             try {
-                var attr = entity.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH);
+                var attr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
                 if (attr != null) {
                     targetHealth = Math.min(savedHealth, attr.getValue());
                 }
@@ -73,16 +74,16 @@ public final class MobPersistenceManager {
     }
 
     /**
-     * Reconstructs an ActiveLunarMob from an existing living entity using its PDC identity.
+     * Reconstructs an ActiveMob from an existing living entity using its PDC identity.
      */
-    public static ActiveLunarMob restoreState(LivingEntity entity, MobDefinitionRegistry registry) {
+    public static ActiveMob restoreState(LivingEntity entity, MobDefinitionRegistry registry) {
         if (entity == null || registry == null) return null;
         Optional<LunarMobIdentity> idOpt = LunarMobIdentity.read(entity);
         if (idOpt.isEmpty()) return null;
         LunarMobIdentity identity = idOpt.get();
         Optional<MobDefinition> defOpt = registry.get(identity.mobId());
         if (defOpt.isEmpty()) return null;
-        ActiveLunarMob mob = new ActiveLunarMob(entity, defOpt.get(), identity);
+        ActiveMob mob = new ActiveMob(entity, defOpt.get(), identity);
         restoreState(mob);
         return mob;
     }

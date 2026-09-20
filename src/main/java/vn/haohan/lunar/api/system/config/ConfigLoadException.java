@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.config;
+package vn.haohan.lunar.api.system.config;
 
 /** Checked failure for a configuration batch that must not replace the active snapshot. */
 public class ConfigLoadException extends Exception {

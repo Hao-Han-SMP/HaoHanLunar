@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.lunar;
 
+import vn.haohan.lunar.core.features.MiningMechanic;
+
 import org.bukkit.Material;
 import org.junit.jupiter.api.Test;
 

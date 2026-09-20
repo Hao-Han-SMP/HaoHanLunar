@@ -54,6 +54,15 @@ public interface ThreatTable {
     Optional<UUID> getTopTarget();
 
     /**
+     * Resolves the primary target with the highest threat score, factoring in switch threshold and taunts.
+     *
+     * @return The primary target entity UUID, or empty if no targets exist.
+     */
+    default Optional<UUID> topTarget() {
+        return getTopTarget();
+    }
+
+    /**
      * Removes all threat accumulated by a specific target entity.
      */
     void clearTarget(UUID targetId);

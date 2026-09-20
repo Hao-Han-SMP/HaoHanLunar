@@ -50,7 +50,7 @@ Ngôn ngữ: Tiếng Việt
 | `BeaconShieldMechanic` | Quản lý vùng năng lượng động quanh beacon Mặt Trăng, animation mở rộng và các lớp particle bảo vệ. |
 | `LunarItems` | Đăng ký toàn bộ custom item và công thức rèn (Smithing Recipes) vào `HaoHanItemCore`. |
 | `OxygenTankBehavior` | Item Behavior xử lý logic khi người chơi kích hoạt bình Oxy (chuột phải). |
-| `PlayerLunarDataManager` | Quản lý dữ liệu trạng thái Oxy và tiến trình sạc bình của từng người chơi trong bộ nhớ. |
+| `PlayerDataManager` | Quản lý dữ liệu trạng thái Oxy và tiến trình sạc bình của từng người chơi trong bộ nhớ. |
 
 ## Yêu cầu hệ thống
 

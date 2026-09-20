@@ -1,6 +1,8 @@
 package vn.haohan.lunar.core.mob;
 
-import vn.haohan.lunar.core.subsystem.mob.LunarMobIdentity;
+import vn.haohan.lunar.api.mob.*;
+
+import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataContainer;

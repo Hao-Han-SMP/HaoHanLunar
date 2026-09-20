@@ -1,6 +1,6 @@
-package vn.haohan.lunar.api.loot.pity;
+package vn.haohan.lunar.api.system.loot.pity;
 
-import vn.haohan.lunar.api.loot.pity.storage.PityStorage;
+import vn.haohan.lunar.api.system.loot.pity.storage.PityStorage;
 
 import java.util.Collection;
 import java.util.Map;

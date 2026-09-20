@@ -1,9 +1,7 @@
-package vn.haohan.lunar.core.presentation.display.orchestration;
+package vn.haohan.lunar.api.presentation.display.orchestration;
 
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-
-import java.util.Objects;
 
 /**
  * Configuration options for interpolating/transforming an active Display entity.

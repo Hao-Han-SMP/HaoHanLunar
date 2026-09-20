@@ -1,6 +1,6 @@
 package vn.haohan.lunar.api.mob.phase;
 
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Collections;
 import java.util.Map;
@@ -10,7 +10,7 @@ import java.util.Objects;
  * Context passed to phase conditions to evaluate phase eligibility.
  */
 public record PhaseContext(
-        ActiveLunarMob mob,
+        ActiveMob mob,
         double health,
         double maxHealth,
         long currentTick,
@@ -20,11 +20,11 @@ public record PhaseContext(
         String signal
 ) {
     public PhaseContext {
-        Objects.requireNonNull(mob, "ActiveLunarMob must not be null");
+        Objects.requireNonNull(mob, "ActiveMob must not be null");
         variables = variables == null ? Map.of() : Collections.unmodifiableMap(variables);
     }
 
-    public static PhaseContext ofHealth(ActiveLunarMob mob, double health, double maxHealth, long currentTick) {
+    public static PhaseContext ofHealth(ActiveMob mob, double health, double maxHealth, long currentTick) {
         return new PhaseContext(mob, health, maxHealth, currentTick, 0L, 0, Map.of(), null);
     }
 

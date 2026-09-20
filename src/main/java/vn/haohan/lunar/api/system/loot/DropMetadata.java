@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.loot;
+package vn.haohan.lunar.api.system.loot;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features;
+package vn.haohan.lunar.core.features;
 
 import io.papermc.paper.event.player.PlayerStopUsingItemEvent;
 import org.bukkit.Bukkit;

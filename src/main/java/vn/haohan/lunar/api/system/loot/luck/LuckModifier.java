@@ -1,4 +1,4 @@
-package vn.haohan.lunar.api.loot.luck;
+package vn.haohan.lunar.api.system.loot.luck;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.ai;
+package vn.haohan.lunar.core.features.boss.warden.ai;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.entity.data.IEntityData;
@@ -12,22 +12,22 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenBehavior;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenConstants;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.WardenState;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.combat.WardenCombatHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.showcase.WardenShowcaseHandler;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.AerialSlashComboSkill;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.CelestialSummonSkill;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.ShieldBlockPushSkill;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.ShieldBlockSkill;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.ShieldChargeSkill;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.ShieldSwordSlamSkill;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.skills.PursuitTask;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.ui.WardenBossBar;
+import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
+import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
+import vn.haohan.lunar.core.features.boss.warden.WardenState;
+import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
+import vn.haohan.lunar.core.features.boss.warden.showcase.WardenShowcaseHandler;
+import vn.haohan.lunar.core.features.boss.warden.skills.AerialSlashComboSkill;
+import vn.haohan.lunar.core.features.boss.warden.skills.CelestialSummonSkill;
+import vn.haohan.lunar.core.features.boss.warden.skills.ShieldBlockPushSkill;
+import vn.haohan.lunar.core.features.boss.warden.skills.ShieldBlockSkill;
+import vn.haohan.lunar.core.features.boss.warden.skills.ShieldChargeSkill;
+import vn.haohan.lunar.core.features.boss.warden.skills.ShieldSwordSlamSkill;
+import vn.haohan.lunar.core.features.boss.warden.skills.PursuitTask;
+import vn.haohan.lunar.core.features.boss.warden.ui.WardenBossBar;
 import vn.haohan.lunar.api.system.util.MathUtil;
 
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAnimationController;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAnimationController;
 
 import java.util.Random;
 

@@ -8,7 +8,7 @@ import vn.haohan.lunar.api.system.combat.DamageContext;
 import vn.haohan.lunar.api.system.combat.DamageResult;
 import vn.haohan.lunar.api.system.combat.DamageType;
 import vn.haohan.lunar.api.manager.CombatManager;
-import vn.haohan.lunar.api.integration.bridge.item.HaoHanItemBridge;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.manager.MobManager;
 import vn.haohan.lunar.api.manager.SkillManager;
 import vn.haohan.lunar.api.system.combat.skill.target.Targeter;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LunarApiContractTest {
 
-    private vn.haohan.lunar.core.subsystem.mob.MobManager coreMobManager;
+    private vn.haohan.lunar.core.mob.LunarMobManager coreMobManager;
     private SkillRegistry coreSkillRegistry;
     private DamagePipeline coreDamagePipeline;
     private DropManager coreDropManager;
@@ -41,7 +41,7 @@ class LunarApiContractTest {
 
     @BeforeEach
     void setUp() {
-        coreMobManager = new vn.haohan.lunar.core.subsystem.mob.MobManager(entity -> {});
+        coreMobManager = new vn.haohan.lunar.core.mob.LunarMobManager(entity -> {});
         var mobRegistry = new MobDefinitionRegistry();
         coreSkillRegistry = new SkillRegistry();
         coreDamagePipeline = new DamagePipeline();

@@ -14,7 +14,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import vn.haohan.lunar.api.system.combat.reward.BossVictorySummary;
 import vn.haohan.lunar.api.system.combat.reward.RewardTier;
-import vn.haohan.lunar.core.subsystem.mob.MobManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,13 +26,13 @@ import java.util.function.Function;
  */
 public final class DamageTracker implements Listener {
 
-    private final MobManager mobManager;
+    private final LunarMobManager mobManager;
     private final Map<UUID, Map<UUID, Double>> mobDamageRecords = new ConcurrentHashMap<>();
     private final Map<UUID, DamageContributionSnapshot> finalSnapshots = new ConcurrentHashMap<>();
     private final Map<UUID, Long> mobCombatStart = new ConcurrentHashMap<>();
     private final Map<UUID, Long> mobCombatEnd = new ConcurrentHashMap<>();
 
-    public DamageTracker(MobManager mobManager) {
+    public DamageTracker(LunarMobManager mobManager) {
         this.mobManager = mobManager;
     }
 

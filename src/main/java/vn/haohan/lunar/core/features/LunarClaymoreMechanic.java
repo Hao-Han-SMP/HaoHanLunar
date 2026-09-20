@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features;
+package vn.haohan.lunar.core.features;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -42,9 +42,9 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.BlockWaveRenderer;
-import vn.haohan.lunar.core.subsystem.features.boss.warden.visual.WardenAudio;
-import vn.haohan.lunar.core.subsystem.features.weapon.claymore.SmoothSlashTask;
+import vn.haohan.lunar.core.features.boss.warden.visual.BlockWaveRenderer;
+import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
+import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 
 import java.util.ArrayList;
@@ -112,12 +112,6 @@ public class LunarClaymoreMechanic implements Listener, LunarSubSystem {
         if (meta.hasCustomModelData()) {
             int cmd = meta.getCustomModelData();
             if (cmd == CMD_IDLE || cmd == CMD_SLASHING) {
-                return true;
-            }
-        }
-        if (meta.hasItemModel()) {
-            NamespacedKey key = meta.getItemModel();
-            if (key != null && key.getKey().startsWith("claymore")) {
                 return true;
             }
         }
@@ -452,7 +446,7 @@ public class LunarClaymoreMechanic implements Listener, LunarSubSystem {
             int breachLvl = getMaceEnchantLevel(item, "breach");
             if (breachLvl > 0 && target instanceof LivingEntity livingTarget) {
                 double armor = 0;
-                var attr = livingTarget.getAttribute(Attribute.ARMOR);
+                var attr = livingTarget.getAttribute(Attribute.GENERIC_ARMOR);
                 if (attr != null) armor = attr.getValue();
                 if (armor > 0) {
                     double armorPenetration = 0.15 * breachLvl;

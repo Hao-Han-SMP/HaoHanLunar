@@ -2,9 +2,9 @@ package vn.haohan.lunar.api.mob.mount;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
-import vn.haohan.lunar.api.combat.cc.CCState;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.api.system.combat.cc.CCState;
 import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -24,12 +24,12 @@ public final class MountAiSyncTracker {
     /**
      * Executes an AI synchronization tick between an active rider and its mount.
      */
-    public void sync(ActiveLunarMob rider) {
+    public void sync(ActiveMob rider) {
         if (rider == null || mobManager == null) return;
         UUID mountId = rider.mountUUID();
         if (mountId == null) return;
 
-        ActiveLunarMob mount = mobManager.get(mountId);
+        ActiveMob mount = mobManager.get(mountId);
         if (mount == null || mount.entity().isDead()) return;
 
         syncTargetAndThreat(mount, rider);
@@ -39,10 +39,10 @@ public final class MountAiSyncTracker {
     /**
      * Synchronizes the Rider's top threat target into the Mount so the Mount steers toward it.
      */
-    public void syncTargetAndThreat(ActiveLunarMob mount, ActiveLunarMob rider) {
+    public void syncTargetAndThreat(ActiveMob mount, ActiveMob rider) {
         if (mount == null || rider == null) return;
 
-        Optional<UUID> riderTargetId = rider.threatTable().topTarget();
+        Optional<UUID> riderTargetId = rider.threatTable().getTopTarget();
         if (riderTargetId.isPresent()) {
             UUID targetId = riderTargetId.get();
             double riderThreat = rider.threatTable().getThreat(targetId);
@@ -66,7 +66,7 @@ public final class MountAiSyncTracker {
      * Propagates crowd-control effects between Rider and Mount:
      * If the Rider is stunned or rooted, the Mount stops or is rooted.
      */
-    public void syncCrowdControl(ActiveLunarMob mount, ActiveLunarMob rider) {
+    public void syncCrowdControl(ActiveMob mount, ActiveMob rider) {
         if (mount == null || rider == null) return;
 
         // If rider is stunned or rooted, halt/root mount

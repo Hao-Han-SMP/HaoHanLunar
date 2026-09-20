@@ -5,7 +5,7 @@ import vn.haohan.lunar.core.system.item.LunarItems;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 
 /**
- * SubSystem responsible for registering custom items with HaoHanItemCore.
+ * Subsystem registering custom item definitions and handlers with the external HaoHanItemCore runtime.
  */
 public final class ItemCoreSubSystem implements LunarSubSystem {
 

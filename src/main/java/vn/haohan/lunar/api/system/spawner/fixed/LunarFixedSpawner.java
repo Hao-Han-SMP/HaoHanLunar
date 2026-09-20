@@ -1,10 +1,10 @@
-package vn.haohan.lunar.api.spawner.fixed;
+package vn.haohan.lunar.api.system.spawner.fixed;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.subsystem.mob.MobManager;
 
 import java.util.Collections;
 import java.util.Objects;
@@ -36,6 +36,10 @@ public final class LunarFixedSpawner {
         this.definition = Objects.requireNonNull(definition, "Spawner definition must not be null");
         this.currentWarmupTicks = definition.warmupSeconds() * 20;
         this.currentCooldownTicks = definition.cooldownSeconds() * 20;
+    }
+
+    public LunarFixedSpawner(SpawnerDefinition definition, Object mobDefinitions, LunarMobManager mobManager) {
+        this(definition);
     }
 
     public SpawnerDefinition definition() {
@@ -110,7 +114,7 @@ public final class LunarFixedSpawner {
      * Executes one tick of spawner logic.
      */
     public void tick(long tickNumber,
-                     MobManager mobManager,
+                     LunarMobManager mobManager,
                      SpawnerCallback spawnerCallback,
                      ProximityChecker proximityChecker) {
         // 1. Prune confirmed dead or invalid mobs

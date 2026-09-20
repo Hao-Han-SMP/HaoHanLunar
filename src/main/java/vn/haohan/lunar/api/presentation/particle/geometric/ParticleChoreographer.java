@@ -1,13 +1,10 @@
-package vn.haohan.lunar.core.presentation.particle.geometric;
+package vn.haohan.lunar.api.presentation.particle.geometric;
 
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.World;
 import org.bukkit.util.Vector;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  * Orchestrates geometric particle effects with strict per-tick particle budget limits

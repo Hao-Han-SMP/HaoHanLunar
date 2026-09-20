@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.boss.warden.util;
+package vn.haohan.lunar.core.features.boss.warden.util;
 
 import org.bukkit.Location;
 import org.bukkit.World;

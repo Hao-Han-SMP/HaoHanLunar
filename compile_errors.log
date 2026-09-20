@@ -1,0 +1,479 @@
+﻿
+> Task :compileJava FAILED
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\subsystem\mob\LunarMobManager.java:28: error: cannot find symbol
+public class LunarMobManager implements vn.haohan.lunar.api.manager.LunarMobManager, Listener {
+                                                                   ^
+  symbol:   class LunarMobManager
+  location: package vn.haohan.lunar.api.manager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\loot\DropManager.java:21: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\loot\DropManager.java:46: error: cannot find symbol
+    private final MobManager mobManager;
+                  ^
+  symbol:   class MobManager
+  location: class DropManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\loot\DropManager.java:61: error: cannot find symbol
+                       MobManager mobManager,
+                       ^
+  symbol:   class MobManager
+  location: class DropManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\skill\mechanic\MechanicRegistry.java:37: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\skill\mechanic\MechanicRegistry.java:87: error: cannot find symbol
+    private MobManager mobManager;
+            ^
+  symbol:   class MobManager
+  location: class MechanicRegistry
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\skill\mechanic\MechanicRegistry.java:104: error: cannot find symbol
+    public MobManager mobManager() { return mobManager; }
+           ^
+  symbol:   class MobManager
+  location: class MechanicRegistry
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\skill\mechanic\MechanicRegistry.java:105: error: cannot find symbol
+    public void setMobManager(MobManager mobManager) { this.mobManager = mobManager; }
+                              ^
+  symbol:   class MobManager
+  location: class MechanicRegistry
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\DamageTracker.java:17: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\DamageTracker.java:29: error: cannot find symbol
+    private final MobManager mobManager;
+                  ^
+  symbol:   class MobManager
+  location: class DamageTracker
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\DamageTracker.java:35: error: cannot find symbol
+    public DamageTracker(MobManager mobManager) {
+                         ^
+  symbol:   class MobManager
+  location: class DamageTracker
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\threat\ThreatManager.java:16: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\threat\ThreatManager.java:28: error: cannot find symbol
+    private final MobManager mobManager;
+                  ^
+  symbol:   class MobManager
+  location: class ThreatManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\combat\threat\ThreatManager.java:31: error: cannot find symbol
+    public ThreatManager(MobManager mobManager) {
+                         ^
+  symbol:   class MobManager
+  location: class ThreatManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\command\LunarMobCommand.java:15: error: package vn.haohan.lunar.api.loot does not exist
+import vn.haohan.lunar.api.loot.DropManager;
+                               ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\command\LunarMobCommand.java:55: error: cannot find symbol
+    private DropManager dropManager;
+            ^
+  symbol:   class DropManager
+  location: class LunarMobCommand
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\system\item\ItemDefinitionRegistry.java:16: error: package vn.haohan.lunar.core.integration.bridge.item does not exist
+import vn.haohan.lunar.core.integration.bridge.item.HaoHanItemBridge;
+                                                   ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\command\LunarMobCommand.java:96: error: cannot find symbol
+    public void setPackManager(PackManager packManager, SkillRegistry skillRegistry, DropManager dropManager) {
+                                                                                     ^
+  symbol:   class DropManager
+  location: class LunarMobCommand
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\fixed\FixedSpawnerManager.java:18: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\fixed\FixedSpawnerManager.java:39: error: cannot find symbol
+    private final MobManager mobManager;
+                  ^
+  symbol:   class MobManager
+  location: class FixedSpawnerManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\fixed\LunarFixedSpawner.java:7: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\fixed\FixedSpawnerManager.java:45: error: cannot find symbol
+    public FixedSpawnerManager(MobDefinitionRegistry mobDefinitions, MobManager mobManager) {
+                                                                     ^
+  symbol:   class MobManager
+  location: class FixedSpawnerManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\fixed\LunarFixedSpawner.java:113: error: cannot find symbol
+                     MobManager mobManager,
+                     ^
+  symbol:   class MobManager
+  location: class LunarFixedSpawner
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:14: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:36: error: cannot find symbol
+    private final MobManager mobManager;
+                  ^
+  symbol:   class MobManager
+  location: class RandomSpawnManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:37: error: cannot find symbol
+    private final Map<String, RandomSpawnRule> rules = new ConcurrentHashMap<>();
+                              ^
+  symbol:   class RandomSpawnRule
+  location: class RandomSpawnManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:51: error: cannot find symbol
+    public RandomSpawnManager(MobDefinitionRegistry mobDefinitions, MobManager mobManager) {
+                                                                    ^
+  symbol:   class MobManager
+  location: class RandomSpawnManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:60: error: cannot find symbol
+    public void registerRule(RandomSpawnRule rule) {
+                             ^
+  symbol:   class RandomSpawnRule
+  location: class RandomSpawnManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:65: error: cannot find symbol
+    public Optional<RandomSpawnRule> unregisterRule(String id) {
+                    ^
+  symbol:   class RandomSpawnRule
+  location: class RandomSpawnManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:70: error: cannot find symbol
+    public Optional<RandomSpawnRule> getRule(String id) {
+                    ^
+  symbol:   class RandomSpawnRule
+  location: class RandomSpawnManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnManager.java:75: error: cannot find symbol
+    public List<RandomSpawnRule> getActiveRules(SpawnAction action) {
+                ^
+  symbol:   class RandomSpawnRule
+  location: class RandomSpawnManager
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnRule.java:23: error: cannot find symbol
+                              SpawnAction action,
+                              ^
+  symbol:   class SpawnAction
+  location: class RandomSpawnRule
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnRule.java:62: error: cannot find symbol
+                           SpawnAction action,
+                           ^
+  symbol:   class SpawnAction
+  location: class RandomSpawnRule
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnRule.java:133: error: cannot find symbol
+        private SpawnAction action = SpawnAction.REPLACE;
+                ^
+  symbol:   class SpawnAction
+  location: class Builder
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\api\system\spawner\random\RandomSpawnRule.java:151: error: cannot find symbol
+        public Builder action(SpawnAction action) { this.action = action; return this; }
+                              ^
+  symbol:   class SpawnAction
+  location: class Builder
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:5: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.GravityMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:6: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.MiningMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:7: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.OxygenMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:8: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.VisualMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:9: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.BeaconShieldMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:10: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.LunarSurfaceSpreadMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:11: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.TelescopeMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:12: error: package vn.haohan.lunar.core.survival.boss.warden does not exist
+import vn.haohan.lunar.core.survival.boss.warden.LunarWardenMechanic;
+                                                ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:13: error: package vn.haohan.lunar.core.survival.boss.warden does not exist
+import vn.haohan.lunar.core.survival.boss.warden.WardenSpawner;
+                                                ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:14: error: package vn.haohan.lunar.core.survival.boss.warden.showcase does not exist
+import vn.haohan.lunar.core.survival.boss.warden.showcase.WardenShowcaseHandler;
+                                                         ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:15: error: package vn.haohan.lunar.core.survival.boss.warden.visual does not exist
+import vn.haohan.lunar.core.survival.boss.warden.visual.WardenTrailCaptureSystem;
+                                                       ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:16: error: package vn.haohan.lunar.core.survival does not exist
+import vn.haohan.lunar.core.survival.LunarClaymoreMechanic;
+                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:17: error: package vn.haohan.lunar.core.survival.weapon.claymore does not exist
+import vn.haohan.lunar.core.survival.weapon.claymore.SmoothSlashTask;
+                                                    ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:35: error: cannot find symbol
+    private GravityMechanic gravityMechanic;
+            ^
+  symbol:   class GravityMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:36: error: cannot find symbol
+    private OxygenMechanic oxygenMechanic;
+            ^
+  symbol:   class OxygenMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:37: error: cannot find symbol
+    private MiningMechanic miningMechanic;
+            ^
+  symbol:   class MiningMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:38: error: cannot find symbol
+    private VisualMechanic visualMechanic;
+            ^
+  symbol:   class VisualMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:39: error: cannot find symbol
+    private BeaconShieldMechanic beaconShieldMechanic;
+            ^
+  symbol:   class BeaconShieldMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:40: error: cannot find symbol
+    private LunarSurfaceSpreadMechanic lunarSurfaceSpreadMechanic;
+            ^
+  symbol:   class LunarSurfaceSpreadMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:41: error: cannot find symbol
+    private TelescopeMechanic telescopeMechanic;
+            ^
+  symbol:   class TelescopeMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:42: error: cannot find symbol
+    private LunarWardenMechanic lunarWardenMechanic;
+            ^
+  symbol:   class LunarWardenMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:43: error: cannot find symbol
+    private LunarClaymoreMechanic lunarClaymoreMechanic;
+            ^
+  symbol:   class LunarClaymoreMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:288: error: cannot find symbol
+    public GravityMechanic getGravityMechanic() {
+           ^
+  symbol:   class GravityMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:292: error: cannot find symbol
+    public OxygenMechanic getOxygenMechanic() {
+           ^
+  symbol:   class OxygenMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:296: error: cannot find symbol
+    public MiningMechanic getMiningMechanic() {
+           ^
+  symbol:   class MiningMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:300: error: cannot find symbol
+    public VisualMechanic getVisualMechanic() {
+           ^
+  symbol:   class VisualMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:304: error: cannot find symbol
+    public BeaconShieldMechanic getBeaconShieldMechanic() {
+           ^
+  symbol:   class BeaconShieldMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:308: error: cannot find symbol
+    public TelescopeMechanic getTelescopeMechanic() {
+           ^
+  symbol:   class TelescopeMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:312: error: cannot find symbol
+    public LunarWardenMechanic getLunarWardenMechanic() {
+           ^
+  symbol:   class LunarWardenMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\HaoHanLunarPlugin.java:316: error: cannot find symbol
+    public LunarClaymoreMechanic getLunarClaymoreMechanic() {
+           ^
+  symbol:   class LunarClaymoreMechanic
+  location: class HaoHanLunarPlugin
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\command\MobCommand.java:6: error: package vn.haohan.lunar.api.system.debug.metrics does not exist
+import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
+                                               ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\command\MobCommand.java:7: error: package vn.haohan.lunar.api.system.debug.trace does not exist
+import vn.haohan.lunar.api.system.debug.trace.SkillTracer;
+                                             ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\command\MobCommand.java:8: error: package vn.haohan.lunar.api.system.debug.validator does not exist
+import vn.haohan.lunar.api.system.debug.validator.ConfigValidationService;
+                                                 ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\command\MobCommand.java:24: error: cannot find symbol
+                      ConfigValidationService validationService,
+                      ^
+  symbol:   class ConfigValidationService
+  location: class MobCommand
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\command\MobCommand.java:25: error: cannot find symbol
+                      SkillTracer tracer,
+                      ^
+  symbol:   class SkillTracer
+  location: class MobCommand
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\command\MobCommand.java:26: error: cannot find symbol
+                      PerformanceMetrics metrics,
+                      ^
+  symbol:   class PerformanceMetrics
+  location: class MobCommand
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\ai\WardenAIController.java:28: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\WardenState.java:12: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\ai\WardenEvasionController.java:3: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\ai\WardenFootworkController.java:18: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\combat\AerialSlashProjectileTask.java:32: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\combat\WardenCombatHandler.java:28: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\ModelEngineMobAdapter.java:30: error: cannot find symbol
+    public boolean attach(ActiveLunarMob activeMob, String modelId) {
+                          ^
+  symbol:   class ActiveLunarMob
+  location: class ModelEngineMobAdapter
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\ModelEngineMobAdapter.java:49: error: cannot find symbol
+    public void destroy(ActiveLunarMob activeMob) {
+                        ^
+  symbol:   class ActiveLunarMob
+  location: class ModelEngineMobAdapter
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\showcase\WardenShowcaseHandler.java:29: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\AerialSlashComboSkill.java:22: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\CelestialSummonSkill.java:19: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\PursuitTask.java:3: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\ShieldBlockPushSkill.java:22: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\ShieldBlockSkill.java:23: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\ShieldChargeSkill.java:33: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\ShieldSwordSlamSkill.java:38: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+1 actionable task: 1 executed
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\TargetedLightStrikeTask.java:16: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\skills\ThrustFlingSkill.java:23: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\ui\WardenBossBar.java:3: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\visual\BlockWaveRenderer.java:19: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\visual\TrailRenderer.java:14: error: cannot find symbol
+import vn.haohan.lunar.api.system.util.MathUtil;
+                                      ^
+  symbol:   class MathUtil
+  location: package vn.haohan.lunar.api.system.util
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\WardenSkillRegistry.java:3: error: package vn.haohan.lunar.api.skill does not exist
+import vn.haohan.lunar.api.skill.SkillCastContext;
+                                ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\WardenSkillRegistry.java:36: error: cannot find symbol
+    public boolean cast(String skillId, SkillCastContext context, Map<String, Object> parameters) {
+                                        ^
+  symbol:   class SkillCastContext
+  location: class WardenSkillRegistry
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\boss\warden\WardenSkillRegistry.java:59: error: cannot find symbol
+        void invoke(String skillId, SkillCastContext context, Map<String, Object> parameters);
+                                    ^
+  symbol:   class SkillCastContext
+  location: interface WardenSkillInvoker
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\OxygenMechanic.java:4: error: package vn.haohan.lunar.api.system.data does not exist
+import vn.haohan.lunar.api.system.data.PlayerLunarData;
+                                      ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\OxygenMechanic.java:189: error: cannot find symbol
+    private boolean chargeHeldOxygenTank(Player player, PlayerLunarData data) {
+                                                        ^
+  symbol:   class PlayerLunarData
+  location: class OxygenMechanic
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\features\OxygenMechanic.java:256: error: cannot find symbol
+    private void displayOxygen(Player player, PlayerLunarData data) {
+                                              ^
+  symbol:   class PlayerLunarData
+  location: class OxygenMechanic
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\subsystem\engine\MobCoreSubSystem.java:14: error: package vn.haohan.lunar.api.system.spawner.fixed does not exist
+import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
+                                               ^
+F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\subsystem\engine\MobCoreSubSystem.java:19: error: cannot find symbol
+import vn.haohan.lunar.core.subsystem.mob.MobManager;
+                                         ^
+  symbol:   class MobManager
+  location: package vn.haohan.lunar.core.subsystem.mob
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: F:\.HaoHanProject\HaoHanLunar\src\main\java\vn\haohan\lunar\core\system\validator\ContentLintTool.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+100 errors
+System.Management.Automation.RemoteException
+FAILURE: Build failed with an exception.
+System.Management.Automation.RemoteException
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler error output for details.
+System.Management.Automation.RemoteException
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+System.Management.Automation.RemoteException
+BUILD FAILED in 2s

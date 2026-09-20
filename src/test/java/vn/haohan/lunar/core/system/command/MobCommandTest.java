@@ -6,13 +6,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import vn.haohan.lunar.api.system.command.LunarMobCommand;
 import vn.haohan.lunar.api.system.config.ConfigValidationReport;
-import vn.haohan.lunar.api.loot.DropManager;
+import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionId;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.mob.pack.PackManager;
-import vn.haohan.lunar.api.skill.SkillRegistry;
+import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
 
 import java.io.IOException;
 import java.lang.reflect.Proxy;

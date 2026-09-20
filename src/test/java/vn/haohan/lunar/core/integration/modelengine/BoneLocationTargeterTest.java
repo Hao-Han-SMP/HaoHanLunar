@@ -1,5 +1,7 @@
 package vn.haohan.lunar.core.integration.modelengine;
 
+import vn.haohan.lunar.api.integration.bridge.modelengine.BoneLocationResolver;
+
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -8,13 +10,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.mob.MobDefinition;
-import vn.haohan.lunar.core.mob.MobDefinitionId;
-import vn.haohan.lunar.core.skill.SkillCastContext;
-import vn.haohan.lunar.core.skill.SkillDefinition;
-import vn.haohan.lunar.core.skill.SkillTrigger;
-import vn.haohan.lunar.core.skill.targeter.TargeterRegistry;
-import vn.haohan.lunar.core.skill.targeter.impl.BoneLocationTargeter;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
+import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
+import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterRegistry;
+import vn.haohan.lunar.api.system.combat.skill.targeter.impl.BoneLocationTargeter;
 
 import java.lang.reflect.Proxy;
 import java.util.Collection;
