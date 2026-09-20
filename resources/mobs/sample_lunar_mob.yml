@@ -1,0 +1,33 @@
+# =========================================================
+# HaoHanLunar - Sample Custom Mob Definition
+# =========================================================
+config-version: 1
+id: sample_lunar_beast
+name: "&bLunar Beast"
+type: IRON_GOLEM
+
+# Optional ModelEngine model identifier
+model_id: "lunar_beast"
+
+# Drop table reference (must match an id in drops/)
+drop_table: sample_lunar_drops
+
+# List of skill references (must match ids in skills/)
+skills:
+  - sample_meteor_strike
+
+# Bukkit living entity attributes
+attributes:
+  generic_max_health: 300.0
+  generic_movement_speed: 0.28
+  generic_attack_damage: 18.0
+
+# General mob options
+options:
+  prevent_other_drops: true
+  despawn_range: 64.0
+
+# Classification and filtering tags
+tags:
+  - lunar_boss
+  - hostile

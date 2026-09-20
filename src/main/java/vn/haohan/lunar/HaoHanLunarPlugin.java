@@ -1,20 +1,20 @@
 package vn.haohan.lunar;
 
-import vn.haohan.lunar.data.PlayerLunarDataManager;
-import vn.haohan.lunar.item.LunarItems;
-import vn.haohan.lunar.mechanics.GravityMechanic;
-import vn.haohan.lunar.mechanics.MiningMechanic;
-import vn.haohan.lunar.mechanics.OxygenMechanic;
-import vn.haohan.lunar.mechanics.VisualMechanic;
-import vn.haohan.lunar.mechanics.BeaconShieldMechanic;
-import vn.haohan.lunar.mechanics.LunarSurfaceSpreadMechanic;
-import vn.haohan.lunar.mechanics.TelescopeMechanic;
-import vn.haohan.lunar.mechanics.boss.warden.LunarWardenMechanic;
-import vn.haohan.lunar.mechanics.boss.warden.WardenSpawner;
-import vn.haohan.lunar.mechanics.boss.warden.showcase.WardenShowcaseHandler;
-import vn.haohan.lunar.mechanics.boss.warden.visual.WardenTrailCaptureSystem;
-import vn.haohan.lunar.mechanics.LunarClaymoreMechanic;
-import vn.haohan.lunar.mechanics.weapon.claymore.SmoothSlashTask;
+import vn.haohan.lunar.core.system.data.PlayerLunarDataManager;
+import vn.haohan.lunar.core.system.item.LunarItems;
+import vn.haohan.lunar.core.survival.GravityMechanic;
+import vn.haohan.lunar.core.survival.MiningMechanic;
+import vn.haohan.lunar.core.survival.OxygenMechanic;
+import vn.haohan.lunar.core.survival.VisualMechanic;
+import vn.haohan.lunar.core.survival.BeaconShieldMechanic;
+import vn.haohan.lunar.core.survival.LunarSurfaceSpreadMechanic;
+import vn.haohan.lunar.core.survival.TelescopeMechanic;
+import vn.haohan.lunar.core.survival.boss.warden.LunarWardenMechanic;
+import vn.haohan.lunar.core.survival.boss.warden.WardenSpawner;
+import vn.haohan.lunar.core.survival.boss.warden.showcase.WardenShowcaseHandler;
+import vn.haohan.lunar.core.survival.boss.warden.visual.WardenTrailCaptureSystem;
+import vn.haohan.lunar.core.survival.LunarClaymoreMechanic;
+import vn.haohan.lunar.core.survival.weapon.claymore.SmoothSlashTask;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -85,6 +85,12 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(lunarSurfaceSpreadMechanic, this);
         pm.registerEvents(telescopeMechanic, this);
         pm.registerEvents(lunarClaymoreMechanic, this);
+        try {
+            vn.haohan.lunar.core.world.pin.PinManager.get().load(getDataFolder().toPath().resolve("regions.yml"));
+            pm.registerEvents(new vn.haohan.lunar.core.world.pin.PinBoundaryListener(), this);
+        } catch (Throwable t) {
+            getLogger().warning("Could not load regions.yml: " + t.getMessage());
+        }
 
         // Register commands dynamically for Paper plugins
         // 1. /tplunar (aliases: /lunar, /tplunardimension, /gotolunar)
@@ -269,6 +275,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         }
 
+                try {
+            vn.haohan.lunar.core.world.pin.PinManager.get().save(getDataFolder().toPath().resolve("regions.yml"));
+        } catch (Throwable ignored) {}
         getLogger().info("HaoHanLunar plugin successfully disabled.");
     }
 

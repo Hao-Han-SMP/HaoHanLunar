@@ -1,0 +1,15 @@
+id: lunar_warden_ground_slam
+trigger: [onCombat]
+cooldown: 80
+targeter: players_in_radius
+conditions:
+  - id: target_within
+    radius: 8
+mechanics:
+  - type: damage
+    amount: 12.0
+  - type: particle
+    particle: EXPLOSION
+    count: 12
+    delay: 2
+    repeat: 1

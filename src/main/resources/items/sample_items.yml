@@ -1,0 +1,26 @@
+# =========================================================
+# HaoHanLunar - Sample Custom Item Definitions
+# Phase 9: MythicItem Specification
+# =========================================================
+LUNAR_ECLIPSE_BLADE:
+  Material: NETHERITE_SWORD
+  Display: "<gradient:#ff4500:#8a2be2><b>Lunar Eclipse Blade</b></gradient>"
+  Lore:
+  - "<gray>Thanh kiếm rèn từ mảnh vỡ Mặt Trăng."
+  - "<yellow>Kỹ năng: <gold>Nguyệt Trảm (Chuột phải)"
+  CustomModelData: 10501
+  Rarity: EPIC
+  Unbreakable: true
+  Enchantments:
+  - SHARPNESS 5
+  - UNBREAKING 3
+  Attributes:
+    MAIN_HAND:
+      GENERIC_ATTACK_DAMAGE: 14.5
+      GENERIC_ATTACK_SPEED: 1.6
+  ItemFlags:
+  - HIDE_ATTRIBUTES
+  - HIDE_ENCHANTS
+  Skills:
+  - skill{s=MoonlightSlash;cd=60} @TargetLocation ~onUse
+  - skill{s=LunarBleed;cd=20} @Target ~onDamage

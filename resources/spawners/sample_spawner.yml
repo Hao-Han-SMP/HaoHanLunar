@@ -1,0 +1,25 @@
+# =========================================================
+# HaoHanLunar - Sample Fixed Spawner Definition
+# =========================================================
+config-version: 1
+id: lunar_crater_spawner
+
+# Spawn coordinates
+world: haohan:lunar
+x: 100.5
+y: 65.0
+z: -250.5
+
+# Mob definition ID (must match an id in mobs/)
+mob: sample_lunar_beast
+
+# Spawner limits and ranges
+max_mobs: 1
+radius: 10.0
+activation_range: 32.0
+respawn_cooldown: 60
+
+# Optional conditions required for spawning
+conditions:
+  - id: player_within
+    radius: 32.0

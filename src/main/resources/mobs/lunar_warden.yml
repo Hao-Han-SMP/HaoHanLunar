@@ -1,0 +1,40 @@
+id: lunar_warden
+entity-type: IRON_GOLEM
+display-name: "The Lunar Warden"
+model-id: thelunarwarden
+attributes:
+  max_health: 1000.0
+options:
+  aware: false
+  invisible: true
+  persistent: true
+movement:
+  walk-forward-speed: 0.125
+  walk-chase-speed: 0.180
+  walk-strafe-speed: 0.135
+  walk-backward-speed: 0.130
+  head-height: 5.2
+attack-animations:
+  - attack_slash_left
+  - attack_sweep_right
+  - attack_slash_straight
+  - attack_thrust_fling
+  - skill_charge_summon
+  - skill_shield_charge
+  - skill_shield_sword_slam
+  - skill_shield_block_push
+  - skill_shield_block
+  - skill_aerial_slash_combo
+skills:
+  - aerial_slash_combo
+  - ground_slam
+  - celestial_summon
+  - shield_block
+  - shield_block_push
+  - shield_charge
+  - shield_sword_slam
+  - targeted_light_strike
+  - thrust_fling
+  - pursuit
+tags: [boss, lunar]
+drop-table: lunar_warden

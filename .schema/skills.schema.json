@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LunarSkillDefinition",
+  "description": "Schema for HaoHanLunar skill definition YAML files",
+  "type": "object",
+  "required": ["id"],
+  "properties": {
+    "config-version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_.-]+$"
+    },
+    "trigger": {
+      "type": "string"
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cooldown": {
+      "type": "number",
+      "minimum": 0
+    },
+    "cooldown-group": {
+      "type": "string"
+    },
+    "group-cooldown": {
+      "type": "number",
+      "minimum": 0
+    },
+    "targeter": {
+      "type": "string"
+    },
+    "conditions": {
+      "type": "array"
+    },
+    "mechanics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

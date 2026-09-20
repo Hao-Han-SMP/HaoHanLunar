@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LunarSpawnerDefinition",
+  "description": "Schema for HaoHanLunar spawner definition YAML files",
+  "type": "object",
+  "required": ["id", "mob"],
+  "properties": {
+    "config-version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_.-]+$"
+    },
+    "world": {
+      "type": "string"
+    },
+    "x": {
+      "type": "number"
+    },
+    "y": {
+      "type": "number"
+    },
+    "z": {
+      "type": "number"
+    },
+    "mob": {
+      "type": "string"
+    },
+    "max_mobs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mobs_per_spawn": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "radius": {
+      "type": "number",
+      "minimum": 0
+    },
+    "activation_range": {
+      "type": "number",
+      "minimum": 0
+    },
+    "respawn_cooldown": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "soft_leash_radius": {
+      "type": "number",
+      "minimum": 0
+    },
+    "hard_leash_radius": {
+      "type": "number",
+      "minimum": 0
+    },
+    "conditions": {
+      "type": "array"
+    },
+    "waves": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": true
+}

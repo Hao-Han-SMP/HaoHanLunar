@@ -1,0 +1,30 @@
+# =========================================================
+# HaoHanLunar - Sample Skill Definition
+# =========================================================
+config-version: 1
+id: sample_meteor_strike
+
+# Triggers: onSpawn, onTimer, onAttack, onCombat, onDamaged, onDeath, onKill, onInteract, onSignal
+trigger: onCombat
+
+# Cooldown in seconds before the skill can be re-cast
+cooldown: 10
+
+# Conditions that must all pass for the skill to trigger
+conditions:
+  - id: distance
+    min: 3.0
+    max: 20.0
+
+# Targeter: self, target, nearest_player, players_in_radius
+targeter: target
+
+# Mechanics execution chain
+mechanics:
+  - type: message
+    message: "<mob.name>&c prepares a crushing meteor strike on <target.name>!"
+  - type: sound
+    sound: entity_warden_heartbeat
+  - type: damage
+    amount: 15.0
+    delay: 20
