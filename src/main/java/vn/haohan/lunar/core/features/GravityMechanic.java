@@ -163,13 +163,13 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     public void applyLunarAttributes(LivingEntity entity) {
         if (entity.getScoreboardTags().contains("hh_lunar_physic")) return;
 
-        applyModifier(entity, Attribute.GENERIC_GRAVITY, -0.8343, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
-        applyModifier(entity, Attribute.GENERIC_SAFE_FALL_DISTANCE, 15.0, AttributeModifier.Operation.ADD_NUMBER);
-        applyModifier(entity, Attribute.GENERIC_FALL_DAMAGE_MULTIPLIER, -0.8, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
-        applyModifier(entity, Attribute.GENERIC_ATTACK_KNOCKBACK, 0.75, AttributeModifier.Operation.ADD_NUMBER);
+        applyModifier(entity, Attribute.GRAVITY, -0.8343, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+        applyModifier(entity, Attribute.SAFE_FALL_DISTANCE, 15.0, AttributeModifier.Operation.ADD_NUMBER);
+        applyModifier(entity, Attribute.FALL_DAMAGE_MULTIPLIER, -0.8, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+        applyModifier(entity, Attribute.ATTACK_KNOCKBACK, 0.75, AttributeModifier.Operation.ADD_NUMBER);
 
         if (entity instanceof Player player) {
-            applyModifier(player, Attribute.PLAYER_BLOCK_BREAK_SPEED, -0.2, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
+            applyModifier(player, Attribute.BLOCK_BREAK_SPEED, -0.2, AttributeModifier.Operation.MULTIPLY_SCALAR_1);
         }
 
         entity.addScoreboardTag("hh_lunar_physic");
@@ -178,13 +178,13 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     public void removeLunarAttributes(LivingEntity entity) {
         if (!entity.getScoreboardTags().contains("hh_lunar_physic")) return;
 
-        removeModifier(entity, Attribute.GENERIC_GRAVITY);
-        removeModifier(entity, Attribute.GENERIC_SAFE_FALL_DISTANCE);
-        removeModifier(entity, Attribute.GENERIC_FALL_DAMAGE_MULTIPLIER);
-        removeModifier(entity, Attribute.GENERIC_ATTACK_KNOCKBACK);
+        removeModifier(entity, Attribute.GRAVITY);
+        removeModifier(entity, Attribute.SAFE_FALL_DISTANCE);
+        removeModifier(entity, Attribute.FALL_DAMAGE_MULTIPLIER);
+        removeModifier(entity, Attribute.ATTACK_KNOCKBACK);
 
         if (entity instanceof Player player) {
-            removeModifier(player, Attribute.PLAYER_BLOCK_BREAK_SPEED);
+            removeModifier(player, Attribute.BLOCK_BREAK_SPEED);
             // Also reset mining modifiers just in case
             plugin.getMiningMechanic().resetMiningModifiers(player);
         }

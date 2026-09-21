@@ -31,8 +31,8 @@ public final class WardenBossBar {
         }
 
         double maxHp = WardenConstants.BOSS_MAX_HEALTH;
-        if (golem.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null) {
-            maxHp = golem.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+        if (golem.getAttribute(Attribute.MAX_HEALTH) != null) {
+            maxHp = golem.getAttribute(Attribute.MAX_HEALTH).getValue();
         }
         double currentHp = MathUtil.clamp(golem.getHealth(), 0.0, maxHp);
 

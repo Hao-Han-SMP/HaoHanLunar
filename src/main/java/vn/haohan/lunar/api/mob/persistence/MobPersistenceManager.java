@@ -64,7 +64,7 @@ public final class MobPersistenceManager {
         if (savedHealth != null && savedHealth > 0.0) {
             double targetHealth = savedHealth;
             try {
-                var attr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                var attr = entity.getAttribute(Attribute.MAX_HEALTH);
                 if (attr != null) {
                     targetHealth = Math.min(savedHealth, attr.getValue());
                 }

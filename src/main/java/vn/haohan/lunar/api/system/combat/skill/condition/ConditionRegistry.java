@@ -203,7 +203,7 @@ public final class ConditionRegistry {
             Location loc = subject.getLocation();
             if (loc == null || loc.getWorld() == null) return false;
             try {
-                String biomeName = loc.getBlock().getBiome().name();
+                String biomeName = loc.getBlock().getBiome().getKey().getKey();
                 return expected.equalsIgnoreCase(biomeName);
             } catch (Throwable ignored) {
                 return false;

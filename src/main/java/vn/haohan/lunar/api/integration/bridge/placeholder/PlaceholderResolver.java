@@ -261,7 +261,7 @@ public final class PlaceholderResolver {
     private static double safeGetDamage(LivingEntity entity) {
         if (entity == null) return 5.0;
         try {
-            var attr = entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+            var attr = entity.getAttribute(Attribute.ATTACK_DAMAGE);
             if (attr != null) return attr.getValue();
         } catch (Throwable ignored) {
         }

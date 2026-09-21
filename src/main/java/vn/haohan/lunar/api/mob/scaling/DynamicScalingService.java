@@ -83,7 +83,7 @@ public final class DynamicScalingService {
         if (mob.baseDamage() <= 0) {
             double baseDmg = 5.0;
             try {
-                AttributeInstance dmgAttr = entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+                AttributeInstance dmgAttr = entity.getAttribute(Attribute.ATTACK_DAMAGE);
                 if (dmgAttr != null) {
                     baseDmg = dmgAttr.getBaseValue();
                 }
@@ -100,7 +100,7 @@ public final class DynamicScalingService {
         double newMaxHealth = Math.max(1.0, mob.baseMaxHealth() * result.healthMultiplier());
 
         try {
-            AttributeInstance maxHealthAttr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            AttributeInstance maxHealthAttr = entity.getAttribute(Attribute.MAX_HEALTH);
             if (maxHealthAttr != null) {
                 maxHealthAttr.setBaseValue(newMaxHealth);
             }
@@ -112,7 +112,7 @@ public final class DynamicScalingService {
         }
 
         try {
-            AttributeInstance dmgAttr = entity.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE);
+            AttributeInstance dmgAttr = entity.getAttribute(Attribute.ATTACK_DAMAGE);
             if (dmgAttr != null) {
                 dmgAttr.setBaseValue(mob.baseDamage() * result.damageMultiplier());
             }

@@ -131,7 +131,7 @@ public final class DamagePipeline implements CombatManager {
                         double current = entity.getHealth();
                         double max = Double.MAX_VALUE;
                         try {
-                            var attr = entity.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                            var attr = entity.getAttribute(Attribute.MAX_HEALTH);
                             if (attr != null) {
                                 max = attr.getValue();
                             }

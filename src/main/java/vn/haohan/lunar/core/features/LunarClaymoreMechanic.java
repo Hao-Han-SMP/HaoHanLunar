@@ -425,7 +425,7 @@ public class LunarClaymoreMechanic implements Listener, LunarSubSystem {
             int breachLvl = getMaceEnchantLevel(item, "breach");
             if (breachLvl > 0 && target instanceof LivingEntity livingTarget) {
                 double armor = 0;
-                var attr = livingTarget.getAttribute(Attribute.GENERIC_ARMOR);
+                var attr = livingTarget.getAttribute(Attribute.ARMOR);
                 if (attr != null) armor = attr.getValue();
                 if (armor > 0) {
                     double armorPenetration = 0.15 * breachLvl;

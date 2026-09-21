@@ -77,6 +77,14 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
     }
 
     private void tickPlayerOxygen(Player player) {
+        GameMode mode = player.getGameMode();
+        if (mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR) {
+            PlayerLunarData data = plugin.getLunarDataManager().get(player);
+            data.setOxygen(600);
+            data.setOxygenDmg(0);
+            return;
+        }
+
         PlayerLunarData data = plugin.getLunarDataManager().get(player);
         if (!player.getScoreboardTags().contains("hh_lunar_oxygen")) {
             data.setOxygen(600);
@@ -163,8 +171,10 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
                     data.setOxygenDmg(data.getOxygenDmg() + 1);
                     if (data.getOxygenDmg() >= 20) {
                         data.setOxygenDmg(0);
-                        player.damage(2.0, DamageSource.builder(DamageType.DROWN).build());
-                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_DROWN, SoundCategory.PLAYERS, 1.0f, 1.0f);
+                        if (player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR) {
+                            player.damage(2.0, DamageSource.builder(DamageType.DROWN).build());
+                            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_DROWN, SoundCategory.PLAYERS, 1.0f, 1.0f);
+                        }
                     }
                 } else {
                     data.setOxygenDmg(0);

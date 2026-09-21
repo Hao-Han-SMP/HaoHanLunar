@@ -71,7 +71,7 @@ class StatSystemTest {
                         health[0] = (double) args[0];
                         yield null;
                     }
-                    case "getAttribute" -> (args.length > 0 && (Objects.equals(args[0], Attribute.GENERIC_MAX_HEALTH) || String.valueOf(args[0]).contains("MAX_HEALTH"))) ? maxHealthAttr : null;
+                    case "getAttribute" -> (args.length > 0 && (Objects.equals(args[0], Attribute.MAX_HEALTH) || String.valueOf(args[0]).contains("MAX_HEALTH"))) ? maxHealthAttr : null;
                     case "getLocation" -> new Location(mockWorld, 0, 64, 0);
                     case "getWorld" -> mockWorld;
                     case "isValid" -> true;

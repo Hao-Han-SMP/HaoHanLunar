@@ -36,7 +36,7 @@ public final class WardenTargeting {
 
         List<Player> lowHealthPlayers = new ArrayList<>();
         for (Player p : nearbyPlayers) {
-            double maxHp = p.getAttribute(Attribute.GENERIC_MAX_HEALTH) != null ? p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() : 20.0;
+            double maxHp = p.getAttribute(Attribute.MAX_HEALTH) != null ? p.getAttribute(Attribute.MAX_HEALTH).getValue() : 20.0;
             double hp = p.getHealth();
             double hpRatio = hp / maxHp;
 

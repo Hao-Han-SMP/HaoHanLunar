@@ -154,7 +154,7 @@ public final class WardenShowcaseHandler {
 
     private static void applyScaleAttribute(IronGolem golem, double scale) {
         try {
-            AttributeInstance instance = golem.getAttribute(Attribute.GENERIC_SCALE);
+            AttributeInstance instance = golem.getAttribute(Attribute.SCALE);
             if (instance != null) {
                 instance.setBaseValue(scale);
                 return;
