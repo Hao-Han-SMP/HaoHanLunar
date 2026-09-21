@@ -2,21 +2,29 @@ package vn.haohan.lunar;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import vn.haohan.lunar.api.system.world.pin.PinBoundaryListener;
+import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.core.command.LunarCommands;
 import vn.haohan.lunar.core.features.*;
 import vn.haohan.lunar.core.features.beacon.BeaconShieldMechanic;
 import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
 import vn.haohan.lunar.core.features.boss.warden.WardenSpawner;
 import vn.haohan.lunar.core.features.boss.warden.showcase.WardenShowcaseHandler;
+import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
 import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
 import vn.haohan.lunar.core.subsystem.LunarSubSystems;
+import vn.haohan.lunar.core.subsystem.engine.ItemCoreSubSystem;
+import vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem;
+import vn.haohan.lunar.core.subsystem.engine.PinSubSystem;
+import vn.haohan.lunar.core.subsystem.engine.PlayerDataSubSystem;
 import vn.haohan.lunar.core.system.data.PlayerDataManager;
 import vn.haohan.lunar.core.system.item.LunarItems;
 
@@ -28,6 +36,8 @@ import java.util.List;
  * and the primary 1-tick repeating update loop.
  */
 public final class HaoHanLunarPlugin extends JavaPlugin {
+
+    public static final NamespacedKey LUNAR_WORLD_KEY = NamespacedKey.fromString("haohan:lunar");
 
     private static HaoHanLunarPlugin instance;
 
@@ -49,6 +59,25 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
      */
     public static HaoHanLunarPlugin getInstance() {
         return instance;
+    }
+
+    /**
+     * Checks if the given world is the Lunar dimension.
+     *
+     * @param world world to check
+     * @return true if world matches the Lunar dimension key
+     */
+    public static boolean isLunarWorld(World world) {
+        return world != null && LUNAR_WORLD_KEY.equals(world.getKey());
+    }
+
+    /**
+     * Retrieves the loaded Lunar dimension world, or null if not loaded.
+     *
+     * @return lunar world instance or null
+     */
+    public static World getLunarWorld() {
+        return Bukkit.getWorld(LUNAR_WORLD_KEY);
     }
 
     @Override
@@ -91,8 +120,8 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(telescopeMechanic, this);
         pm.registerEvents(lunarClaymoreMechanic, this);
         try {
-            vn.haohan.lunar.api.system.world.pin.PinManager.get().load(getDataFolder().toPath().resolve("regions.yml"));
-            pm.registerEvents(new vn.haohan.lunar.api.system.world.pin.PinBoundaryListener(), this);
+            PinManager.get().load(getDataFolder().toPath().resolve("regions.yml"));
+            pm.registerEvents(new PinBoundaryListener(), this);
         } catch (Throwable t) {
             getLogger().warning("Could not load regions.yml: " + t.getMessage());
         }
@@ -113,21 +142,23 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
                     return true;
                 }
 
-                String lunarWorldName = getConfig().getString("skybox.world", "haohan:lunar");
-                World lunarWorld = Bukkit.getWorld(lunarWorldName);
-
+                World lunarWorld = getLunarWorld();
                 if (lunarWorld == null) {
-                    // Search by key
-                    for (World w : Bukkit.getWorlds()) {
-                        if (w.getKey().toString().equals(lunarWorldName) || w.getName().equalsIgnoreCase("lunar")) {
-                            lunarWorld = w;
-                            break;
+                    String lunarWorldName = getConfig().getString("skybox.world", LUNAR_WORLD_KEY.toString());
+                    lunarWorld = Bukkit.getWorld(lunarWorldName);
+                    if (lunarWorld == null) {
+                        // Search by key
+                        for (World w : Bukkit.getWorlds()) {
+                            if (w.getKey().toString().equals(lunarWorldName) || w.getName().equalsIgnoreCase("lunar")) {
+                                lunarWorld = w;
+                                break;
+                            }
                         }
                     }
                 }
 
                 if (lunarWorld == null) {
-                    player.sendMessage("§c[HaoHanLunar] Không tìm thấy thế giới Mặt Trăng (§e" + lunarWorldName + "§c)! Hãy đảm bảo thế giới đã được nạp.");
+                    player.sendMessage("§c[HaoHanLunar] Không tìm thấy thế giới Mặt Trăng! Hãy đảm bảo thế giới đã được nạp.");
                     return true;
                 }
 
@@ -241,10 +272,10 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }, 1L, 1L);
 
         // Initialize Lunar SubSystems and commands
-        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem());
-        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.ItemCoreSubSystem());
-        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.PlayerDataSubSystem());
-        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.PinSubSystem());
+        LunarSubSystems.register(new MobCoreSubSystem());
+        LunarSubSystems.register(new ItemCoreSubSystem());
+        LunarSubSystems.register(new PlayerDataSubSystem());
+        LunarSubSystems.register(new PinSubSystem());
         LunarSubSystems.init(this);
         LunarCommands.init(this);
 
@@ -265,6 +296,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         if (lunarWardenMechanic != null) {
             lunarWardenMechanic.clearAllWardens();
         }
+        WardenEntityManager.purgeAllTempEntities();
 
         // Save in-memory player state
         if (lunarDataManager != null) {
@@ -289,10 +321,11 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }
 
         try {
-            vn.haohan.lunar.api.system.world.pin.PinManager.get().save(getDataFolder().toPath().resolve("regions.yml"));
+            PinManager.get().save(getDataFolder().toPath().resolve("regions.yml"));
         } catch (Throwable ignored) {}
 
         LunarSubSystems.disable(this);
+        LunarCommands.clear();
         getLogger().info("HaoHanLunar plugin successfully disabled.");
     }
 

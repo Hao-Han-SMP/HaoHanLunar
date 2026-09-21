@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.util.BoundingBox;
@@ -64,15 +65,14 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
         if (safeZoneCacheTick % SAFE_ZONE_CACHE_CLEANUP_INTERVAL == 0 || safeZoneCache.size() > 500) {
             cleanupSafeZoneCache();
         }
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getWorld().getKey().toString().equals("haohan:lunar")) {
-                tickPlayerOxygen(player);
-            } else {
-                // If player leaves lunar dimension, reset oxygen parameters if they had the tag
-                if (player.getScoreboardTags().contains("hh_lunar_oxygen")) {
-                    resetPlayerOxygen(player);
-                }
-            }
+
+        World lunarWorld = HaoHanLunarPlugin.getLunarWorld();
+        if (lunarWorld == null) {
+            return;
+        }
+
+        for (Player player : lunarWorld.getPlayers()) {
+            tickPlayerOxygen(player);
         }
     }
 
@@ -148,35 +148,31 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
 
                 data.setOxygenDmg(0);
 
-                // Check if depleted
+                // If tank is empty after this tick, play break sound and deactivate
                 if (data.getTankO2() <= 0) {
-                    player.showTitle(net.kyori.adventure.title.Title.title(
-                        Component.empty(),
-                        Component.text("⚠ Bình oxy đã cạn!", NamedTextColor.RED)
-                    ));
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_BREATH, SoundCategory.MASTER, 2.0f, 0.4f);
-                    data.setTankTier(0);
                     data.setTankActive(false);
+                    player.removeScoreboardTag("hh_o2tank_active");
+                    player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BREAK, SoundCategory.PLAYERS, 1.0f, 1.0f);
                 }
             } else {
-                // Decay base oxygen
-                if (data.getOxygen() > 0) {
-                    data.setOxygen(data.getOxygen() - 1);
-                }
+                // Base oxygen decay (when no active tank)
+                data.setOxygen(data.getOxygen() - 1);
 
-                // Suffocation damage
+                // Suffocation damage logic
                 if (data.getOxygen() <= 0) {
                     data.setOxygenDmg(data.getOxygenDmg() + 1);
                     if (data.getOxygenDmg() >= 20) {
-                        DamageSource source = DamageSource.builder(DamageType.DROWN).build();
-                        player.damage(1.0, source);
                         data.setOxygenDmg(0);
+                        player.damage(2.0, DamageSource.builder(DamageType.DROWN).build());
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT_DROWN, SoundCategory.PLAYERS, 1.0f, 1.0f);
                     }
+                } else {
+                    data.setOxygenDmg(0);
                 }
             }
         }
 
-        // Display oxygen bar
+        // Display oxygen and tank status via action bar
         displayOxygen(player, data);
     }
 
@@ -310,7 +306,7 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
     @EventHandler
     public void onPlayerChangeWorld(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
-        if (!player.getWorld().getKey().toString().equals("haohan:lunar")) {
+        if (!HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
             resetPlayerOxygen(player);
         }
     }
@@ -318,10 +314,19 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld().getKey().toString().equals("haohan:lunar")) {
+        if (HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
             plugin.getLunarDataManager().saveAndRemove(player);
         } else {
             plugin.getLunarDataManager().remove(player);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+        if (event.getRespawnLocation().getWorld() != null
+                && !HaoHanLunarPlugin.isLunarWorld(event.getRespawnLocation().getWorld())) {
+            resetPlayerOxygen(player);
         }
     }
 
@@ -355,7 +360,7 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
     private SafeZoneResult getSafeZoneResult(Location loc) {
         if (loc == null || loc.getWorld() == null) return SafeZoneResult.OUTSIDE;
         World world = loc.getWorld();
-        if (!world.getKey().toString().equals("haohan:lunar")) return SafeZoneResult.OUTSIDE;
+        if (!HaoHanLunarPlugin.isLunarWorld(world)) return SafeZoneResult.OUTSIDE;
 
         int chunkX = loc.getBlockX() >> 4;
         int chunkZ = loc.getBlockZ() >> 4;
@@ -400,10 +405,10 @@ public class OxygenMechanic implements Listener, LunarSubSystem {
         return new SafeZoneResult(inRestBase, inSpaceStation);
     }
 
-    private record ChunkKey(UUID worldId, int x, int z) { }
-    private record SafeZoneResult(boolean inRestBase, boolean inSpaceStation) {
-        private static final SafeZoneResult OUTSIDE = new SafeZoneResult(false, false);
+    private record ChunkKey(UUID worldId, int chunkX, int chunkZ) {}
+    private record SafeZoneCacheEntry(List<SafeZoneBox> boxes, long expiresAtTick) {}
+    private record SafeZoneBox(String key, BoundingBox bounds) {}
+    public record SafeZoneResult(boolean inRestBase, boolean inSpaceStation) {
+        public static final SafeZoneResult OUTSIDE = new SafeZoneResult(false, false);
     }
-    private record SafeZoneBox(String key, BoundingBox bounds) { }
-    private record SafeZoneCacheEntry(List<SafeZoneBox> boxes, long expiresAtTick) { }
 }

@@ -1,9 +1,10 @@
 package vn.haohan.lunar.api.system.combat.skill.projectile;
 
-import java.util.List;
+import java.util.Iterator;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Centralized tracker for in-flight projectiles.
@@ -11,7 +12,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public final class ProjectileTracker {
 
-    private final List<ActiveProjectile> projectiles = new CopyOnWriteArrayList<>();
+    private final Set<ActiveProjectile> projectiles = ConcurrentHashMap.newKeySet();
 
     public ActiveProjectile spawn(ActiveProjectile projectile) {
         Objects.requireNonNull(projectile, "Projectile must not be null");
@@ -20,10 +21,14 @@ public final class ProjectileTracker {
     }
 
     public void tick(long currentTick) {
-        projectiles.removeIf(p -> {
+        Iterator<ActiveProjectile> iterator = projectiles.iterator();
+        while (iterator.hasNext()) {
+            ActiveProjectile p = iterator.next();
             p.tick();
-            return p.isDead();
-        });
+            if (p.isDead()) {
+                iterator.remove();
+            }
+        }
     }
 
     public int size() {
@@ -32,13 +37,16 @@ public final class ProjectileTracker {
 
     public void cleanupShooter(UUID shooterId) {
         if (shooterId == null) return;
-        projectiles.removeIf(p -> {
+        Iterator<ActiveProjectile> iterator = projectiles.iterator();
+        while (iterator.hasNext()) {
+            ActiveProjectile p = iterator.next();
             if (shooterId.equals(p.shooterId())) {
                 p.terminate();
-                return true;
+                iterator.remove();
+            } else if (p.isDead()) {
+                iterator.remove();
             }
-            return p.isDead();
-        });
+        }
     }
 
     public void clear() {

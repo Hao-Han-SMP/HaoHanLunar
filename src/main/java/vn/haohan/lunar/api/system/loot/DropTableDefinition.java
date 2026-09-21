@@ -228,7 +228,9 @@ public record DropTableDefinition(String id,
         List<ItemStack> items = new ArrayList<>();
         UUID playerUuid = metadata != null && metadata.killer() != null ? metadata.killer().getUniqueId() : null;
 
-        double luckBonus = metadata != null ? metadata.amountModifier() : 1.0;
+        // Base amountModifier is already applied inside DropEntry.rollAmount().
+        // luckBonus only scales extra bonus luck and bonus mob levels.
+        double luckBonus = 1.0;
         double luck = (metadata != null && metadata.killer() != null)
                 ? LuckModifier.calculateLuck(metadata.killer())
                 : 0.0;

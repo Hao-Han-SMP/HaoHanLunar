@@ -14,7 +14,7 @@ public final class CrowdControlTracker {
     private final LongSupplier tickSupplier;
 
     public CrowdControlTracker() {
-        this(System::currentTimeMillis);
+        this(() -> System.currentTimeMillis() / 50L);
     }
 
     public CrowdControlTracker(LongSupplier tickSupplier) {
@@ -184,8 +184,9 @@ public final class CrowdControlTracker {
     }
 
     public Map<CCState, CCEffect> snapshot() {
-        long now = tickSupplier.getAsLong();
         cleanupExpired();
-        return Collections.unmodifiableMap(new EnumMap<>(activeEffects));
+        Map<CCState, CCEffect> copy = new EnumMap<>(CCState.class);
+        copy.putAll(activeEffects);
+        return Collections.unmodifiableMap(copy);
     }
 }

@@ -106,7 +106,7 @@ public final class SkillScheduler {
             }
             try {
                 task.callback().run();
-            } catch (RuntimeException exception) {
+            } catch (Throwable exception) {
                 warningLogger.accept("Skill task " + task.id() + " failed: " + exception.getMessage());
             }
             task.executionsRemaining--;

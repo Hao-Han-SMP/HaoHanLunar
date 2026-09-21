@@ -18,6 +18,46 @@ public class PlayerLunarData {
     private int tankCharge = 0;
     private boolean tankActive = false;
 
+    private static volatile Keys cachedKeys;
+
+    private record Keys(
+        NamespacedKey oxygen,
+        NamespacedKey oxygenDmg,
+        NamespacedKey rbRegen,
+        NamespacedKey ssRegen,
+        NamespacedKey tankO2,
+        NamespacedKey tankTier,
+        NamespacedKey tankCharge,
+        NamespacedKey tankActive
+    ) {
+        static Keys of(Plugin plugin) {
+            return new Keys(
+                new NamespacedKey(plugin, "oxygen"),
+                new NamespacedKey(plugin, "oxygen_dmg"),
+                new NamespacedKey(plugin, "rb_regen"),
+                new NamespacedKey(plugin, "ss_regen"),
+                new NamespacedKey(plugin, "tank_o2"),
+                new NamespacedKey(plugin, "tank_tier"),
+                new NamespacedKey(plugin, "tank_charge"),
+                new NamespacedKey(plugin, "tank_active")
+            );
+        }
+    }
+
+    private static Keys getKeys(Plugin plugin) {
+        Keys k = cachedKeys;
+        if (k == null) {
+            synchronized (PlayerLunarData.class) {
+                k = cachedKeys;
+                if (k == null) {
+                    k = Keys.of(plugin);
+                    cachedKeys = k;
+                }
+            }
+        }
+        return k;
+    }
+
     public PlayerLunarData(Player player) {
         this.player = player;
     }
@@ -44,28 +84,30 @@ public class PlayerLunarData {
     public void setTankActive(boolean tankActive) { this.tankActive = tankActive; }
 
     public void load(Plugin plugin) {
+        Keys k = getKeys(plugin);
         PersistentDataContainer pdc = player.getPersistentDataContainer();
-        oxygen = pdc.getOrDefault(new NamespacedKey(plugin, "oxygen"), PersistentDataType.INTEGER, 600);
-        oxygenDmg = pdc.getOrDefault(new NamespacedKey(plugin, "oxygen_dmg"), PersistentDataType.INTEGER, 0);
-        rbRegen = pdc.getOrDefault(new NamespacedKey(plugin, "rb_regen"), PersistentDataType.INTEGER, 0);
-        ssRegen = pdc.getOrDefault(new NamespacedKey(plugin, "ss_regen"), PersistentDataType.INTEGER, 0);
-        tankO2 = pdc.getOrDefault(new NamespacedKey(plugin, "tank_o2"), PersistentDataType.INTEGER, 0);
-        tankTier = pdc.getOrDefault(new NamespacedKey(plugin, "tank_tier"), PersistentDataType.INTEGER, 0);
-        tankCharge = pdc.getOrDefault(new NamespacedKey(plugin, "tank_charge"), PersistentDataType.INTEGER, 0);
+        oxygen = pdc.getOrDefault(k.oxygen(), PersistentDataType.INTEGER, 600);
+        oxygenDmg = pdc.getOrDefault(k.oxygenDmg(), PersistentDataType.INTEGER, 0);
+        rbRegen = pdc.getOrDefault(k.rbRegen(), PersistentDataType.INTEGER, 0);
+        ssRegen = pdc.getOrDefault(k.ssRegen(), PersistentDataType.INTEGER, 0);
+        tankO2 = pdc.getOrDefault(k.tankO2(), PersistentDataType.INTEGER, 0);
+        tankTier = pdc.getOrDefault(k.tankTier(), PersistentDataType.INTEGER, 0);
+        tankCharge = pdc.getOrDefault(k.tankCharge(), PersistentDataType.INTEGER, 0);
         
-        Byte active = pdc.get(new NamespacedKey(plugin, "tank_active"), PersistentDataType.BYTE);
+        Byte active = pdc.get(k.tankActive(), PersistentDataType.BYTE);
         tankActive = active != null && active == 1;
     }
 
     public void save(Plugin plugin) {
+        Keys k = getKeys(plugin);
         PersistentDataContainer pdc = player.getPersistentDataContainer();
-        pdc.set(new NamespacedKey(plugin, "oxygen"), PersistentDataType.INTEGER, oxygen);
-        pdc.set(new NamespacedKey(plugin, "oxygen_dmg"), PersistentDataType.INTEGER, oxygenDmg);
-        pdc.set(new NamespacedKey(plugin, "rb_regen"), PersistentDataType.INTEGER, rbRegen);
-        pdc.set(new NamespacedKey(plugin, "ss_regen"), PersistentDataType.INTEGER, ssRegen);
-        pdc.set(new NamespacedKey(plugin, "tank_o2"), PersistentDataType.INTEGER, tankO2);
-        pdc.set(new NamespacedKey(plugin, "tank_tier"), PersistentDataType.INTEGER, tankTier);
-        pdc.set(new NamespacedKey(plugin, "tank_charge"), PersistentDataType.INTEGER, tankCharge);
-        pdc.set(new NamespacedKey(plugin, "tank_active"), PersistentDataType.BYTE, (byte) (tankActive ? 1 : 0));
+        pdc.set(k.oxygen(), PersistentDataType.INTEGER, oxygen);
+        pdc.set(k.oxygenDmg(), PersistentDataType.INTEGER, oxygenDmg);
+        pdc.set(k.rbRegen(), PersistentDataType.INTEGER, rbRegen);
+        pdc.set(k.ssRegen(), PersistentDataType.INTEGER, ssRegen);
+        pdc.set(k.tankO2(), PersistentDataType.INTEGER, tankO2);
+        pdc.set(k.tankTier(), PersistentDataType.INTEGER, tankTier);
+        pdc.set(k.tankCharge(), PersistentDataType.INTEGER, tankCharge);
+        pdc.set(k.tankActive(), PersistentDataType.BYTE, (byte) (tankActive ? 1 : 0));
     }
 }

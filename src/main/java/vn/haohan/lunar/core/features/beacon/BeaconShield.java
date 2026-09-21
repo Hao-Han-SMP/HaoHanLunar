@@ -4,6 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
+import vn.haohan.lunar.HaoHanLunarPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,13 +81,18 @@ public final class BeaconShield {
         return dx * dx + dy * dy + dz * dz <= radius * radius;
     }
 
-    public boolean isValid(String lunarWorldKey) {
+    public boolean isValid() {
         World world = beacon.getWorld();
-        if (world == null || !world.getKey().toString().equals(lunarWorldKey)) {
+        if (!HaoHanLunarPlugin.isLunarWorld(world)) {
             return false;
         }
         Block block = beacon.getBlock();
         return block.getType().name().equals("BEACON")
                 && world.isChunkLoaded(block.getX() >> 4, block.getZ() >> 4);
+    }
+
+    @Deprecated
+    public boolean isValid(String lunarWorldKey) {
+        return isValid();
     }
 }

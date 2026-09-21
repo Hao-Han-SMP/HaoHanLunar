@@ -2,7 +2,6 @@ package vn.haohan.lunar.core.features;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
@@ -19,7 +18,6 @@ import java.util.*;
 /** Spreads the lunar beacon's surface conversion as a noisy, staged wave. */
 public final class LunarSurfaceSpreadMechanic implements Listener, LunarSubSystem {
 
-    private static final String LUNAR_WORLD = "haohan:lunar";
     private static final List<Stage> STAGES = List.of(
             new Stage(Material.STONE, Set.of(Material.STONE, Material.DEEPSLATE, Material.TUFF,
                     Material.GRAVEL, Material.SAND)),
@@ -66,23 +64,30 @@ public final class LunarSurfaceSpreadMechanic implements Listener, LunarSubSyste
 
     @Override
     public void tick() {
+        if (spreads.isEmpty()) return;
+
         Iterator<Spread> iterator = spreads.iterator();
         while (iterator.hasNext()) {
             Spread spread = iterator.next();
             if (!isValid(spread)) {
+                spread.restorePreviousStates();
                 iterator.remove();
                 continue;
             }
-            spread.advanceAllStages();
+
             spread.age++;
-            if (spread.isComplete()) iterator.remove();
+            spread.advanceAllStages();
+
+            if (spread.isComplete()) {
+                iterator.remove();
+            }
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onBeaconPlace(BlockPlaceEvent event) {
         Block block = event.getBlockPlaced();
-        if (!isLunar(block.getWorld()) || block.getType() != Material.BEACON) return;
+        if (!HaoHanLunarPlugin.isLunarWorld(block.getWorld()) || block.getType() != Material.BEACON) return;
         Iterator<Spread> iterator = spreads.iterator();
         while (iterator.hasNext()) {
             Spread spread = iterator.next();
@@ -108,10 +113,20 @@ public final class LunarSurfaceSpreadMechanic implements Listener, LunarSubSyste
 
     @EventHandler
     public void onWorldUnload(WorldUnloadEvent event) {
-        spreads.removeIf(spread -> spread.beacon.getWorld() == event.getWorld());
+        Iterator<Spread> iterator = spreads.iterator();
+        while (iterator.hasNext()) {
+            Spread spread = iterator.next();
+            if (spread.beacon.getWorld() == event.getWorld()) {
+                spread.restorePreviousStates();
+                iterator.remove();
+            }
+        }
     }
 
     public void removeAll() {
+        for (Spread spread : spreads) {
+            spread.restorePreviousStates();
+        }
         spreads.clear();
     }
 
@@ -136,12 +151,8 @@ public final class LunarSurfaceSpreadMechanic implements Listener, LunarSubSyste
     private boolean isValid(Spread spread) {
         World world = spread.beacon.getWorld();
         Block beacon = spread.beacon.getBlock();
-        return isLunar(world) && beacon.getType() == Material.BEACON
+        return HaoHanLunarPlugin.isLunarWorld(world) && beacon.getType() == Material.BEACON
                 && world.isChunkLoaded(beacon.getX() >> 4, beacon.getZ() >> 4);
-    }
-
-    private boolean isLunar(World world) {
-        return world != null && world.getKey().toString().equals(LUNAR_WORLD);
     }
 
     private final class Spread {
@@ -170,63 +181,52 @@ public final class LunarSurfaceSpreadMechanic implements Listener, LunarSubSyste
             return true;
         }
 
-        private int applyRing(int stage, double radius) {
-            double previousRadius = previousRadii[stage];
-            if (radius <= previousRadius) return 0;
+        private void applyRing(int stageIndex, double targetRadius) {
+            double currentRadius = previousRadii[stageIndex];
+            if (targetRadius <= currentRadius) return;
+
+            Stage stage = STAGES.get(stageIndex);
             World world = beacon.getWorld();
-            Stage current = STAGES.get(stage);
-            int centerX = beacon.getBlockX();
-            int centerZ = beacon.getBlockZ();
-            int range = (int) Math.ceil(radius + edgeNoise + 1.0);
-            int inspected = 0;
-            // Keep both axes centered on the beacon. Using center + from as the
-            // lower bound would make every later ring occupy only one quadrant.
-            for (int x = centerX - range; x <= centerX + range; x++) {
-                for (int z = centerZ - range; z <= centerZ + range; z++) {
-                    double distance = Math.hypot(x + 0.5 - beacon.getX(), z + 0.5 - beacon.getZ());
-                    double noisyBoundary = mixedNoise(x, z, stage) * edgeNoise;
-                    if (distance > radius + noisyBoundary || distance <= previousRadius - 1.0 + noisyBoundary) continue;
-                    // Never force-load terrain just because a beacon wave reaches it.
-                    if (!world.isChunkLoaded(x >> 4, z >> 4)) continue;
-                    Block surface = world.getHighestBlockAt(x, z);
-                    if (!current.sources.contains(surface.getType())) continue;
-                    Location key = surface.getLocation();
-                    previousStates.putIfAbsent(key, surface.getBlockData().clone());
-                    surface.setType(current.result, false);
-                    appliedStates.put(key, surface.getBlockData().clone());
-                    world.spawnParticle(Particle.BLOCK, surface.getLocation().add(0.5, 1.0, 0.5),
-                            2, 0.28, 0.08, 0.28, 0.0, current.result.createBlockData());
-                    inspected++;
+            if (world == null) return;
+
+            int minX = (int) Math.floor(beacon.getX() - targetRadius - edgeNoise - 1);
+            int maxX = (int) Math.ceil(beacon.getX() + targetRadius + edgeNoise + 1);
+            int minZ = (int) Math.floor(beacon.getZ() - targetRadius - edgeNoise - 1);
+            int maxZ = (int) Math.ceil(beacon.getZ() + targetRadius + edgeNoise + 1);
+
+            for (int x = minX; x <= maxX; x++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    double dist = Math.hypot(x + 0.5 - beacon.getX(), z + 0.5 - beacon.getZ());
+                    double noise = ((Math.sin(x * 0.35) + Math.cos(z * 0.35)) * 0.5) * edgeNoise;
+                    double effectiveDist = dist + noise;
+
+                    if (effectiveDist > currentRadius && effectiveDist <= targetRadius) {
+                        int y = world.getHighestBlockYAt(x, z);
+                        Block block = world.getBlockAt(x, y, z);
+                        if (stage.replaceable().contains(block.getType())) {
+                            Location loc = block.getLocation();
+                            previousStates.putIfAbsent(loc, block.getBlockData().clone());
+                            block.setType(stage.targetMaterial(), false);
+                            appliedStates.put(loc, block.getBlockData().clone());
+                        }
+                    }
                 }
             }
-            previousRadii[stage] = radius;
-            return inspected;
+            previousRadii[stageIndex] = targetRadius;
         }
 
         private void restorePreviousStates() {
-            World world = beacon.getWorld();
-            if (world == null) return;
             for (Map.Entry<Location, BlockData> entry : previousStates.entrySet()) {
-                Location location = entry.getKey();
-                Block block = world.getBlockAt(location);
-                BlockData applied = appliedStates.get(location);
-                // Do not overwrite a block that a player changed after the wave.
-                if (applied != null && block.getBlockData().matches(applied)) {
+                Block block = entry.getKey().getBlock();
+                BlockData applied = appliedStates.get(entry.getKey());
+                if (applied == null || block.getBlockData().matches(applied)) {
                     block.setBlockData(entry.getValue(), false);
                 }
             }
             previousStates.clear();
             appliedStates.clear();
         }
-
-        private double mixedNoise(int x, int z, int stage) {
-            long hash = x * 341873128712L + z * 132897987541L + stage * 42317861L;
-            hash ^= hash >>> 13;
-            double fine = ((hash & 0xFFFFL) / 32767.5) - 1.0;
-            double broad = Math.sin(x * 0.23 + stage * 1.7) * Math.cos(z * 0.19 - stage * 0.8);
-            return broad * 0.65 + fine * 0.35;
-        }
     }
 
-    private record Stage(Material result, Set<Material> sources) { }
+    private record Stage(Material targetMaterial, Set<Material> replaceable) {}
 }

@@ -297,22 +297,18 @@ public class LunarWardenMechanic implements Listener, LunarSubSystem {
             IronGolem golem = (IronGolem) e.getEntity();
             WardenState state = bossStates.get(golem.getUniqueId());
 
-            if (state.bossBar != null) {
-                state.bossBar.name(net.kyori.adventure.text.Component.empty());
-                for (Player player : golem.getWorld().getPlayers()) {
-                    player.hideBossBar(state.bossBar);
+            if (state != null) {
+                if (state.bossBar != null) {
+                    state.bossBar.name(net.kyori.adventure.text.Component.empty());
+                    for (Player player : golem.getWorld().getPlayers()) {
+                        player.hideBossBar(state.bossBar);
+                    }
                 }
+                state.cleanup();
             }
 
             // Stop all BGM for this boss
             WardenBGMManager.stopBGMForBoss(golem.getUniqueId());
-
-            if (state.impaledTargetUUID != null) {
-                Entity victim = org.bukkit.Bukkit.getEntity(state.impaledTargetUUID);
-                if (victim instanceof Player p) {
-                    p.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS);
-                }
-            }
 
             WardenTrailCaptureSystem.clearHistory(golem.getUniqueId());
             bossStates.remove(golem.getUniqueId());

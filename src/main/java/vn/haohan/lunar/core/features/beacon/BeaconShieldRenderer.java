@@ -45,6 +45,7 @@ public final class BeaconShieldRenderer {
             display.setBillboard(Display.Billboard.FIXED);
             display.setInterpolationDuration(2);
             display.setPersistent(false);
+            display.addScoreboardTag("haohan_lunar_temp_entity");
             shield.getDisplays().add(display);
             if (globalDisplays != null) {
                 globalDisplays.add(display);

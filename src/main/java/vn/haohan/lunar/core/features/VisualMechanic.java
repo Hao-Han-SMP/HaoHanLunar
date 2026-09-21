@@ -27,15 +27,13 @@ import java.util.logging.Level;
  */
 public class VisualMechanic implements Listener, LunarSubSystem {
 
-    private static final String DEFAULT_LUNAR_WORLD_KEY = "haohan:lunar";
-
     private final HaoHanLunarPlugin plugin;
     private int tickCounter = 0;
     private int skyboxCheckCounter = 0;
 
     // SkyboxEngine integration settings
     private boolean skyboxEnabled = true;
-    private String lunarWorldKey = DEFAULT_LUNAR_WORLD_KEY;
+    private String lunarWorldKey = HaoHanLunarPlugin.LUNAR_WORLD_KEY.toString();
     private String defaultSkybox = "lunar_space";
     private final Map<String, String> biomeSkyboxMap = new HashMap<>();
 
@@ -56,7 +54,7 @@ public class VisualMechanic implements Listener, LunarSubSystem {
 
     @Override
     public int priority() {
-        return 45;
+        return 30;
     }
 
     @Override
@@ -74,7 +72,7 @@ public class VisualMechanic implements Listener, LunarSubSystem {
         ConfigurationSection sec = plugin.getConfig().getConfigurationSection("skybox");
         if (sec != null) {
             this.skyboxEnabled = sec.getBoolean("enabled", true);
-            this.lunarWorldKey = sec.getString("world", DEFAULT_LUNAR_WORLD_KEY);
+            this.lunarWorldKey = sec.getString("world", HaoHanLunarPlugin.LUNAR_WORLD_KEY.toString());
             this.defaultSkybox = sec.getString("default-skybox", "lunar_space");
 
             ConfigurationSection biomes = sec.getConfigurationSection("biome-skyboxes");
@@ -84,7 +82,10 @@ public class VisualMechanic implements Listener, LunarSubSystem {
                 }
             }
         } else {
-            // Default mappings if not explicitly defined in config
+            // Default configuration values
+            this.skyboxEnabled = true;
+            this.lunarWorldKey = HaoHanLunarPlugin.LUNAR_WORLD_KEY.toString();
+            this.defaultSkybox = "lunar_space";
             biomeSkyboxMap.put("haohan:lunar_terrae", "lunar_space");
             biomeSkyboxMap.put("haohan:lunar_maria", "lunar_space");
             biomeSkyboxMap.put("haohan:lunar_craters", "lunar_space");
@@ -94,9 +95,9 @@ public class VisualMechanic implements Listener, LunarSubSystem {
         }
     }
 
-    public void checkSkyboxEngineStatus() {
+    private void checkSkyboxEngineStatus() {
         if (Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) {
-            plugin.getLogger().info("[VisualMechanic] SkyboxEngine detected! Dynamic lunar skyboxes activated exclusively for " + lunarWorldKey + ".");
+            plugin.getLogger().info("[VisualMechanic] SkyboxEngine hook detected! Atmospheric dynamic skyboxes active.");
         } else {
             plugin.getLogger().info("[VisualMechanic] SkyboxEngine is not loaded. Custom shader skyboxes will remain idle until enabled.");
         }
@@ -107,9 +108,18 @@ public class VisualMechanic implements Listener, LunarSubSystem {
         tickCounter++;
         if (tickCounter >= 8) {
             tickCounter = 0;
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (player.getWorld().getKey().toString().equals(lunarWorldKey)) {
-                    spawnBiomeParticles(player);
+            if (lunarWorldKey.equals(HaoHanLunarPlugin.LUNAR_WORLD_KEY.toString())) {
+                World lunar = HaoHanLunarPlugin.getLunarWorld();
+                if (lunar != null) {
+                    for (Player player : lunar.getPlayers()) {
+                        spawnBiomeParticles(player);
+                    }
+                }
+            } else {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (player.getWorld().getKey().toString().equals(lunarWorldKey)) {
+                        spawnBiomeParticles(player);
+                    }
                 }
             }
         }
@@ -144,99 +154,90 @@ public class VisualMechanic implements Listener, LunarSubSystem {
                 if (now < expire) {
                     continue; // Temporary skybox still active
                 } else {
-                    temporarySkyboxExpirations.remove(uuid); // Expired, fall back to biome skybox
+                    temporarySkyboxExpirations.remove(uuid); // Expired
                 }
             }
 
-            // Determine target skybox based on player's current biome
+            // Determine target skybox based on player's current lunar biome
             NamespacedKey biomeKey = player.getLocation().getBlock().getBiome().getKey();
-            String targetSkybox = biomeSkyboxMap.getOrDefault(biomeKey.toString(), defaultSkybox);
+            String biomeId = biomeKey.toString();
+            String targetSkybox = biomeSkyboxMap.getOrDefault(biomeId, defaultSkybox);
 
-            String current = activeSkyboxes.get(uuid);
-            if (current == null || !current.equals(targetSkybox)) {
+            String currentSkybox = activeSkyboxes.get(uuid);
+            if (currentSkybox == null || !currentSkybox.equals(targetSkybox)) {
                 applySkybox(player, targetSkybox);
             }
         }
     }
 
-    /**
-     * Applies a skybox shader profile to the player using SkyboxEngine.
-     */
     public void applySkybox(Player player, String skyboxId) {
         if (!skyboxEnabled || player == null || !player.isOnline()) return;
-        if (!Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) return;
-        if (skyboxId == null || skyboxId.isBlank()) return;
 
-        String current = activeSkyboxes.get(player.getUniqueId());
-        if (skyboxId.equals(current)) {
-            return;
-        }
-
-        activeSkyboxes.put(player.getUniqueId(), skyboxId);
         try {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "skyboxengine enable " + player.getName() + " " + skyboxId);
+            var apiClass = Class.forName("com.skyboxengine.api.SkyboxAPI");
+            var method = apiClass.getMethod("setSkybox", Player.class, String.class);
+            method.invoke(null, player, skyboxId);
+            activeSkyboxes.put(player.getUniqueId(), skyboxId);
+        } catch (ClassNotFoundException e) {
+            // SkyboxEngine API class not found
         } catch (Throwable t) {
-            plugin.getLogger().log(Level.WARNING, "Failed to apply skybox '" + skyboxId + "' for " + player.getName(), t);
+            plugin.getLogger().log(Level.WARNING, "[VisualMechanic] Failed to apply skybox '" + skyboxId + "' to " + player.getName(), t);
         }
     }
 
-    /**
-     * Disables the active custom skybox for the player and resets to default environment.
-     */
-    public void clearSkybox(Player player) {
-        if (player == null) return;
-        String current = activeSkyboxes.remove(player.getUniqueId());
-        temporarySkyboxExpirations.remove(player.getUniqueId());
-
-        if (Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine") && player.isOnline()) {
-            try {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "skyboxengine disable " + player.getName());
-            } catch (Throwable t) {
-                plugin.getLogger().log(Level.WARNING, "Failed to disable skybox for " + player.getName(), t);
-            }
-        }
-    }
-
-    /**
-     * Temporarily sets an override skybox for the player (e.g. during a special attack or phase transition).
-     * Automatically reverts back to the appropriate biome skybox once expired.
-     */
-    public void setTemporarySkybox(Player player, String skyboxId, long durationTicks) {
+    public void applyTemporarySkybox(Player player, String skyboxId, long durationTicks) {
         if (!skyboxEnabled || player == null || !player.isOnline()) return;
-        long expireAt = System.currentTimeMillis() + (durationTicks * 50L);
-        temporarySkyboxExpirations.put(player.getUniqueId(), expireAt);
+
+        long expirationTime = System.currentTimeMillis() + (durationTicks * 50L);
+        temporarySkyboxExpirations.put(player.getUniqueId(), expirationTime);
         applySkybox(player, skyboxId);
     }
 
-    private void spawnBiomeParticles(Player player) {
-        Location loc = player.getLocation().add(0, 1, 0);
-        NamespacedKey biomeKey = loc.getBlock().getBiome().getKey();
-        String biome = biomeKey.toString();
+    public void clearSkybox(Player player) {
+        if (player == null) return;
+        UUID uuid = player.getUniqueId();
+        activeSkyboxes.remove(uuid);
+        temporarySkyboxExpirations.remove(uuid);
 
-        switch (biome) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) return;
+
+        try {
+            var apiClass = Class.forName("com.skyboxengine.api.SkyboxAPI");
+            var method = apiClass.getMethod("resetSkybox", Player.class);
+            method.invoke(null, player);
+        } catch (ClassNotFoundException e) {
+            // SkyboxEngine API not present
+        } catch (Throwable t) {
+            plugin.getLogger().log(Level.WARNING, "[VisualMechanic] Failed to reset skybox for " + player.getName(), t);
+        }
+    }
+
+    private void spawnBiomeParticles(Player player) {
+        Location loc = player.getLocation();
+        String biomeKey = loc.getBlock().getBiome().getKey().toString();
+
+        switch (biomeKey) {
             case "haohan:lunar_terrae":
-                player.spawnParticle(Particle.DUST, loc, 4, 10, 3, 10, 0.01);
+                player.spawnParticle(Particle.ASH, loc, 3, 10, 3, 10, 0.01);
                 break;
             case "haohan:lunar_maria":
-                var blackDust = new Particle.DustOptions(Color.fromRGB(0, 0, 0), 1.5f);
-                player.spawnParticle(Particle.DUST, loc, 4, 8, 2.5, 8, 0.01, blackDust);
+                var grayDust = new Particle.DustOptions(Color.fromRGB(80, 80, 80), 1.0f);
+                player.spawnParticle(Particle.DUST, loc, 2, 8, 2, 8, 0.01, grayDust);
                 break;
             case "haohan:lunar_craters":
-                player.spawnParticle(Particle.GLOW, loc, 2, 8, 2.5, 8, 0.03);
+                player.spawnParticle(Particle.WHITE_ASH, loc, 4, 10, 3, 10, 0.02);
                 break;
             case "haohan:lunar_crystal_craters":
-                var amethystPurple = new Particle.DustOptions(Color.fromRGB(184, 115, 245), 1.5f);
-                var whiteDust = new Particle.DustOptions(Color.fromRGB(255, 255, 255), 1.5f);
-                player.spawnParticle(Particle.DUST, loc, 3, 8, 2.5, 8, 0.01, amethystPurple);
-                player.spawnParticle(Particle.DUST, loc, 1, 8, 2.5, 8, 0.01, whiteDust);
+                var crystalCyanDust = new Particle.DustOptions(Color.fromRGB(0, 240, 255), 1.2f);
+                player.spawnParticle(Particle.DUST, loc, 3, 8, 2.5, 8, 0.01, crystalCyanDust);
+                player.spawnParticle(Particle.END_ROD, loc, 1, 6, 2, 6, 0.01);
                 break;
             case "haohan:lunar_giant_crystals":
-                var crystalPurple = new Particle.DustOptions(Color.fromRGB(179, 51, 230), 1.5f);
-                var crystalMagenta = new Particle.DustOptions(Color.fromRGB(242, 66, 186), 1.5f);
-                var whiteDust2 = new Particle.DustOptions(Color.fromRGB(255, 255, 255), 1.5f);
-                player.spawnParticle(Particle.DUST, loc, 2, 8, 2.5, 8, 0.01, crystalPurple);
-                player.spawnParticle(Particle.DUST, loc, 1, 8, 2.5, 8, 0.01, crystalMagenta);
-                player.spawnParticle(Particle.DUST, loc, 1, 8, 2.5, 8, 0.01, whiteDust2);
+                var crystalPurple = new Particle.DustOptions(Color.fromRGB(180, 50, 255), 1.4f);
+                var whiteDust = new Particle.DustOptions(Color.fromRGB(255, 255, 255), 1.0f);
+                player.spawnParticle(Particle.DUST, loc, 3, 8, 3, 8, 0.01, crystalPurple);
+                player.spawnParticle(Particle.DUST, loc, 2, 8, 3, 8, 0.01, whiteDust);
+                player.spawnParticle(Particle.PORTAL, loc, 2, 6, 2, 6, 0.02);
                 break;
             case "haohan:lunar_giant_crystal_outskirts":
                 var crystalLightBlue = new Particle.DustOptions(Color.fromRGB(102, 191, 255), 1.5f);
@@ -318,15 +319,9 @@ public class VisualMechanic implements Listener, LunarSubSystem {
      * Clean up all skyboxes when plugin is disabled or reloaded.
      */
     public void cleanup() {
-        if (Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) {
-            for (UUID uuid : activeSkyboxes.keySet()) {
-                Player player = Bukkit.getPlayer(uuid);
-                if (player != null && player.isOnline()) {
-                    try {
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "skyboxengine disable " + player.getName());
-                    } catch (Throwable ignored) {}
-                }
-            }
+        if (!Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) return;
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            clearSkybox(player);
         }
         activeSkyboxes.clear();
         temporarySkyboxExpirations.clear();

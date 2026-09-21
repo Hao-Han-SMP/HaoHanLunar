@@ -59,14 +59,16 @@ public final class MobEquipmentDefinition {
 
             Object val = entry.getValue();
             if (val instanceof String str) {
-                String[] parts = str.split(":", 2);
-                String itemId = parts[0].trim();
+                int lastColon = str.lastIndexOf(':');
+                String itemId = str.trim();
                 double dropChance = 0.0;
-                if (parts.length > 1) {
+                if (lastColon > 0) {
+                    String possibleChance = str.substring(lastColon + 1).trim();
                     try {
-                        dropChance = Double.parseDouble(parts[1].trim());
-                    }
-                    catch (NumberFormatException ignored) {
+                        dropChance = Double.parseDouble(possibleChance);
+                        itemId = str.substring(0, lastColon).trim();
+                    } catch (NumberFormatException ignored) {
+                        // Not a trailing drop chance; entire string is the itemId (e.g. "minecraft:iron_sword")
                     }
                 }
                 builder.set(slot, itemId, dropChance);

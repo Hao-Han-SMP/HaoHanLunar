@@ -3,7 +3,6 @@ package vn.haohan.lunar.core.features.beacon;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
@@ -24,7 +23,6 @@ import java.util.function.Predicate;
  */
 public final class BeaconShieldMechanic implements Listener, LunarSubSystem {
 
-    private static final String LUNAR_WORLD = "haohan:lunar";
     private final List<BeaconShield> shields = new ArrayList<>();
     private final List<ItemDisplay> displays = new ArrayList<>();
 
@@ -86,7 +84,7 @@ public final class BeaconShieldMechanic implements Listener, LunarSubSystem {
                 }
                 continue;
             }
-            if (!shield.isValid(LUNAR_WORLD)) {
+            if (!shield.isValid()) {
                 BeaconShieldRenderer.removeDisplays(shield, displays);
                 iterator.remove();
                 continue;
@@ -114,7 +112,7 @@ public final class BeaconShieldMechanic implements Listener, LunarSubSystem {
     @EventHandler(ignoreCancelled = true)
     public void onBeaconPlace(BlockPlaceEvent event) {
         Block block = event.getBlockPlaced();
-        if (block.getType().name().equals("BEACON") && isLunar(block.getWorld())) {
+        if (block.getType().name().equals("BEACON") && HaoHanLunarPlugin.isLunarWorld(block.getWorld())) {
             shields.removeIf(shield -> shield.getBeacon().equals(block.getLocation()));
             BeaconShield shield = new BeaconShield(block.getLocation().clone().add(0.5, 0.0, 0.5));
             shields.add(shield);
@@ -144,7 +142,7 @@ public final class BeaconShieldMechanic implements Listener, LunarSubSystem {
     }
 
     public boolean isInShield(Location location) {
-        if (location == null || !isLunar(location.getWorld())) return false;
+        if (location == null || !HaoHanLunarPlugin.isLunarWorld(location.getWorld())) return false;
         for (BeaconShield shield : shields) {
             if (shield.isInShield(location)) {
                 return true;
@@ -174,9 +172,5 @@ public final class BeaconShieldMechanic implements Listener, LunarSubSystem {
             BeaconShieldRenderer.removeDisplays(shield, displays);
             iterator.remove();
         }
-    }
-
-    private boolean isLunar(World world) {
-        return world != null && world.getKey().toString().equals(LUNAR_WORLD);
     }
 }

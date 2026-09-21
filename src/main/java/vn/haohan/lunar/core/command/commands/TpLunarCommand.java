@@ -39,20 +39,22 @@ public class TpLunarCommand implements LunarCommand {
             return true;
         }
 
-        String lunarWorldName = plugin.getConfig().getString("skybox.world", "haohan:lunar");
-        World lunarWorld = Bukkit.getWorld(lunarWorldName);
-
+        World lunarWorld = HaoHanLunarPlugin.getLunarWorld();
         if (lunarWorld == null) {
-            for (World w : Bukkit.getWorlds()) {
-                if (w.getKey().toString().equals(lunarWorldName) || w.getName().equalsIgnoreCase("lunar")) {
-                    lunarWorld = w;
-                    break;
+            String lunarWorldName = plugin.getConfig().getString("skybox.world", HaoHanLunarPlugin.LUNAR_WORLD_KEY.toString());
+            lunarWorld = Bukkit.getWorld(lunarWorldName);
+            if (lunarWorld == null) {
+                for (World w : Bukkit.getWorlds()) {
+                    if (w.getKey().toString().equals(lunarWorldName) || w.getName().equalsIgnoreCase("lunar")) {
+                        lunarWorld = w;
+                        break;
+                    }
                 }
             }
         }
 
         if (lunarWorld == null) {
-            player.sendMessage("§c[HaoHanLunar] Không tìm thấy thế giới Mặt Trăng (§e" + lunarWorldName + "§c)! Hãy đảm bảo thế giới đã được nạp.");
+            player.sendMessage("§c[HaoHanLunar] Không tìm thấy thế giới Mặt Trăng! Hãy đảm bảo thế giới đã được nạp.");
             return true;
         }
 

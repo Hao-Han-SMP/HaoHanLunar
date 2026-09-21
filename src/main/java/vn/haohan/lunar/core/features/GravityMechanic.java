@@ -16,6 +16,7 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
@@ -62,34 +63,26 @@ public class GravityMechanic implements Listener, LunarSubSystem {
 
     @Override
     public void tick() {
-        for (World world : Bukkit.getWorlds()) {
-            if (world.getKey().toString().equals("haohan:lunar")) {
-                // Apply low gravity to falling items
-                for (Item item : world.getEntitiesByClass(Item.class)) {
-                    if (!item.isOnGround()) {
-                        var vel = item.getVelocity();
-                        vel.setY(vel.getY() + 0.033372);
-                        item.setVelocity(vel);
-                    }
-                }
+        World lunarWorld = HaoHanLunarPlugin.getLunarWorld();
+        if (lunarWorld == null) {
+            return;
+        }
 
-                // Apply low gravity to falling blocks
-                for (FallingBlock fb : world.getEntitiesByClass(FallingBlock.class)) {
-                    if (!fb.isOnGround()) {
-                        var vel = fb.getVelocity();
-                        vel.setY(vel.getY() + 0.033372);
-                        fb.setVelocity(vel);
-                    }
-                }
-            } else {
-                // Reset attributes for players not in Lunar world
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    if (!player.getWorld().getKey().toString().equals("haohan:lunar")) {
-                        if (player.getScoreboardTags().contains("hh_lunar_physic")) {
-                            removeLunarAttributes(player);
-                        }
-                    }
-                }
+        // Apply low gravity to falling items in the lunar world
+        for (Item item : lunarWorld.getEntitiesByClass(Item.class)) {
+            if (!item.isOnGround()) {
+                var vel = item.getVelocity();
+                vel.setY(vel.getY() + 0.033372);
+                item.setVelocity(vel);
+            }
+        }
+
+        // Apply low gravity to falling blocks in the lunar world
+        for (FallingBlock fb : lunarWorld.getEntitiesByClass(FallingBlock.class)) {
+            if (!fb.isOnGround()) {
+                var vel = fb.getVelocity();
+                vel.setY(vel.getY() + 0.033372);
+                fb.setVelocity(vel);
             }
         }
     }
@@ -97,7 +90,7 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     @EventHandler
     public void onPlayerChangeWorld(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld().getKey().toString().equals("haohan:lunar")) {
+        if (HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
             applyLunarAttributes(player);
         } else {
             removeLunarAttributes(player);
@@ -105,9 +98,14 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     }
 
     @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        removeLunarAttributes(event.getPlayer());
+    }
+
+    @EventHandler
     public void onEntitySpawn(EntitySpawnEvent event) {
         if (event.getEntity() instanceof LivingEntity living
-                && living.getWorld().getKey().toString().equals("haohan:lunar")) {
+                && HaoHanLunarPlugin.isLunarWorld(living.getWorld())) {
             applyLunarAttributes(living);
         }
     }
@@ -115,16 +113,17 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (player.getWorld().getKey().toString().equals("haohan:lunar")) {
+        if (HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
             applyLunarAttributes(player);
         }
     }
 
     /** Applies attributes to entities already loaded before this plugin enables. */
     public void initializeLoadedLunarEntities() {
-        for (World world : Bukkit.getWorlds()) {
-            if (world.getKey().toString().equals("haohan:lunar")) {
-                for (LivingEntity entity : world.getLivingEntities()) applyLunarAttributes(entity);
+        World lunarWorld = HaoHanLunarPlugin.getLunarWorld();
+        if (lunarWorld != null) {
+            for (LivingEntity entity : lunarWorld.getLivingEntities()) {
+                applyLunarAttributes(entity);
             }
         }
     }
@@ -132,7 +131,7 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     @EventHandler
     public void onEntityPortal(EntityPortalEvent event) {
         if (event.getEntity() instanceof LivingEntity living) {
-            if (event.getTo() != null && event.getTo().getWorld().getKey().toString().equals("haohan:lunar")) {
+            if (event.getTo() != null && HaoHanLunarPlugin.isLunarWorld(event.getTo().getWorld())) {
                 applyLunarAttributes(living);
             } else if (event.getTo() != null) {
                 removeLunarAttributes(living);
@@ -143,8 +142,7 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     @EventHandler
     public void onPlayerPortal(PlayerPortalEvent event) {
         Player player = event.getPlayer();
-        if (event.getTo() != null && event.getTo().getWorld() != null
-                && event.getTo().getWorld().getKey().toString().equals("haohan:lunar")) {
+        if (event.getTo() != null && HaoHanLunarPlugin.isLunarWorld(event.getTo().getWorld())) {
             applyLunarAttributes(player);
         } else {
             removeLunarAttributes(player);
@@ -155,7 +153,7 @@ public class GravityMechanic implements Listener, LunarSubSystem {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         Player player = event.getPlayer();
         if (event.getRespawnLocation().getWorld() != null
-                && event.getRespawnLocation().getWorld().getKey().toString().equals("haohan:lunar")) {
+                && HaoHanLunarPlugin.isLunarWorld(event.getRespawnLocation().getWorld())) {
             applyLunarAttributes(player);
         } else {
             removeLunarAttributes(player);

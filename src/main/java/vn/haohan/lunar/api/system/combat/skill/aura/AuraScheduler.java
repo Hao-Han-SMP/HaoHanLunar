@@ -43,7 +43,7 @@ public final class AuraScheduler {
      * Main tick dispatch invoked once per server tick by the plugin tick loop.
      */
     public void tick(long currentTick) {
-        for (ActiveAura aura : List.copyOf(auras.values())) {
+        for (ActiveAura aura : auras.values()) {
             aura.tick(currentTick);
             if (aura.isExpired()) {
                 auras.remove(buildKey(aura.attachment().attachmentKey(), aura.definition().id()), aura);
@@ -54,7 +54,7 @@ public final class AuraScheduler {
     public void dispatchAttack(LivingEntity attacker, LivingEntity target, double damage) {
         if (attacker == null) return;
         String prefix = "entity:" + attacker.getUniqueId();
-        for (ActiveAura aura : List.copyOf(auras.values())) {
+        for (ActiveAura aura : auras.values()) {
             if (!aura.isExpired() && (aura.attachment().attachmentKey().startsWith(prefix)
                     || (aura.ownerId() != null && aura.ownerId().equals(attacker.getUniqueId())))) {
                 aura.onHit(target, damage);
@@ -65,7 +65,7 @@ public final class AuraScheduler {
     public void dispatchDamaged(LivingEntity victim, Entity attacker, double damage) {
         if (victim == null) return;
         String prefix = "entity:" + victim.getUniqueId();
-        for (ActiveAura aura : List.copyOf(auras.values())) {
+        for (ActiveAura aura : auras.values()) {
             if (!aura.isExpired() && (aura.attachment().attachmentKey().startsWith(prefix)
                     || (aura.ownerId() != null && aura.ownerId().equals(victim.getUniqueId())))) {
                 aura.onDamaged(attacker, damage);
@@ -104,7 +104,7 @@ public final class AuraScheduler {
     }
 
     public void clear() {
-        for (ActiveAura aura : List.copyOf(auras.values())) {
+        for (ActiveAura aura : auras.values()) {
             aura.expire();
         }
         auras.clear();

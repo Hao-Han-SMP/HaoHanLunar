@@ -22,7 +22,7 @@ public class OxygenTankBehavior implements ItemBehavior {
         ItemStack item = context.item();
         
         // 1. Must be in lunar dimension
-        if (!player.getWorld().getKey().toString().equals("haohan:lunar")) {
+        if (!HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
             player.sendActionBar(Component.text("⚠ Bình oxy chỉ dùng tại Mặt Trăng!", NamedTextColor.RED));
             return;
         }
@@ -83,19 +83,17 @@ public class OxygenTankBehavior implements ItemBehavior {
         data.setTankTier(tier);
         data.setTankActive(true);
 
-        if (wasActive) {
+        player.addScoreboardTag("hh_o2tank_active");
+
+        // Sounds & messages
+        player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, SoundCategory.PLAYERS, 1.0f, 1.0f);
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_BREATH, SoundCategory.PLAYERS, 1.0f, 1.0f);
+
+        if (!wasActive) {
             player.showTitle(net.kyori.adventure.title.Title.title(
                 Component.empty(),
-                Component.text("🔋 Đã chuyển sang bình oxy mới", NamedTextColor.YELLOW)
-            ));
-        } else {
-            player.showTitle(net.kyori.adventure.title.Title.title(
-                Component.empty(),
-                Component.text("🔋 Bình oxy đã được kích hoạt", NamedTextColor.GREEN)
+                Component.text("⚡ Kích hoạt bình dưỡng khí!", NamedTextColor.GREEN)
             ));
         }
-
-        // Play breath sound
-        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_BREATH, SoundCategory.MASTER, 2.0f, 0.4f);
     }
 }

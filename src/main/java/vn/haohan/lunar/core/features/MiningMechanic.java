@@ -3,6 +3,7 @@ package vn.haohan.lunar.core.features;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
@@ -10,6 +11,7 @@ import org.bukkit.block.data.type.NoteBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import vn.haohan.lunar.HaoHanLunarPlugin;
@@ -49,18 +51,14 @@ public class MiningMechanic implements Listener, LunarSubSystem {
 
     @Override
     public void tick() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            tickPlayerMining(player);
-        }
-    }
-
-    private void tickPlayerMining(Player player) {
-        if (!player.getWorld().getKey().toString().equals("haohan:lunar")) {
-            resetMiningModifiers(player);
+        World lunarWorld = HaoHanLunarPlugin.getLunarWorld();
+        if (lunarWorld == null) {
             return;
         }
-        boolean lookingAtOre = isLookingAtLunarOre(player);
-        updateMiningAttributes(player, lookingAtOre);
+        for (Player player : lunarWorld.getPlayers()) {
+            boolean lookingAtOre = isLookingAtLunarOre(player);
+            updateMiningAttributes(player, lookingAtOre);
+        }
     }
 
     /** The only tool that can mine Anorthosite Ore in the lunar dimension. */
@@ -89,16 +87,20 @@ public class MiningMechanic implements Listener, LunarSubSystem {
             boolean hasNetherite = isAllowedLunarPickaxe(player.getInventory().getItemInMainHand().getType());
             applyOreMiningModifier(instance, hasNetherite);
         } else {
-            // Remove modifiers
-            instance.removeModifier(slowMiningKey);
-            instance.removeModifier(noMiningKey);
+            // Remove modifiers if present
+            if (instance.getModifier(slowMiningKey) != null) {
+                instance.removeModifier(slowMiningKey);
+            }
+            if (instance.getModifier(noMiningKey) != null) {
+                instance.removeModifier(noMiningKey);
+            }
         }
     }
 
     private void applyOreMiningModifier(org.bukkit.attribute.AttributeInstance instance, boolean hasNetherite) {
         if (hasNetherite) {
             // Apply slow mining
-            if (instance.getModifiers().stream().noneMatch(m -> m.getKey().equals(slowMiningKey))) {
+            if (instance.getModifier(slowMiningKey) == null) {
                 instance.removeModifier(noMiningKey);
                 AttributeModifier modifier = new AttributeModifier(slowMiningKey, -0.974,
                         AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
@@ -106,7 +108,7 @@ public class MiningMechanic implements Listener, LunarSubSystem {
             }
         } else {
             // Apply no mining
-            if (instance.getModifiers().stream().noneMatch(m -> m.getKey().equals(noMiningKey))) {
+            if (instance.getModifier(noMiningKey) == null) {
                 instance.removeModifier(slowMiningKey);
                 AttributeModifier modifier = new AttributeModifier(noMiningKey, -1.0,
                         AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
@@ -120,6 +122,13 @@ public class MiningMechanic implements Listener, LunarSubSystem {
         if (instance != null) {
             instance.removeModifier(slowMiningKey);
             instance.removeModifier(noMiningKey);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerChangeWorld(PlayerChangedWorldEvent event) {
+        if (!HaoHanLunarPlugin.isLunarWorld(event.getPlayer().getWorld())) {
+            resetMiningModifiers(event.getPlayer());
         }
     }
 

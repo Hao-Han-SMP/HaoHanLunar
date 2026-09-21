@@ -18,7 +18,14 @@ import java.util.Map;
 
 public class LunarItems {
 
-        public static void register() {
+        private static volatile boolean registered = false;
+
+        public static synchronized void register() {
+                if (registered) {
+                        return;
+                }
+                registered = true;
+
                 var registry = HaoHanItemCore.get().getItemRegistry();
                 var behavior = new OxygenTankBehavior();
 

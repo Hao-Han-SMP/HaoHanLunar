@@ -3,14 +3,14 @@ package vn.haohan.lunar.core.system.data;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerDataManager {
 
     private final Plugin plugin;
-    private final Map<UUID, PlayerLunarData> cache = new HashMap<>();
+    private final Map<UUID, PlayerLunarData> cache = new ConcurrentHashMap<>();
 
     public PlayerDataManager(Plugin plugin) {
         this.plugin = plugin;

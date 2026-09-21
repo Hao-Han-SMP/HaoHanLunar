@@ -61,19 +61,25 @@ public final class MathUtil {
 
     /**
      * Normalizes an angle in degrees to the [-180, 180] range.
+     * Guarded against NaN and Infinite float inputs to avoid infinite loops.
      */
     public static float normalizeAngle(float angle) {
-        while (angle <= -180.0f) angle += 360.0f;
-        while (angle > 180.0f) angle -= 360.0f;
+        if (!Float.isFinite(angle)) return 0.0f;
+        angle = angle % 360.0f;
+        if (angle > 180.0f) angle -= 360.0f;
+        if (angle <= -180.0f) angle += 360.0f;
         return angle;
     }
 
     /**
      * Normalizes an angle in degrees to the [-180, 180] range (double precision).
+     * Guarded against NaN and Infinite double inputs to avoid infinite loops.
      */
     public static double normalizeAngle(double angle) {
-        while (angle <= -180.0) angle += 360.0;
-        while (angle > 180.0) angle -= 360.0;
+        if (!Double.isFinite(angle)) return 0.0;
+        angle = angle % 360.0;
+        if (angle > 180.0) angle -= 360.0;
+        if (angle <= -180.0) angle += 360.0;
         return angle;
     }
 

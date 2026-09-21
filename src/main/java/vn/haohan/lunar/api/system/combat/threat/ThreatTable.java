@@ -180,7 +180,7 @@ public final class ThreatTable implements vn.haohan.lunar.api.system.combat.Thre
      * Prevents target oscillation by requiring alternative targets to exceed current target by switchThresholdMultiplier.
      */
     public Optional<UUID> evaluateTarget() {
-        return evaluateTarget(System.currentTimeMillis());
+        return evaluateTarget(System.currentTimeMillis() / 50L);
     }
 
     public Optional<UUID> evaluateTarget(long currentTick) {
