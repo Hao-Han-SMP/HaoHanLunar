@@ -1,12 +1,6 @@
 package vn.haohan.lunar.core.system.config.migration;
 
 import org.bukkit.entity.EntityType;
-import vn.haohan.lunar.api.system.config.ConfigLoadException;
-import vn.haohan.lunar.api.system.config.LunarYamlLoader;
-import vn.haohan.lunar.api.system.loot.DropManager;
-import vn.haohan.lunar.api.system.loot.DropTableDefinition;
-import vn.haohan.lunar.core.features.boss.warden.WardenSkillRegistry;
-import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionId;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
@@ -15,17 +9,17 @@ import vn.haohan.lunar.api.mob.scaling.DynamicScalingDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainParser;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
+import vn.haohan.lunar.api.system.config.ConfigLoadException;
+import vn.haohan.lunar.api.system.config.LunarYamlLoader;
+import vn.haohan.lunar.api.system.loot.DropManager;
+import vn.haohan.lunar.api.system.loot.DropTableDefinition;
+import vn.haohan.lunar.core.features.boss.warden.WardenSkillRegistry;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Handles Validate-then-Swap configuration reload and config-version migrations.
@@ -251,8 +245,7 @@ public final class ConfigMigrationManager {
                 Map.of(),
                 skills,
                 dropTable,
-                Set.of(),
-                MobEquipmentDefinition.empty(),
+                Set.of(), MobEquipmentDefinition.fromMap(map.getOrDefault("equipment", map.get("Equipment"))),
                 mountId,
                 riders,
                 dynamicScaling
@@ -260,11 +253,6 @@ public final class ConfigMigrationManager {
     }
 
     private static DropTableDefinition parseDropTable(String id, Map<String, Object> map) {
-        int rolls = 1;
-        if (map.containsKey("rolls")) {
-            Object r = map.get("rolls");
-            if (r instanceof Number n) rolls = n.intValue();
-        }
-        return new DropTableDefinition(id, DropTableDefinition.RollMode.INDEPENDENT, List.of(), rolls);
+        return DropTableDefinition.fromMap(id, map, null);
     }
 }

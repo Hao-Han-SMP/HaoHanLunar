@@ -5,9 +5,10 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.mob.scaling.MobLevelApplier;
+import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.Optional;
@@ -21,6 +22,7 @@ public final class MobPersistenceManager {
     private static final String NAMESPACE = "haohanlunar";
     public static final NamespacedKey KEY_SAVED_HEALTH = new NamespacedKey(NAMESPACE, "saved_health");
     public static final NamespacedKey KEY_SAVED_STANCE = new NamespacedKey(NAMESPACE, "saved_stance");
+    public static final NamespacedKey KEY_SAVED_PHASE = new NamespacedKey(NAMESPACE, "saved_phase");
     public static final NamespacedKey KEY_PERSISTENT = new NamespacedKey(NAMESPACE, "is_persistent");
 
     private MobPersistenceManager() {
@@ -39,6 +41,11 @@ public final class MobPersistenceManager {
 
         pdc.set(KEY_SAVED_HEALTH, PersistentDataType.DOUBLE, entity.getHealth());
         pdc.set(KEY_SAVED_STANCE, PersistentDataType.STRING, mob.stance());
+        if (mob.phaseMachine() != null) {
+            mob.phaseMachine().state(entity.getUniqueId()).ifPresent(st -> {
+                pdc.set(KEY_SAVED_PHASE, PersistentDataType.STRING, st.phaseId());
+            });
+        }
         pdc.set(KEY_PERSISTENT, PersistentDataType.BYTE, (byte) 1);
     }
 
@@ -70,6 +77,20 @@ public final class MobPersistenceManager {
         String savedStance = pdc.get(KEY_SAVED_STANCE, PersistentDataType.STRING);
         if (savedStance != null && !savedStance.isBlank()) {
             mob.setStance(savedStance);
+        }
+
+        String savedPhase = pdc.get(KEY_SAVED_PHASE, PersistentDataType.STRING);
+        if (savedPhase != null && !savedPhase.isBlank() && mob.phaseMachine() != null) {
+            mob.phaseMachine().forcePhase(mob, savedPhase, 0L);
+        }
+
+        int savedLevel = MobLevelApplier.getLevel(entity);
+        if (savedLevel > 1 && mob.definition().levelScaling().isPresent()) {
+            try {
+                MobLevelApplier.applyScaling(entity, mob.definition().levelScaling().get(), savedLevel);
+            }
+            catch (Throwable ignored) {
+            }
         }
     }
 

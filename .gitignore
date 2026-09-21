@@ -26,5 +26,5 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 
 # Misc
-plan.md
-plan2.md
+#plan.md
+#plan2.md

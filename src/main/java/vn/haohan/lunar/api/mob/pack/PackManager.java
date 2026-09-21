@@ -4,33 +4,24 @@ import org.bukkit.entity.EntityType;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
-import vn.haohan.lunar.api.system.loot.DropManager;
-import vn.haohan.lunar.api.system.loot.DropTableDefinition;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionId;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.mob.equipment.MobEquipmentDefinition;
 import vn.haohan.lunar.api.mob.scaling.DynamicScalingDefinition;
+import vn.haohan.lunar.api.mob.scaling.LevelScalingDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainParser;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
+import vn.haohan.lunar.api.system.loot.DropManager;
+import vn.haohan.lunar.api.system.loot.DropTableDefinition;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -493,6 +484,10 @@ public final class PackManager {
             }
         }
 
+        Object rawEquipment = map.getOrDefault("Equipment", map.get("equipment"));
+        MobEquipmentDefinition equipment = MobEquipmentDefinition.fromMap(rawEquipment);
+        LevelScalingDefinition levelScaling = LevelScalingDefinition.fromMap(map);
+
         return new MobDefinition(
                 new MobDefinitionId(namespacedId),
                 entityType,
@@ -502,11 +497,10 @@ public final class PackManager {
                 Map.of(),
                 skills,
                 dropTable,
-                Set.of(),
-                MobEquipmentDefinition.empty(),
+                Set.of(), equipment,
                 mountId,
                 riders,
-                dynamicScaling,
+                dynamicScaling, levelScaling,
                 aiGoalSelectors,
                 aiTargetSelectors
         );
@@ -524,11 +518,12 @@ public final class PackManager {
                                 for (Map.Entry<?, ?> entry : map.entrySet()) {
                                     if (entry.getKey() instanceof String dropId && entry.getValue() instanceof Map<?, ?> dropMap) {
                                         String namespacedId = packName + ":" + dropId.toLowerCase(Locale.ROOT);
-                                        int rolls = 1;
-                                        if (dropMap.containsKey("rolls") && dropMap.get("rolls") instanceof Number n) {
-                                            rolls = n.intValue();
+                                        Map<String, Object> castDropMap = new HashMap<>();
+                                        for (Map.Entry<?, ?> e : dropMap.entrySet()) {
+                                            if (e.getKey() != null)
+                                                castDropMap.put(e.getKey().toString(), (Object)e.getValue());
                                         }
-                                        drops.put(namespacedId, new DropTableDefinition(namespacedId, DropTableDefinition.RollMode.INDEPENDENT, List.of(), rolls));
+                                        drops.put(namespacedId, DropTableDefinition.fromMap(namespacedId, castDropMap, null));
                                     }
                                 }
                             }

@@ -1,20 +1,14 @@
 package vn.haohan.lunar.api.system.combat.skill;
 
-import vn.haohan.lunar.api.system.combat.skill.target.Targeter;
 import vn.haohan.lunar.api.manager.SkillManager;
 import vn.haohan.lunar.api.system.combat.skill.condition.Condition;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.Mechanic;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
+import vn.haohan.lunar.api.system.combat.skill.target.Targeter;
 import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

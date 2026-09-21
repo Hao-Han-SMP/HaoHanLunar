@@ -1,5 +1,6 @@
 package vn.haohan.lunar.api.mob.options;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -7,17 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityCombustByBlockEvent;
-import org.bukkit.event.entity.EntityCombustByEntityEvent;
-import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.event.entity.EntityTeleportEvent;
-import org.bukkit.event.entity.EntityTransformEvent;
-import org.bukkit.event.entity.EntityMountEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
@@ -58,18 +49,66 @@ public final class MobOptionsListener implements Listener {
         }
     }
 
+    /**
+     * Evaluates mob options against incoming damage.
+     * Returns true if damage should be cancelled, and modifies damage[0] if capped.
+     */
+    public boolean processDamage(LivingEntity entity, EntityDamageEvent.DamageCause cause, double[] damage, boolean isCustomSkill) {
+        MobOptions opt = getOptions(entity);
+        if (opt == null) return false;
+
+        if (opt.preventVanillaDamage() && !isCustomSkill) {
+            return true;
+        }
+
+        // Safeguards & anti-exploit
+        if (opt.preventSuffocation() && cause == EntityDamageEvent.DamageCause.SUFFOCATION) {
+            return true;
+        }
+        if (opt.preventFallDamage() && cause == EntityDamageEvent.DamageCause.FALL) {
+            return true;
+        }
+        if (opt.preventDrowning() && cause == EntityDamageEvent.DamageCause.DROWNING) {
+            return true;
+        }
+        if (opt.voidProtection() && cause == EntityDamageEvent.DamageCause.VOID) {
+            ActiveMob mob = getMob(entity);
+            if (mob != null && mob.entity() != null) {
+                Location loc = mob.entity().getLocation();
+                if (loc.getWorld() != null) {
+                    Location safe = loc.getWorld().getHighestBlockAt(loc).getLocation().add(0, 1, 0);
+                    mob.entity().teleport(safe);
+                }
+            }
+            return true;
+        }
+
+        // Damage cap per hit
+        if (opt.maxDamagePerHit() > 0.0 && damage != null && damage.length > 0 && damage[0] > opt.maxDamagePerHit()) {
+            damage[0] = opt.maxDamagePerHit();
+        }
+
+        if (opt.noDamageTicks() >= 0) {
+            try {
+                entity.setNoDamageTicks(opt.noDamageTicks());
+            }
+            catch (Throwable ignored) {
+            }
+        }
+        return false;
+    }
+
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
-        MobOptions opt = getOptions(event.getEntity());
-        if (opt == null) return;
-
-        if (opt.preventVanillaDamage() && !isCustomSkillDamage(event)) {
+        if (!(event.getEntity() instanceof LivingEntity living)) return;
+        double[] dmg = new double[]{event.getDamage()};
+        boolean cancelled = processDamage(living, event.getCause(), dmg, isCustomSkillDamage(event));
+        if (cancelled) {
             event.setCancelled(true);
             return;
         }
-
-        if (opt.noDamageTicks() >= 0 && event.getEntity() instanceof LivingEntity living) {
-            living.setNoDamageTicks(opt.noDamageTicks());
+        if (dmg[0] != event.getDamage()) {
+            event.setDamage(dmg[0]);
         }
     }
 

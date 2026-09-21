@@ -4,19 +4,21 @@ import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.mob.Mob;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.mob.MobOptionDefinition;
 import vn.haohan.lunar.api.mob.ai.antistuck.AntiStuckController;
+import vn.haohan.lunar.api.mob.disguise.DisguiseData;
+import vn.haohan.lunar.api.mob.options.MobOptions;
+import vn.haohan.lunar.api.mob.stat.StatHolder;
+import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBarTracker;
 import vn.haohan.lunar.api.system.combat.DamageModifierTable;
 import vn.haohan.lunar.api.system.combat.ImmunityTable;
 import vn.haohan.lunar.api.system.combat.cc.CrowdControlTracker;
-import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
-import vn.haohan.lunar.api.mob.disguise.DisguiseData;
-import vn.haohan.lunar.api.mob.stat.StatHolder;
 import vn.haohan.lunar.api.system.combat.skill.interrupt.CancellationToken;
 import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
-import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBarTracker;
-import vn.haohan.lunar.api.mob.options.MobOptions;
+import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -48,6 +50,7 @@ public class ActiveMob implements Mob {
     private volatile DisguiseData disguise;
     private volatile String activeModelId = null;
     private volatile String activeModelState = null;
+    private volatile vn.haohan.lunar.api.mob.phase.MobPhaseMachine phaseMachine;
     private final StatHolder stats = new StatHolder();
 
     private volatile double baseMaxHealth = -1;
@@ -72,6 +75,7 @@ public class ActiveMob implements Mob {
         }
         this.threatTable = new ThreatTable(this.entityId);
         this.options = MobOptions.fromMap(definition.options());
+        initDamageModifiers(definition);
     }
 
     public UUID entityId() { return entityId; }
@@ -82,10 +86,41 @@ public class ActiveMob implements Mob {
     public AntiStuckController antiStuckController() { return antiStuckController; }
     public StatHolder stats() { return stats; }
 
+    static Object findOption(Map<String, ?> options, String... candidateKeys) {
+        if (options == null) return null;
+        for (String key : candidateKeys) {
+            Object obj = options.get(key);
+            if (obj != null) {
+                return obj instanceof MobOptionDefinition mod ? mod.value() : obj;
+            }
+        }
+        for (Map.Entry<String, ?> entry : options.entrySet()) {
+            String entryKey = entry.getKey().replace("-", "").replace("_", "").toLowerCase(java.util.Locale.ROOT);
+            for (String cand : candidateKeys) {
+                String cleanCand = cand.replace("-", "").replace("_", "").toLowerCase(java.util.Locale.ROOT);
+                if (entryKey.equals(cleanCand)) {
+                    Object val = entry.getValue();
+                    return val instanceof MobOptionDefinition mod ? mod.value() : val;
+                }
+            }
+        }
+        return null;
+    }
+
     public void updateDefinition(MobDefinition newDefinition) {
         if (newDefinition != null && newDefinition.id().equals(this.definitionId)) {
             this.definition = newDefinition;
             this.options = MobOptions.fromMap(newDefinition.options());
+            initDamageModifiers(newDefinition);
+        }
+    }
+
+    private void initDamageModifiers(MobDefinition def) {
+        if (def == null || def.options() == null) return;
+        Object dm = findOption(def.options(), "damagemodifiers", "damage_modifiers", "damage-modifiers");
+        Object edm = findOption(def.options(), "entitydamagemodifiers", "entity_damage_modifiers", "entity-damage-modifiers");
+        if (dm != null || edm != null) {
+            this.damageModifiers = DamageModifierTable.fromConfig(dm, edm);
         }
     }
 
@@ -104,6 +139,14 @@ public class ActiveMob implements Mob {
     }
 
     public ThreatTable threatTable() { return threatTable; }
+
+    public vn.haohan.lunar.api.mob.phase.MobPhaseMachine phaseMachine() {
+        return phaseMachine;
+    }
+
+    public void setPhaseMachine(vn.haohan.lunar.api.mob.phase.MobPhaseMachine phaseMachine) {
+        this.phaseMachine = phaseMachine;
+    }
 
     public MobOptions options() { return options; }
     public void setOptions(MobOptions options) {

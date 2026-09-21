@@ -3,6 +3,10 @@ package vn.haohan.lunar.api.mob.equipment;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -78,5 +82,22 @@ public final class EquipmentApplier {
         if (dropChance <= 0.0) return false;
         if (dropChance >= 1.0) return true;
         return ThreadLocalRandom.current().nextDouble() < dropChance;
+    }
+
+    /**
+     * Resolves equipment drops on mob death according to individual slot drop chances.
+     */
+    public static List<ItemStack> resolveEquipmentDrops(MobEquipmentDefinition equipmentDef, ItemProviderRegistry itemRegistry) {
+        if (equipmentDef == null || equipmentDef.isEmpty()) {
+            return List.of();
+        }
+        List<ItemStack> drops = new ArrayList<>();
+        for (SlotEquipmentDefinition slotDef : equipmentDef.allSlots().values()) {
+            if (rollDrop(slotDef.dropChance())) {
+                var opt = itemRegistry != null ? itemRegistry.resolveItem(slotDef.itemId()) : HaoHanItemBridge.get().createItemStack(slotDef.itemId(), 1);
+                opt.ifPresent(drops::add);
+            }
+        }
+        return List.copyOf(drops);
     }
 }

@@ -7,12 +7,14 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
  * Standalone Content Lint and Schema Validation CLI tool.
- * Verifies YAML configuration schemas, data integrity, and cross-references (orphan detection).
+ * Verifies YAML configuration schemas, data integrity, and cross-references (orphan & cycle detection).
  */
 public final class ContentLintTool {
 
@@ -48,6 +50,13 @@ public final class ContentLintTool {
     }
 
     /**
+     * Asynchronously lints a configuration directory off the Bukkit primary thread.
+     */
+    public static CompletableFuture<LintReport> lintDirectoryAsync(Path rootDir) {
+        return CompletableFuture.supplyAsync(() -> lintDirectory(rootDir), ForkJoinPool.commonPool());
+    }
+
+    /**
      * Scans and validates a directory containing configuration files.
      */
     public static LintReport lintDirectory(Path rootDir) {
@@ -61,6 +70,7 @@ public final class ContentLintTool {
         Map<String, List<String>> mobSkillReferences = new HashMap<>();
         Map<String, String> mobDropTableReferences = new HashMap<>();
         Map<String, String> spawnerMobReferences = new HashMap<>();
+        Map<String, List<String>> skillSubskillReferences = new HashMap<>();
 
         try {
             if (!Files.exists(rootDir)) {
@@ -87,12 +97,16 @@ public final class ContentLintTool {
                 Map<String, Object> data;
                 try (InputStream in = new FileInputStream(file.toFile())) {
                     Object parsed = yaml.load(in);
-                    if (!(parsed instanceof Map)) {
+                    if (!(parsed instanceof Map<?, ?> rawMap)) {
                         issues.add(new LintIssue(relativePath, "root", "YAML root must be a map/dictionary", true));
                         continue;
                     }
-                    //noinspection unchecked
-                    data = (Map<String, Object>) parsed;
+                    data = new HashMap<>();
+                    for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+                        if (entry.getKey() != null) {
+                            data.put(entry.getKey().toString(), entry.getValue());
+                        }
+                    }
                 } catch (Exception ex) {
                     issues.add(new LintIssue(relativePath, "syntax", "Failed to parse YAML: " + ex.getMessage(), true));
                     continue;
@@ -101,7 +115,7 @@ public final class ContentLintTool {
                 if (relativePath.startsWith("mobs/")) {
                     validateMobConfig(relativePath, data, issues, knownMobIds, mobSkillReferences, mobDropTableReferences);
                 } else if (relativePath.startsWith("skills/")) {
-                    validateSkillConfig(relativePath, data, issues, knownSkillIds);
+                    validateSkillConfig(relativePath, data, issues, knownSkillIds, skillSubskillReferences);
                 } else if (relativePath.startsWith("spawners/")) {
                     validateSpawnerConfig(relativePath, data, issues, spawnerMobReferences);
                 } else if (relativePath.startsWith("drops/")) {
@@ -135,11 +149,54 @@ public final class ContentLintTool {
                 }
             }
 
+            // 3. Subskill reference & cycle validation
+            for (Map.Entry<String, List<String>> entry : skillSubskillReferences.entrySet()) {
+                String parentSkill = entry.getKey();
+                for (String childSkill : entry.getValue()) {
+                    if (!knownSkillIds.contains(childSkill)) {
+                        issues.add(new LintIssue("skills/" + parentSkill, "mechanics", "Referenced subskill ID '" + childSkill + "' does not exist", true));
+                    }
+                }
+            }
+
+            detectCircularSkills(skillSubskillReferences, issues);
+
         } catch (Exception ex) {
             issues.add(new LintIssue("Global", "runtime", "Linting execution failed: " + ex.getMessage(), true));
         }
 
         return new LintReport(issues);
+    }
+
+    private static void detectCircularSkills(Map<String, List<String>> graph, List<LintIssue> issues) {
+        Set<String> visited = new HashSet<>();
+        Set<String> visiting = new HashSet<>();
+
+        for (String node : graph.keySet()) {
+            if (!visited.contains(node)) {
+                dfsCycle(node, graph, visited, visiting, new ArrayList<>(), issues);
+            }
+        }
+    }
+
+    private static void dfsCycle(String current, Map<String, List<String>> graph, Set<String> visited, Set<String> visiting, List<String> path, List<LintIssue> issues) {
+        visiting.add(current);
+        path.add(current);
+
+        List<String> neighbors = graph.getOrDefault(current, Collections.emptyList());
+        for (String next : neighbors) {
+            if (visiting.contains(next)) {
+                int cycleStart = path.indexOf(next);
+                List<String> cycle = path.subList(cycleStart, path.size());
+                issues.add(new LintIssue("skills/" + current, "subskill", "Circular skill recursion detected: " + String.join(" -> ", cycle) + " -> " + next, true));
+            } else if (!visited.contains(next)) {
+                dfsCycle(next, graph, visited, visiting, path, issues);
+            }
+        }
+
+        path.remove(path.size() - 1);
+        visiting.remove(current);
+        visited.add(current);
     }
 
     private static void validateMobConfig(String file, Map<String, Object> data, List<LintIssue> issues,
@@ -174,8 +231,7 @@ public final class ContentLintTool {
         }
     }
 
-    private static void validateSkillConfig(String file, Map<String, Object> data, List<LintIssue> issues,
-                                            Set<String> knownSkillIds) {
+    private static void validateSkillConfig(String file, Map<String, Object> data, List<LintIssue> issues, Set<String> knownSkillIds, Map<String, List<String>> skillSubskillRefs) {
         String id = validateId(file, data, "id", issues);
         if (id != null) {
             knownSkillIds.add(id);
@@ -188,8 +244,16 @@ public final class ContentLintTool {
                     Object item = list.get(i);
                     if (!(item instanceof Map<?, ?> mechMap)) {
                         issues.add(new LintIssue(file, "mechanics[" + i + "]", "Mechanic entry must be a map", true));
-                    } else if (!mechMap.containsKey("type")) {
+                    } else if (!mechMap.containsKey("type") && !mechMap.containsKey("mechanic")) {
                         issues.add(new LintIssue(file, "mechanics[" + i + "]", "Mechanic entry missing required 'type'", true));
+                    } else {
+                        Object type = mechMap.containsKey("type") ? mechMap.get("type") : mechMap.get("mechanic");
+                        if (type != null && "skill".equalsIgnoreCase(type.toString())) {
+                            Object targetSkill = mechMap.get("skill");
+                            if (targetSkill != null && id != null) {
+                                skillSubskillRefs.computeIfAbsent(id, k -> new ArrayList<>()).add(targetSkill.toString().toLowerCase(Locale.ROOT));
+                            }
+                        }
                     }
                 }
             } else {

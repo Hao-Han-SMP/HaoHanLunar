@@ -33,6 +33,7 @@ public final class SlashEngine {
         slashRadius = Math.max(0.5, Math.min(slashRadius, 32.0));
         arcAngleDegrees = Math.max(1.0, Math.min(arcAngleDegrees, 360.0));
         double halfArc = arcAngleDegrees / 2.0;
+        double cosThreshold = Math.cos(Math.toRadians(halfArc));
 
         Vector facing = facingDirection.clone().normalize();
         World world = origin.getWorld();
@@ -52,8 +53,9 @@ public final class SlashEngine {
                 continue;
             }
 
-            double angle = Math.toDegrees(facing.angle(toTarget));
-            if (angle <= halfArc) {
+            double dot = facing.dot(toTarget.clone().normalize());
+            if (dot >= cosThreshold) {
+                double angle = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dot))));
                 SlashHit hit = new SlashHit(living, distance, angle);
                 hits.add(hit);
                 if (onHit != null) {

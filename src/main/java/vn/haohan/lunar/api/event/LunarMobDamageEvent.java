@@ -5,8 +5,8 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import vn.haohan.lunar.api.system.combat.DamageType;
 import vn.haohan.lunar.api.mob.Mob;
+import vn.haohan.lunar.api.system.combat.DamageType;
 
 import java.util.Objects;
 import java.util.Optional;

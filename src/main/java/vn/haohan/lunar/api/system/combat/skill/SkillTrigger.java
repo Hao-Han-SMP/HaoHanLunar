@@ -16,8 +16,7 @@ public enum SkillTrigger {
     ON_LUNAR_PHASE_CHANGE("onLunarPhaseChange"),
     ON_MOONRISE("onMoonrise"),
     ON_MOONSET("onMoonset"),
-    ON_ENTER_BOUNDS("onEnterBounds"),
-    ON_EXIT_BOUNDS("onExitBounds");
+    ON_ENTER_BOUNDS("onEnterBounds"), ON_EXIT_BOUNDS("onExitBounds"), ON_SHOOT("onShoot"), ON_TARGET_CHANGE("onTargetChange"), ON_HEAL("onHeal"), ON_TELEPORT("onTeleport");
 
     private final String configName;
 

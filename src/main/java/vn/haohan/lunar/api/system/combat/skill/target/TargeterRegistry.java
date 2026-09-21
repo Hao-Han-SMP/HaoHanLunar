@@ -1,18 +1,11 @@
 package vn.haohan.lunar.api.system.combat.skill.target;
 
+import org.bukkit.GameMode;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.GameMode;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
@@ -34,7 +27,13 @@ public final class TargeterRegistry {
     }
 
     public Optional<Targeter> get(String id) {
-        return Optional.ofNullable(targeters.get(normalize(id)));
+        String key = normalize(id);
+        Targeter targeter = targeters.get(key);
+        if (targeter == null) {
+            if ("pir".equals(key)) return Optional.ofNullable(targeters.get("players_in_radius"));
+            if ("eir".equals(key)) return Optional.ofNullable(targeters.get("living_entities_in_radius"));
+        }
+        return Optional.ofNullable(targeter);
     }
 
     public List<TargetRef> resolve(String id, TargeterContext context) {

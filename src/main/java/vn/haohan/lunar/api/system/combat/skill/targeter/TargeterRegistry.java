@@ -5,14 +5,7 @@ import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.targeter.impl.*;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -139,10 +132,12 @@ public final class TargeterRegistry {
         EntityTargeter playersInRadius = new PlayersInRadiusTargeter();
         registerEntityTargeter("players_in_radius", playersInRadius);
         registerEntityTargeter("playersinradius", playersInRadius);
+        registerEntityTargeter("pir", playersInRadius);
 
         EntityTargeter livingEntitiesInRadius = new LivingEntitiesInRadiusTargeter();
         registerEntityTargeter("living_entities_in_radius", livingEntitiesInRadius);
         registerEntityTargeter("livingentitiesinradius", livingEntitiesInRadius);
+        registerEntityTargeter("eir", livingEntitiesInRadius);
 
         EntityTargeter randomPlayer = new RandomPlayerTargeter();
         registerEntityTargeter("random_player", randomPlayer);
@@ -166,6 +161,29 @@ public final class TargeterRegistry {
         EntityTargeter threat = new ThreatTableTargeter();
         registerEntityTargeter("threat_table_targets", threat);
         registerEntityTargeter("threattabletargets", threat);
+        registerEntityTargeter("threattargets", threat);
+
+        EntityTargeter threatTop = new ThreatTopTargeter();
+        registerEntityTargeter("threat_top", threatTop);
+        registerEntityTargeter("threattop", threatTop);
+        registerEntityTargeter("threat_table_top", threatTop);
+        registerEntityTargeter("threattabletop", threatTop);
+
+        EntityTargeter behind = new BehindTargeter();
+        registerEntityTargeter("behind", behind);
+
+        EntityTargeter inFront = new InFrontTargeter();
+        registerEntityTargeter("infront", inFront);
+        registerEntityTargeter("in_front", inFront);
+
+        EntityTargeter nearestPlayer = new NearestPlayerTargeter();
+        registerEntityTargeter("nearest_player", nearestPlayer);
+        registerEntityTargeter("nearestplayer", nearestPlayer);
+        registerEntityTargeter("pirnearest", nearestPlayer);
+
+        EntityTargeter audience = new AudienceTargeter();
+        registerEntityTargeter("audience", audience);
+        registerEntityTargeter("skillaudience", audience);
 
         // Location targeters
         LocationTargeter origin = new OriginTargeter();
@@ -177,6 +195,10 @@ public final class TargeterRegistry {
         LocationTargeter boneLocation = new BoneLocationTargeter();
         registerLocationTargeter("bonelocation", boneLocation);
         registerLocationTargeter("bone", boneLocation);
+
+        LocationTargeter highestBlock = new HighestBlockTargeter();
+        registerLocationTargeter("highest_block", highestBlock);
+        registerLocationTargeter("highestblock", highestBlock);
         // P20 Pin Targeters
         EntityTargeter entitiesNearPin = new EntitiesNearPinTargeter();
         registerEntityTargeter("entities_near_pin", entitiesNearPin);

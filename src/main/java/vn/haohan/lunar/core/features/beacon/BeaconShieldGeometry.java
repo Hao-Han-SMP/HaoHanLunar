@@ -2,14 +2,7 @@ package vn.haohan.lunar.core.features.beacon;
 
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Pure mathematical geometry and spherical polyhedron subdivision for Beacon Shield.

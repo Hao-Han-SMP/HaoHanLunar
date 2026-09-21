@@ -8,22 +8,17 @@ import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import vn.haohan.lunar.core.system.data.PlayerDataManager;
-import vn.haohan.lunar.core.system.item.LunarItems;
-import vn.haohan.lunar.core.features.GravityMechanic;
-import vn.haohan.lunar.core.features.OxygenMechanic;
-import vn.haohan.lunar.core.features.MiningMechanic;
-import vn.haohan.lunar.core.features.VisualMechanic;
+import vn.haohan.lunar.core.command.LunarCommands;
+import vn.haohan.lunar.core.features.*;
 import vn.haohan.lunar.core.features.beacon.BeaconShieldMechanic;
-import vn.haohan.lunar.core.features.LunarSurfaceSpreadMechanic;
-import vn.haohan.lunar.core.features.TelescopeMechanic;
 import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
 import vn.haohan.lunar.core.features.boss.warden.WardenSpawner;
 import vn.haohan.lunar.core.features.boss.warden.showcase.WardenShowcaseHandler;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
-import vn.haohan.lunar.core.features.LunarClaymoreMechanic;
 import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
+import vn.haohan.lunar.core.subsystem.LunarSubSystems;
+import vn.haohan.lunar.core.system.data.PlayerDataManager;
+import vn.haohan.lunar.core.system.item.LunarItems;
 
 import java.util.List;
 
@@ -246,9 +241,12 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }, 1L, 1L);
 
         // Initialize Lunar SubSystems and commands
-        vn.haohan.lunar.core.subsystem.LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem());
-        vn.haohan.lunar.core.subsystem.LunarSubSystems.init(this);
-        vn.haohan.lunar.core.command.LunarCommands.init(this);
+        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem());
+        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.ItemCoreSubSystem());
+        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.PlayerDataSubSystem());
+        LunarSubSystems.register(new vn.haohan.lunar.core.subsystem.engine.PinSubSystem());
+        LunarSubSystems.init(this);
+        LunarCommands.init(this);
 
         getLogger().info("HaoHanLunar plugin successfully enabled and hooks registered!");
     }
@@ -294,7 +292,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             vn.haohan.lunar.api.system.world.pin.PinManager.get().save(getDataFolder().toPath().resolve("regions.yml"));
         } catch (Throwable ignored) {}
 
-        vn.haohan.lunar.core.subsystem.LunarSubSystems.disable(this);
+        LunarSubSystems.disable(this);
         getLogger().info("HaoHanLunar plugin successfully disabled.");
     }
 

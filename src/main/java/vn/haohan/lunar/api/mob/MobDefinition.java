@@ -3,12 +3,9 @@ package vn.haohan.lunar.api.mob;
 import org.bukkit.entity.EntityType;
 import vn.haohan.lunar.api.mob.equipment.MobEquipmentDefinition;
 import vn.haohan.lunar.api.mob.scaling.DynamicScalingDefinition;
+import vn.haohan.lunar.api.mob.scaling.LevelScalingDefinition;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Immutable, runtime-independent data describing a configured custom mob.
@@ -29,6 +26,7 @@ public final class MobDefinition {
     private final Optional<String> mountId;
     private final List<String> riderIds;
     private final Optional<DynamicScalingDefinition> dynamicScaling;
+    private final Optional<LevelScalingDefinition> levelScaling;
     private final List<String> aiGoalSelectors;
     private final List<String> aiTargetSelectors;
 
@@ -45,7 +43,7 @@ public final class MobDefinition {
             MobEquipmentDefinition equipment,
             String mountId,
             List<String> riderIds,
-            DynamicScalingDefinition dynamicScaling,
+            DynamicScalingDefinition dynamicScaling, LevelScalingDefinition levelScaling,
             List<String> aiGoalSelectors,
             List<String> aiTargetSelectors) {
         this.id = Objects.requireNonNull(id, "Mob definition ID must not be null");
@@ -61,8 +59,13 @@ public final class MobDefinition {
         this.mountId = optionalText(mountId, "Mount ID");
         this.riderIds = riderIds != null ? immutableTextList(riderIds, "Rider IDs") : List.of();
         this.dynamicScaling = Optional.ofNullable(dynamicScaling);
+        this.levelScaling = Optional.ofNullable(levelScaling);
         this.aiGoalSelectors = aiGoalSelectors != null ? List.copyOf(aiGoalSelectors) : List.of();
         this.aiTargetSelectors = aiTargetSelectors != null ? List.copyOf(aiTargetSelectors) : List.of();
+    }
+
+    public MobDefinition(MobDefinitionId id, EntityType entityType, String displayName, String modelId, Map<String, MobAttributeDefinition> attributes, Map<String, MobOptionDefinition> options, List<String> skillReferences, String dropTableReference, Set<String> tags, MobEquipmentDefinition equipment, String mountId, List<String> riderIds, DynamicScalingDefinition dynamicScaling, List<String> aiGoalSelectors, List<String> aiTargetSelectors) {
+        this(id, entityType, displayName, modelId, attributes, options, skillReferences, dropTableReference, tags, equipment, mountId, riderIds, dynamicScaling, null, aiGoalSelectors, aiTargetSelectors);
     }
 
     public MobDefinition(
@@ -138,6 +141,10 @@ public final class MobDefinition {
     public Optional<String> mountId() { return mountId; }
     public List<String> riderIds() { return riderIds; }
     public Optional<DynamicScalingDefinition> dynamicScaling() { return dynamicScaling; }
+
+    public Optional<LevelScalingDefinition> levelScaling() {
+        return levelScaling;
+    }
     public List<String> aiGoalSelectors() { return aiGoalSelectors; }
     public List<String> aiTargetSelectors() { return aiTargetSelectors; }
 

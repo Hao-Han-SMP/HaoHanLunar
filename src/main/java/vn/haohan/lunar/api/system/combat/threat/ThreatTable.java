@@ -1,11 +1,6 @@
 package vn.haohan.lunar.api.system.combat.threat;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -128,6 +123,10 @@ public final class ThreatTable implements vn.haohan.lunar.api.system.combat.Thre
 
     public boolean isEmpty() {
         return threatScores.isEmpty();
+    }
+
+    public boolean hasTarget(UUID targetId) {
+        return targetId != null && threatScores.containsKey(targetId);
     }
 
     public int size() {

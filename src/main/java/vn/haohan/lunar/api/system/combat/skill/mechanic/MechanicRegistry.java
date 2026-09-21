@@ -3,10 +3,7 @@ package vn.haohan.lunar.api.system.combat.skill.mechanic;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -15,58 +12,43 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.api.manager.MobManager;
-import vn.haohan.lunar.api.presentation.audio.SpatialAudioEngine;
-import vn.haohan.lunar.api.presentation.display.orchestration.*;
-import vn.haohan.lunar.api.presentation.particle.geometric.ParticleChoreographer;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraAttachment;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraDefinition;
-import vn.haohan.lunar.api.system.world.environment.EnvironmentalFieldTracker;
-import vn.haohan.lunar.api.system.world.hazard.HazardZoneDefinition;
-import vn.haohan.lunar.api.system.world.hazard.HazardZoneTracker;
-import vn.haohan.lunar.api.system.world.totem.TotemDefinition;
-import vn.haohan.lunar.api.system.world.totem.TotemManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraRegistry;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraScheduler;
-import vn.haohan.lunar.api.system.combat.skill.aura.StackMode;
-import vn.haohan.lunar.api.system.combat.DamageType;
-import vn.haohan.lunar.api.system.combat.cc.CCState;
 import vn.haohan.lunar.api.mob.disguise.DisguiseData;
 import vn.haohan.lunar.api.mob.disguise.DisguiseManager;
 import vn.haohan.lunar.api.mob.disguise.DisguiseType;
 import vn.haohan.lunar.api.mob.pack.PackCoordinationService;
 import vn.haohan.lunar.api.mob.signal.MobSignalBus;
-import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
-
-import vn.haohan.lunar.api.system.combat.skill.projectile.ActiveProjectile;
-import vn.haohan.lunar.api.system.combat.skill.projectile.ProjectileDefinition;
-import vn.haohan.lunar.api.system.combat.skill.projectile.ProjectileTracker;
-import vn.haohan.lunar.api.system.combat.skill.projectile.SurfaceMode;
+import vn.haohan.lunar.api.presentation.audio.SpatialAudioEngine;
+import vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge;
+import vn.haohan.lunar.api.presentation.display.orchestration.*;
+import vn.haohan.lunar.api.presentation.particle.geometric.ParticleChoreographer;
+import vn.haohan.lunar.api.system.combat.DamageType;
+import vn.haohan.lunar.api.system.combat.cc.CCState;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
+import vn.haohan.lunar.api.system.combat.skill.aura.*;
 import vn.haohan.lunar.api.system.combat.skill.complex.BeamEngine;
 import vn.haohan.lunar.api.system.combat.skill.complex.ChainEngine;
 import vn.haohan.lunar.api.system.combat.skill.complex.OrbitalEngine;
 import vn.haohan.lunar.api.system.combat.skill.complex.SlashEngine;
-import org.bukkit.Material;
+import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
+import vn.haohan.lunar.api.system.combat.skill.projectile.ActiveProjectile;
+import vn.haohan.lunar.api.system.combat.skill.projectile.ProjectileDefinition;
+import vn.haohan.lunar.api.system.combat.skill.projectile.ProjectileTracker;
+import vn.haohan.lunar.api.system.combat.skill.projectile.SurfaceMode;
 import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
+import vn.haohan.lunar.api.system.world.environment.EnvironmentalFieldTracker;
+import vn.haohan.lunar.api.system.world.hazard.HazardZoneDefinition;
+import vn.haohan.lunar.api.system.world.hazard.HazardZoneTracker;
+import vn.haohan.lunar.api.system.world.totem.TotemDefinition;
+import vn.haohan.lunar.api.system.world.totem.TotemManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.system.util.SafeExpressionEvaluator;
 import vn.haohan.lunar.core.system.variable.VariableManager;
 import vn.haohan.lunar.core.system.variable.VariableScope;
 import vn.haohan.lunar.core.system.variable.VariableValue;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiPredicate;
-import vn.haohan.lunar.core.system.util.SafeExpressionEvaluator;
 
 /** Safe MVP mechanic registry. Arbitrary command execution is intentionally absent. */
 public final class MechanicRegistry {
@@ -673,49 +655,125 @@ public final class MechanicRegistry {
 
         // Combat Mechanics: Immunity & Crowd Control
         register("immunity", (context, params) -> {
-            int durationTicks = boundedInt(params, "duration", 1, 72000);
+            int durationTicks = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
             String causeStr = params.containsKey("cause") ? params.get("cause").toString() : null;
-            String typeStr = params.containsKey("damage-type") ? params.get("damage-type").toString() : null;
+            String typeStr = params.containsKey("type") ? params.get("type").toString() : params.containsKey("damage-type") ? params.get("damage-type").toString() : null;
+            String skillStr = params.containsKey("skill") ? params.get("skill").toString() : null;
 
-            ActiveMob caster = context.cast().caster();
-            if (caster != null) {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            List<ActiveMob> targets = new ArrayList<>();
+            if (context.targets() == null || context.targets().isEmpty()) {
+                if (caster != null) targets.add(caster);
+            } else {
+                for (TargetRef ref : context.targets()) {
+                    if (ref.entity() != null) {
+                        ActiveMob mob = mobManager != null ? mobManager.get(ref.entity().getUniqueId()) : null;
+                        if (mob != null) {
+                            targets.add(mob);
+                        } else if (caster != null && ref.entity().getUniqueId().equals(caster.entityId())) {
+                            targets.add(caster);
+                        }
+                    }
+                }
+                if (targets.isEmpty() && caster != null) {
+                    targets.add(caster);
+                }
+            }
+
+            for (ActiveMob mob : targets) {
                 if (causeStr != null) {
                     try {
-                        DamageCause cause = DamageCause.valueOf(causeStr.toUpperCase(Locale.ROOT));
-                        caster.immunityTable().addCauseImmunity(cause, durationTicks);
+                        DamageCause cause = DamageCause.valueOf(causeStr.trim().toUpperCase(Locale.ROOT));
+                        mob.immunityTable().addCauseImmunity(cause, durationTicks);
                     } catch (IllegalArgumentException ignored) {}
                 }
                 if (typeStr != null) {
+                    String normType = typeStr.trim().toUpperCase(Locale.ROOT);
                     try {
-                        DamageType dtype = DamageType.valueOf(typeStr.toUpperCase(Locale.ROOT));
-                        caster.immunityTable().addTypeImmunity(dtype, durationTicks);
+                        DamageCause cause = DamageCause.valueOf(normType);
+                        mob.immunityTable().addCauseImmunity(cause, durationTicks);
+                    }
+                    catch (IllegalArgumentException ignored) {
+                    }
+                    try {
+                        DamageType dtype = DamageType.valueOf(normType);
+                        mob.immunityTable().addTypeImmunity(dtype, durationTicks);
                     } catch (IllegalArgumentException ignored) {}
+                }
+                if (skillStr != null && !skillStr.isBlank()) {
+                    mob.immunityTable().addSkillImmunity(skillStr.trim(), durationTicks);
                 }
             }
         });
 
         register("stun", (context, params) -> {
-            int duration = boundedInt(params, "duration", 1, 72000);
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
+            int priority = params.containsKey("priority") ? ((Number)params.get("priority")).intValue() : 1;
+            applyCCToTargets(context, CCState.STUN, duration, priority, 1.0);
+        });
+
+        register("root", (context, params) -> {
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
             int priority = params.containsKey("priority") ? ((Number) params.get("priority")).intValue() : 1;
-            ActiveMob caster = context.cast().caster();
-            UUID casterId = caster != null ? caster.entityId() : null;
-            for (TargetRef ref : context.targets()) {
-                if (ref.entity() != null && caster != null && ref.entity().getUniqueId().equals(caster.entityId())) {
-                    caster.crowdControl().apply(CCState.STUN, duration, casterId, priority);
-                }
-            }
+            applyCCToTargets(context, CCState.ROOT, duration, priority, 1.0);
+        });
+
+        register("silence", (context, params) -> {
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
+            int priority = params.containsKey("priority") ? ((Number)params.get("priority")).intValue() : 1;
+            applyCCToTargets(context, CCState.SILENCE, duration, priority, 1.0);
+        });
+
+        register("disarm", (context, params) -> {
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
+            int priority = params.containsKey("priority") ? ((Number)params.get("priority")).intValue() : 1;
+            applyCCToTargets(context, CCState.DISARM, duration, priority, 1.0);
+        });
+
+        register("invulnerable", (context, params) -> {
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
+            int priority = params.containsKey("priority") ? ((Number)params.get("priority")).intValue() : 1;
+            applyCCToTargets(context, CCState.INVULNERABLE, duration, priority, 1.0);
+        });
+
+        register("slow", (context, params) -> {
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
+            double intensity = params.containsKey("amount") ? ((Number)params.get("amount")).doubleValue() : params.containsKey("intensity") ? ((Number)params.get("intensity")).doubleValue() : 0.5;
+            int priority = params.containsKey("priority") ? ((Number)params.get("priority")).intValue() : 1;
+            applyCCToTargets(context, CCState.SLOW, duration, priority, intensity);
+        });
+
+        register("fear", (context, params) -> {
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
+            int priority = params.containsKey("priority") ? ((Number)params.get("priority")).intValue() : 1;
+            applyCCToTargets(context, CCState.FEAR, duration, priority, 1.0);
         });
 
         register("cc", (context, params) -> {
             String stateStr = text(params, "state").toUpperCase(Locale.ROOT);
             CCState state = CCState.valueOf(stateStr);
-            int duration = boundedInt(params, "duration", 1, 72000);
+            int duration = params.containsKey("duration") ? boundedInt(params, "duration", 1, 72000) : params.containsKey("d") ? boundedInt(params, "d", 1, 72000) : 20;
             int priority = params.containsKey("priority") ? ((Number) params.get("priority")).intValue() : 1;
+            double intensity = params.containsKey("amount") ? ((Number)params.get("amount")).doubleValue() : params.containsKey("intensity") ? ((Number)params.get("intensity")).doubleValue() : 1.0;
+            applyCCToTargets(context, state, duration, priority, intensity);
+        });
+
+        register("taunt", (context, params) -> {
+            double amount = params.containsKey("amount") ? ((Number)params.get("amount")).doubleValue() : params.containsKey("a") ? ((Number)params.get("a")).doubleValue() : 50.0;
+            long duration = params.containsKey("duration") ? ((Number)params.get("duration")).longValue() : params.containsKey("d") ? ((Number)params.get("d")).longValue() : 60L;
             ActiveMob caster = context.cast().caster();
-            UUID casterId = caster != null ? caster.entityId() : null;
-            for (TargetRef ref : context.targets()) {
-                if (ref.entity() != null && caster != null && ref.entity().getUniqueId().equals(caster.entityId())) {
-                    caster.crowdControl().apply(state, duration, casterId, priority);
+            UUID casterId = caster != null ? caster.entityId() : (context.cast() != null ? context.cast().casterId() : null);
+            if (casterId == null) return;
+            long currentTick = context.cast() != null ? context.cast().startedAtTick() : 0L;
+
+            if (context.targets() != null) {
+                for (TargetRef ref : context.targets()) {
+                    if (ref.entity() != null) {
+                        ActiveMob targetMob = mobManager != null ? mobManager.get(ref.entity().getUniqueId()) : null;
+                        if (targetMob != null) {
+                            targetMob.threatTable().taunt(casterId, amount, duration, currentTick);
+                        }
+                    }
                 }
             }
         });
@@ -1484,6 +1542,31 @@ public final class MechanicRegistry {
 
     private double boundedAxis(Object raw) {
         return boundedAxis(null, null, raw);
+    }
+
+    private void applyCCToTargets(MechanicContext context, CCState state, int duration, int priority, double intensity) {
+        ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+        UUID casterId = caster != null ? caster.entityId() : (context.cast() != null ? context.cast().casterId() : null);
+
+        List<TargetRef> targets = context.targets();
+        if (targets == null || targets.isEmpty()) {
+            if (caster != null) {
+                caster.crowdControl().apply(state, duration, casterId, priority, intensity);
+            }
+            return;
+        }
+
+        for (TargetRef ref : targets) {
+            if (ref.entity() != null) {
+                UUID targetId = ref.entity().getUniqueId();
+                ActiveMob targetMob = mobManager != null ? mobManager.get(targetId) : null;
+                if (targetMob != null) {
+                    targetMob.crowdControl().apply(state, duration, casterId, priority, intensity);
+                } else if (caster != null && targetId.equals(caster.entityId())) {
+                    caster.crowdControl().apply(state, duration, casterId, priority, intensity);
+                }
+            }
+        }
     }
 
     private static String normalize(String id) {

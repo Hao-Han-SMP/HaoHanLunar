@@ -14,12 +14,7 @@ import org.bukkit.event.world.WorldUnloadEvent;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /** Spreads the lunar beacon's surface conversion as a noisy, staged wave. */
 public final class LunarSurfaceSpreadMechanic implements Listener, LunarSubSystem {

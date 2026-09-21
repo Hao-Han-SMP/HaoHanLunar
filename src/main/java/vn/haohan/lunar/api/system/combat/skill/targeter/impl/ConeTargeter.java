@@ -33,8 +33,10 @@ public final class ConeTargeter implements EntityTargeter {
         if (world == null) return List.of();
 
         double radius = TargeterFilter.parseRadius(parameters);
+        double radiusSq = radius * radius;
         double angle = parseAngle(parameters, 90.0);
         double halfAngle = angle / 2.0;
+        double cosThreshold = Math.cos(Math.toRadians(halfAngle));
         Vector facing = origin.getDirection().normalize();
 
         List<LivingEntity> candidates = new ArrayList<>();
@@ -47,11 +49,11 @@ public final class ConeTargeter implements EntityTargeter {
             }
 
             Vector toTarget = living.getLocation().toVector().subtract(origin.toVector());
-            double dist = toTarget.length();
-            if (dist <= 0.0001 || dist > radius) continue;
+            double distSq = toTarget.lengthSquared();
+            if (distSq <= 0.0001 || distSq > radiusSq) continue;
 
-            double degrees = Math.toDegrees(facing.angle(toTarget));
-            if (degrees <= halfAngle) {
+            double dot = facing.dot(toTarget.multiply(1.0 / Math.sqrt(distSq)));
+            if (dot >= cosThreshold) {
                 candidates.add(living);
             }
         }

@@ -3,12 +3,7 @@ package vn.haohan.lunar.api.system.combat.skill.aura;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -83,6 +78,10 @@ public final class AuraScheduler {
         return Optional.ofNullable(auras.get(buildKey(attachment.attachmentKey(), auraId)));
     }
 
+    private static String buildKey(String attachmentKey, String auraId) {
+        return attachmentKey + ":" + auraId.toLowerCase(Locale.ROOT);
+    }
+
     public int cancelAll(UUID entityId) {
         if (entityId == null) return 0;
         String prefix = "entity:" + entityId;
@@ -111,7 +110,10 @@ public final class AuraScheduler {
         auras.clear();
     }
 
-    private static String buildKey(String attachmentKey, String auraId) {
-        return attachmentKey + ":" + auraId.toLowerCase();
+    public boolean hasAura(UUID entityId, String auraId) {
+        if (entityId == null || auraId == null) return false;
+        String key = "entity:" + entityId + ":" + auraId.toLowerCase(Locale.ROOT);
+        ActiveAura existing = auras.get(key);
+        return existing != null && !existing.isExpired();
     }
 }

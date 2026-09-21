@@ -1,14 +1,11 @@
 package vn.haohan.lunar.api.mob.phase;
 
+import org.bukkit.Bukkit;
+import vn.haohan.lunar.api.event.LunarMobPhaseChangeEvent;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
@@ -39,6 +36,19 @@ public final class MobPhaseMachine {
      */
     public PhaseTransitionResult update(ActiveMob mob, double health, double maxHealth, long tick) {
         return update(PhaseContext.ofHealth(mob, health, maxHealth, tick));
+    }
+
+    private static int parsePhaseNumber(String id) {
+        if (id == null) return 1;
+        String digits = id.replaceAll("[^0-9]", "");
+        if (!digits.isEmpty()) {
+            try {
+                return Integer.parseInt(digits);
+            }
+            catch (NumberFormatException ignored) {
+            }
+        }
+        return 1;
     }
 
     /**
@@ -85,6 +95,19 @@ public final class MobPhaseMachine {
             return PhaseTransitionResult.unchanged(previous);
         }
 
+        // Fire LunarMobPhaseChangeEvent if Bukkit is available
+        int prevIndex = parsePhaseNumber(previous != null ? previous.phaseId() : "1");
+        int nextIndex = parsePhaseNumber(selected.id());
+        try {
+            LunarMobPhaseChangeEvent event = new LunarMobPhaseChangeEvent(mob, prevIndex, nextIndex);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return PhaseTransitionResult.unchanged(previous);
+            }
+        }
+        catch (Throwable ignored) {
+        }
+
         // Dispatch exit skills
         if (previous != null) {
             for (String exitSkill : previous.phase().onExitSkills()) {
@@ -110,6 +133,17 @@ public final class MobPhaseMachine {
         }
 
         return new PhaseTransitionResult(true, previous, next, null);
+    }
+
+    public boolean forcePhase(ActiveMob mob, String phaseId, long tick) {
+        if (mob == null || phaseId == null) return false;
+        MobPhase found = phases.stream().filter(p -> p.id().equalsIgnoreCase(phaseId.trim())).findFirst().orElse(null);
+        if (found == null) return false;
+        MobPhaseState prev = states.get(mob.entityId());
+        MobPhaseState next = new MobPhaseState(found, tick, prev != null ? prev.completedPhases() : null);
+        states.put(mob.entityId(), next);
+        mob.setStance(found.id());
+        return true;
     }
 
     public Optional<MobPhaseState> state(UUID entityId) { return Optional.ofNullable(states.get(entityId)); }

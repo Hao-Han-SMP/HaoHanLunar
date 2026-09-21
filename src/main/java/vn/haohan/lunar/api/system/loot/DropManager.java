@@ -11,28 +11,19 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.api.manager.LootManager;
 import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
+import vn.haohan.lunar.api.manager.LootManager;
+import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.mob.equipment.EquipmentApplier;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
+import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.api.system.loot.instanced.InstancedDropTracker;
 import vn.haohan.lunar.api.system.loot.pity.PityManager;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -121,50 +112,55 @@ public final class DropManager implements LootManager, Listener {
             return List.of();
         }
 
-        Optional<MobDefinition> definitionOpt = mobDefinitions.get(mob.definitionId());
-        String dropTableId = definitionOpt.flatMap(MobDefinition::dropTableReference).orElse(null);
-        if (dropTableId == null) {
-            return List.of();
-        }
+        Optional<MobDefinition> definitionOpt = mobDefinitions != null ? mobDefinitions.get(mob.definitionId()) : Optional.empty();
+        String dropTableId = definitionOpt.flatMap(MobDefinition::dropTableReference).or(() -> mob.definition() != null ? mob.definition().dropTableReference() : Optional.empty()).orElse(null);
 
-        DropTableDefinition table = get(dropTableId).orElse(null);
-        if (table == null) {
-            return List.of();
-        }
-
-        DropOptions opts = table.options();
+        DropTableDefinition table = dropTableId != null ? get(dropTableId).orElse(null) : null;
+        DropOptions opts = table != null ? table.options() : DropOptions.DEFAULT;
         List<ItemStack> totalSpawned = new ArrayList<>();
 
-        if (opts.dropsPerPlayer()) {
-            ThreatTable threat = mob.threatTable();
-            double totalThreat = threat.totalThreat();
-            double minPercent = opts.dropsPerPlayerRequiredDamagePercent();
+        if (table != null) {
+            if (opts.dropsPerPlayer()) {
+                ThreatTable threat = mob.threatTable();
+                double totalThreat = threat.totalThreat();
+                double minPercent = opts.dropsPerPlayerRequiredDamagePercent();
 
-            for (Map.Entry<UUID, Double> entry : threat.snapshot().entrySet()) {
-                double threatScore = entry.getValue() != null ? entry.getValue() : 0.0;
-                double percent = totalThreat > 0 ? (threatScore / totalThreat) * 100.0 : 100.0;
-                if (percent >= minPercent) {
-                    Player p = null;
-                    try {
-                        p = org.bukkit.Bukkit.getPlayer(entry.getKey());
-                    } catch (Throwable ignored) {
+                for (Map.Entry<UUID, Double> entry : threat.snapshot().entrySet()) {
+                    double threatScore = entry.getValue() != null ? entry.getValue() : 0.0;
+                    double percent = totalThreat > 0 ? (threatScore / totalThreat) * 100.0 : 100.0;
+                    if (percent >= minPercent) {
+                        Player p = null;
+                        try {
+                            p = org.bukkit.Bukkit.getPlayer(entry.getKey());
+                        }
+                        catch (Throwable ignored) {
+                        }
+                        LivingEntity contributor = p != null ? p : killer;
+                        DropMetadata meta = DropMetadata.of(mob, contributor, deathLocation);
+                        List<ItemStack> pDrops = table.roll(meta, random, itemBridge, conditionRegistry, pityManager);
+                        spawnDrops(pDrops, deathLocation, opts, random, contributor != null ? contributor.getUniqueId() : null);
+                        totalSpawned.addAll(pDrops);
                     }
-                    LivingEntity contributor = p != null ? p : killer;
-                    DropMetadata meta = DropMetadata.of(mob, contributor, deathLocation);
-                    List<ItemStack> pDrops = table.roll(meta, random, itemBridge, conditionRegistry, pityManager);
-                    spawnDrops(pDrops, deathLocation, opts, random, contributor != null ? contributor.getUniqueId() : null);
-                    totalSpawned.addAll(pDrops);
                 }
+            } else {
+                DropMetadata metadata = DropMetadata.of(mob, killer, deathLocation);
+                List<ItemStack> drops = table.roll(metadata, random, itemBridge, conditionRegistry, pityManager);
+                spawnDrops(drops, deathLocation, opts, random, killer != null ? killer.getUniqueId() : null);
+                totalSpawned.addAll(drops);
             }
-        } else {
-            DropMetadata metadata = DropMetadata.of(mob, killer, deathLocation);
-            List<ItemStack> drops = table.roll(metadata, random, itemBridge, conditionRegistry, pityManager);
-            spawnDrops(drops, deathLocation, opts, random, killer != null ? killer.getUniqueId() : null);
-            totalSpawned.addAll(drops);
+        }
+
+        if (mob.definition() != null && mob.definition().equipment() != null && !mob.definition().equipment().isEmpty()) {
+            List<ItemStack> eqDrops = EquipmentApplier.resolveEquipmentDrops(mob.definition().equipment(), null);
+            if (!eqDrops.isEmpty()) {
+                spawnDrops(eqDrops, deathLocation, opts, random, killer != null ? killer.getUniqueId() : null);
+                totalSpawned.addAll(eqDrops);
+            }
         }
 
         return List.copyOf(totalSpawned);
     }
+
 
     private void spawnDrops(List<ItemStack> drops, Location loc, DropOptions opts, Random random, UUID ownerUuid) {
         if (loc == null || loc.getWorld() == null || drops.isEmpty()) return;
@@ -242,6 +238,9 @@ public final class DropManager implements LootManager, Listener {
     public List<ItemStack> generateDrops(String dropTableId, LivingEntity victim, Player killer, double luckBonus) {
         DropTableDefinition table = get(dropTableId).orElse(null);
         if (table == null) return List.of();
-        return List.of();
+        ActiveMob mob = (victim != null && mobManager != null) ? mobManager.get(victim.getUniqueId()) : null;
+        Location loc = victim != null ? victim.getLocation() : (killer != null ? killer.getLocation() : null);
+        DropMetadata metadata = new DropMetadata(mob, killer, loc, luckBonus <= 0 ? 1.0 : luckBonus, 0L);
+        return table.roll(metadata, ThreadLocalRandom.current(), itemBridge, conditionRegistry, pityManager);
     }
 }

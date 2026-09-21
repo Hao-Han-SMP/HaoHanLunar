@@ -14,18 +14,12 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import vn.haohan.lunar.api.manager.SpawnerManager;
-import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -59,6 +53,16 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
     public void register(LunarFixedSpawner spawner) {
         Objects.requireNonNull(spawner, "Spawner must not be null");
         spawners.put(spawner.id(), spawner);
+    }
+
+    public void replaceAll(java.util.Collection<SpawnerDefinition> definitions) {
+        Objects.requireNonNull(definitions, "Spawner definitions must not be null");
+        Map<String, LunarFixedSpawner> newSpawners = new ConcurrentHashMap<>();
+        for (SpawnerDefinition def : definitions) {
+            newSpawners.put(def.id(), new LunarFixedSpawner(def, mobDefinitions, mobManager));
+        }
+        spawners.clear();
+        spawners.putAll(newSpawners);
     }
 
     public boolean hasSpawner(String id) {

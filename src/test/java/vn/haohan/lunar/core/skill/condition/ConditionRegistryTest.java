@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
+import vn.haohan.lunar.api.system.combat.skill.aura.AuraAttachment;
+import vn.haohan.lunar.api.system.combat.skill.aura.AuraDefinition;
+import vn.haohan.lunar.api.system.combat.skill.aura.AuraScheduler;
 
 import java.lang.reflect.Proxy;
 import java.util.List;
@@ -78,6 +81,56 @@ class ConditionRegistryTest {
         assertTrue(registry.not(context, wrong).matched());
     }
 
+    @Test
+    void evaluatesMythicMobsParityConditions() {
+        LivingEntity caster = entity(10, Set.of("boss"));
+        LivingEntity target = entity(20, Set.of("player"));
+
+        ConditionRegistry registry = new ConditionRegistry();
+        AuraScheduler auraScheduler = new AuraScheduler();
+        registry.setAuraScheduler(auraScheduler);
+
+        ConditionContext context = new ConditionContext(
+                caster,
+                target,
+                "default",
+                new CooldownRegistry(),
+                Map.of("threat", 150.0),
+                0L
+        );
+
+        // evaluateComparison helper checks
+        assertTrue(ConditionRegistry.evaluateComparison(10.0, "<=15"));
+        assertTrue(ConditionRegistry.evaluateComparison(10.0, "<15"));
+        assertTrue(ConditionRegistry.evaluateComparison(10.0, ">=5"));
+        assertTrue(ConditionRegistry.evaluateComparison(10.0, ">5"));
+        assertTrue(ConditionRegistry.evaluateComparison(10.0, "==10"));
+        assertTrue(ConditionRegistry.evaluateComparison(10.0, "=10"));
+        assertFalse(ConditionRegistry.evaluateComparison(10.0, ">15"));
+
+        // distance condition
+        assertTrue(registry.evaluate("distance", context, Map.of("d", "<=10")).matched());
+        assertFalse(registry.evaluate("distance", context, Map.of("d", ">10")).matched());
+
+        // health condition (absolute and percentage)
+        assertTrue(registry.evaluate("health", context, Map.of("h", "<=25")).matched());
+        assertTrue(registry.evaluate("health", context, Map.of("h", "<=100%")).matched());
+
+        // threat condition
+        assertTrue(registry.evaluate("threat", context, Map.of("amount", ">=100")).matched());
+        assertFalse(registry.evaluate("threat", context, Map.of("amount", ">200")).matched());
+
+        // isdead condition
+        assertFalse(registry.evaluate("isdead", context, Map.of()).matched());
+        assertTrue(registry.evaluate("isdead", context, Map.of("bool", false)).matched());
+
+        // hasaura condition
+        assertFalse(registry.evaluate("hasaura", context, Map.of("aura", "shield")).matched());
+        AuraDefinition auraDef = AuraDefinition.builder("shield").durationTicks(200L).build();
+        auraScheduler.applyAura(auraDef, AuraAttachment.ofEntity(target), caster.getUniqueId(), 0L);
+        assertTrue(registry.evaluate("hasaura", context, Map.of("aura", "shield")).matched());
+    }
+
     private static LivingEntity entity(double health, Set<String> tags) {
         UUID uuid = UUID.randomUUID();
         World world = (World) Proxy.newProxyInstance(World.class.getClassLoader(), new Class<?>[]{World.class},
@@ -92,6 +145,7 @@ class ConditionRegistryTest {
                 new Class<?>[]{LivingEntity.class}, (proxy, method, args) -> switch (method.getName()) {
                     case "getUniqueId" -> uuid;
                     case "getHealth" -> health;
+                    case "getMaxHealth" -> 20.0;
                     case "getWorld" -> world;
                     case "getLocation" -> new Location(world, 0, 64, 0);
                     case "getScoreboardTags" -> tags;

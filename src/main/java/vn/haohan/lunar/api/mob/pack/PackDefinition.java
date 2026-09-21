@@ -1,8 +1,8 @@
 package vn.haohan.lunar.api.mob.pack;
 
-import vn.haohan.lunar.api.system.loot.DropTableDefinition;
 import vn.haohan.lunar.api.mob.MobDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainDefinition;
+import vn.haohan.lunar.api.system.loot.DropTableDefinition;
 
 import java.nio.file.Path;
 import java.util.Collections;

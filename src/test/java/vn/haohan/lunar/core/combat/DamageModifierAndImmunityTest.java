@@ -179,6 +179,90 @@ class DamageModifierAndImmunityTest {
         assertTrue(casterMob.immunityTable().hasCauseImmunity(DamageCause.PROJECTILE, System.currentTimeMillis() + 50));
     }
 
+    @Test
+    void damageModifierTableFromConfigParsing() {
+        // List format (MythicMobs style)
+        DamageModifierTable listTable = DamageModifierTable.fromConfig(
+                List.of("FIRE 0.5", "FALL: 0.0", "PROJECTILE 1.5"),
+                List.of("PLAYER 0.8", "IRON_GOLEM: 0.2")
+        );
+        assertEquals(0.5, listTable.calculateMultiplier(DamageCause.FIRE, null), 0.001);
+        assertEquals(0.0, listTable.calculateMultiplier(DamageCause.FALL, null), 0.001);
+        assertEquals(1.5, listTable.calculateMultiplier(DamageCause.PROJECTILE, null), 0.001);
+        assertEquals(0.8, listTable.calculateMultiplier(DamageCause.ENTITY_ATTACK, EntityType.PLAYER), 0.001);
+
+        // Map format
+        DamageModifierTable mapTable = DamageModifierTable.fromConfig(
+                Map.of("FIRE", 0.75, "MAGIC", "0.25"),
+                Map.of("PLAYER", 0.5)
+        );
+        assertEquals(0.75, mapTable.calculateMultiplier(DamageCause.FIRE, null), 0.001);
+        assertEquals(0.25, mapTable.calculateMultiplier(DamageCause.MAGIC, null), 0.001);
+        assertEquals(0.5, mapTable.calculateMultiplier(DamageCause.ENTITY_ATTACK, EntityType.PLAYER), 0.001);
+
+        // Delimited string format
+        DamageModifierTable strTable = DamageModifierTable.fromConfig("FIRE 0.4, FALL 0.1", "PLAYER 0.9");
+        assertEquals(0.4, strTable.calculateMultiplier(DamageCause.FIRE, null), 0.001);
+        assertEquals(0.1, strTable.calculateMultiplier(DamageCause.FALL, null), 0.001);
+        assertEquals(0.9, strTable.calculateMultiplier(DamageCause.ENTITY_ATTACK, EntityType.PLAYER), 0.001);
+    }
+
+    @Test
+    void activeMobInitializesDamageModifiersFromOptions() {
+        LivingEntity entity = mockLiving();
+        MobDefinition def = new MobDefinition(
+                new MobDefinitionId("boss_def"),
+                EntityType.IRON_GOLEM,
+                "Boss Def",
+                null,
+                Map.of(),
+                Map.of(
+                        "DamageModifiers", new MobOptionDefinition("DamageModifiers", "FIRE 0.5, FALL 0.0"),
+                        "EntityDamageModifiers", new MobOptionDefinition("EntityDamageModifiers", "PLAYER 0.5")
+                ),
+                List.of(),
+                null,
+                Set.of()
+        );
+        vn.haohan.lunar.core.subsystem.mob.ActiveMob mob = new vn.haohan.lunar.core.subsystem.mob.ActiveMob(
+                entity, def, new LunarMobIdentity("boss_def", "1.0")
+        );
+        assertEquals(0.5, mob.damageModifiers().calculateMultiplier(DamageCause.FIRE, null), 0.001);
+        assertEquals(0.0, mob.damageModifiers().calculateMultiplier(DamageCause.FALL, null), 0.001);
+        assertEquals(0.25, mob.damageModifiers().calculateMultiplier(DamageCause.FIRE, EntityType.PLAYER), 0.001);
+    }
+
+    @Test
+    void expandedCrowdControlAndTauntMechanics() {
+        MechanicRegistry registry = new MechanicRegistry();
+        LivingEntity casterEntity = mockLiving(d -> {});
+        ActiveLunarMob casterMob = mockActiveMob(casterEntity, "boss_cc");
+
+        SkillDefinition skill = new SkillDefinition("cc_test", Set.of(SkillTrigger.ON_TIMER), 10, List.of());
+        SkillCastContext castContext = new SkillCastContext(casterMob, skill, SkillTrigger.ON_TIMER, 100L);
+        MechanicContext mechContext = new MechanicContext(castContext, List.of(TargetRef.entity(casterEntity)));
+
+        // Test root
+        registry.execute("root", mechContext, Map.of("duration", 60));
+        assertTrue(casterMob.crowdControl().isRooted());
+
+        // Test silence
+        registry.execute("silence", mechContext, Map.of("duration", 60));
+        assertTrue(casterMob.crowdControl().isSilenced());
+
+        // Test disarm
+        registry.execute("disarm", mechContext, Map.of("duration", 60));
+        assertTrue(casterMob.crowdControl().isDisarmed());
+
+        // Test invulnerable
+        registry.execute("invulnerable", mechContext, Map.of("duration", 60));
+        assertTrue(casterMob.crowdControl().isInvulnerable());
+
+        // Test slow
+        registry.execute("slow", mechContext, Map.of("duration", 60, "amount", 0.7));
+        assertTrue(casterMob.crowdControl().isSlowed());
+    }
+
     // --- Helpers ---
 
     private static LivingEntity mockLiving() {

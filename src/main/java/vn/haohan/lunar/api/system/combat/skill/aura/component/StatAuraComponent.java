@@ -8,11 +8,7 @@ import org.bukkit.potion.PotionEffectType;
 import vn.haohan.lunar.api.system.combat.skill.aura.ActiveAura;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraComponent;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Periodically applies and refreshes potion buffs/debuffs to living entities standing within the aura radius.

@@ -24,7 +24,10 @@ public class PlayerLunarData {
 
     public Player getPlayer() { return player; }
     public int getOxygen() { return oxygen; }
-    public void setOxygen(int oxygen) { this.oxygen = Math.max(0, Math.min(600, oxygen)); }
+
+    public void setOxygen(int oxygen) {
+        this.oxygen = Math.clamp(oxygen, 0, 600);
+    }
     public int getOxygenDmg() { return oxygenDmg; }
     public void setOxygenDmg(int oxygenDmg) { this.oxygenDmg = oxygenDmg; }
     public int getRbRegen() { return rbRegen; }

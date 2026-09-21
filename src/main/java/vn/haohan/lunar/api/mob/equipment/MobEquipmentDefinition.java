@@ -40,6 +40,57 @@ public final class MobEquipmentDefinition {
         return slots.isEmpty();
     }
 
+    @SuppressWarnings("unchecked")
+    public static MobEquipmentDefinition fromMap(Object raw) {
+        if (raw == null) return empty();
+        if (raw instanceof MobEquipmentDefinition med) return med;
+        if (!(raw instanceof Map<?, ?> map)) return empty();
+
+        Builder builder = builder();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (entry.getKey() == null) continue;
+            EquipmentSlot slot;
+            try {
+                slot = EquipmentSlot.fromString(entry.getKey().toString());
+            }
+            catch (IllegalArgumentException ignored) {
+                continue;
+            }
+
+            Object val = entry.getValue();
+            if (val instanceof String str) {
+                String[] parts = str.split(":", 2);
+                String itemId = parts[0].trim();
+                double dropChance = 0.0;
+                if (parts.length > 1) {
+                    try {
+                        dropChance = Double.parseDouble(parts[1].trim());
+                    }
+                    catch (NumberFormatException ignored) {
+                    }
+                }
+                builder.set(slot, itemId, dropChance);
+            } else if (val instanceof Map<?, ?> slotMap) {
+                String itemId = String.valueOf(find(slotMap, "item", "id"));
+                double dropChance = 0.0;
+                Object dc = find(slotMap, "dropChance", "drop-chance");
+                if (dc instanceof Number n) dropChance = n.doubleValue();
+                boolean unbreakable = Boolean.parseBoolean(String.valueOf(find(slotMap, "unbreakable")));
+                builder.set(slot, itemId, dropChance, unbreakable);
+            }
+        }
+        return builder.build();
+    }
+
+    private static Object find(Map<?, ?> map, String... keys) {
+        if (map == null) return null;
+        for (String k : keys) {
+            Object v = map.get(k);
+            if (v != null) return v;
+        }
+        return null;
+    }
+
     public static final class Builder {
         private final Map<EquipmentSlot, SlotEquipmentDefinition> map = new EnumMap<>(EquipmentSlot.class);
 

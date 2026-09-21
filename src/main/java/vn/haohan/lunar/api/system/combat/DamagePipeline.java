@@ -1,11 +1,11 @@
 package vn.haohan.lunar.api.system.combat;
 
 import org.bukkit.attribute.Attribute;
-import vn.haohan.lunar.api.manager.CombatManager;
-import vn.haohan.lunar.api.mob.Mob;
-
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import vn.haohan.lunar.api.manager.CombatManager;
+import vn.haohan.lunar.api.mob.Mob;
+import vn.haohan.lunar.api.spawner.cluster.PackAggroCoordinator;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.List;
@@ -27,10 +27,11 @@ public final class DamagePipeline implements CombatManager {
     private final List<Consumer<DamageContext>> modifiers = new CopyOnWriteArrayList<>();
     private final List<Function<DamageContext, String>> immunityCheckers = new CopyOnWriteArrayList<>();
     private final List<BiConsumer<DamageContext, Double>> postHandlers = new CopyOnWriteArrayList<>();
+    private static final int MAX_CALL_DEPTH = 6;
+    private static final ThreadLocal<Integer> CALL_DEPTH = ThreadLocal.withInitial(() -> 0);
 
-    private static Optional<ActiveMob> asActive(Optional<? extends Mob> mobOpt) {
-        return mobOpt.filter(ActiveMob.class::isInstance).map(ActiveMob.class::cast);
-    }
+    private PackAggroCoordinator packAggroCoordinator = new PackAggroCoordinator();
+    private vn.haohan.lunar.core.subsystem.mob.LunarMobManager mobManager;
 
     public DamagePipeline() {
         // Built-in pre-checks
@@ -107,6 +108,16 @@ public final class DamagePipeline implements CombatManager {
             });
         });
 
+        // Built-in modifier: boss maxDamagePerHit capping
+        registerModifier(ctx -> {
+            asActive(ctx.victimMob()).ifPresent(victim -> {
+                double cap = victim.options().maxDamagePerHit();
+                if (cap > 0.0 && ctx.finalDamage() > cap) {
+                    ctx.setFinalDamage(cap);
+                }
+            });
+        });
+
         // Built-in post handler: attacker lifesteal
         registerPostHandler((ctx, appliedDamage) -> {
             if (appliedDamage <= 0.0) return;
@@ -133,12 +144,34 @@ public final class DamagePipeline implements CombatManager {
             });
         });
 
+        // Built-in post handler: pack aggro coordination
+        registerPostHandler((ctx, appliedDamage) -> {
+            if (appliedDamage <= 0.0) return;
+            asActive(ctx.victimMob()).ifPresent(victim -> {
+                if (ctx.attacker() instanceof LivingEntity attacker && mobManager != null && packAggroCoordinator != null) {
+                    packAggroCoordinator.broadcastAggro(victim, attacker, mobManager.snapshot());
+                }
+            });
+        });
+
         // Built-in immunity checker: mob victim immunity table
         registerImmunityChecker(ctx -> {
             return asActive(ctx.victimMob())
                     .flatMap(mob -> mob.immunityTable().checkImmunity(ctx))
                     .orElse(null);
         });
+    }
+
+    public void setMobManager(vn.haohan.lunar.core.subsystem.mob.LunarMobManager mobManager) {
+        this.mobManager = mobManager;
+    }
+
+    private static Optional<ActiveMob> asActive(Optional<? extends Mob> mobOpt) {
+        return mobOpt.filter(ActiveMob.class::isInstance).map(ActiveMob.class::cast);
+    }
+
+    public void setPackAggroCoordinator(PackAggroCoordinator coordinator) {
+        this.packAggroCoordinator = coordinator != null ? coordinator : new PackAggroCoordinator();
     }
 
     private static boolean isBasicAttack(DamageCause cause) {
@@ -155,6 +188,14 @@ public final class DamagePipeline implements CombatManager {
     public DamageResult execute(DamageContext context) {
         Objects.requireNonNull(context, "Damage context must not be null");
 
+        int depth = CALL_DEPTH.get();
+        if (depth >= MAX_CALL_DEPTH) {
+            String rejectReason = "Recursion call depth limit exceeded (" + MAX_CALL_DEPTH + ")";
+            context.cancel(rejectReason);
+            return DamageResult.cancelled(context, rejectReason);
+        }
+        CALL_DEPTH.set(depth + 1);
+        try {
         // 1. Pre-execution checks
         for (Function<DamageContext, String> check : preChecks) {
             String rejectReason = check.apply(context);
@@ -217,6 +258,9 @@ public final class DamagePipeline implements CombatManager {
         }
 
         return DamageResult.success(context, appliedDamage);
+        } finally {
+            CALL_DEPTH.set(depth);
+        }
     }
 
     @Override

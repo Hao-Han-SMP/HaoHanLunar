@@ -7,27 +7,42 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffectType;
+import vn.haohan.lunar.api.system.combat.skill.aura.AuraScheduler;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.SinglePin;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /** Safe condition registry. Invalid parameters become validation results, never combat-tick exceptions. */
 public final class ConditionRegistry {
 
     private final Map<String, Condition> conditions = new LinkedHashMap<>();
+    private AuraScheduler auraScheduler;
 
     public ConditionRegistry() {
         registerBuiltins();
+    }
+
+    public static boolean evaluateComparison(double actual, String spec) {
+        if (spec == null) return true;
+        spec = spec.trim();
+        try {
+            if (spec.startsWith("<=")) return actual <= Double.parseDouble(spec.substring(2).trim());
+            if (spec.startsWith("<")) return actual < Double.parseDouble(spec.substring(1).trim());
+            if (spec.startsWith(">=")) return actual >= Double.parseDouble(spec.substring(2).trim());
+            if (spec.startsWith(">")) return actual > Double.parseDouble(spec.substring(1).trim());
+            if (spec.startsWith("==")) return actual == Double.parseDouble(spec.substring(2).trim());
+            if (spec.startsWith("=")) return actual == Double.parseDouble(spec.substring(1).trim());
+            return actual <= Double.parseDouble(spec);
+        }
+        catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     public synchronized void register(String id, Condition condition) {
@@ -92,6 +107,57 @@ public final class ConditionRegistry {
         return ConditionResult.matched(all || result);
     }
 
+    private static ConditionParameterException invalid(String message) {
+        return new ConditionParameterException(message);
+    }
+
+    private static String normalize(String id) {
+        Objects.requireNonNull(id, "Condition ID must not be null");
+        String normalized = id.trim().toLowerCase(Locale.ROOT);
+        if (normalized.isBlank()) throw new IllegalArgumentException("Condition ID must not be blank");
+        return normalized;
+    }
+
+    private static boolean compare(Object actual, Object expected, String operator) {
+        if (actual == null || expected == null) return false;
+        int ordering;
+        if (actual instanceof Number left && expected instanceof Number right) {
+            ordering = Double.compare(left.doubleValue(), right.doubleValue());
+        } else {
+            ordering = String.valueOf(actual).compareTo(String.valueOf(expected));
+        }
+        return switch (operator.toLowerCase(Locale.ROOT)) {
+            case "equals", "==", "=" -> Objects.equals(actual, expected) || String.valueOf(actual).equals(String.valueOf(expected));
+            case "not_equals", "!=", "<>" -> !Objects.equals(actual, expected);
+            case "greater", ">" -> ordering > 0;
+            case "greater_or_equal", ">=" -> ordering >= 0;
+            case "less", "<" -> ordering < 0;
+            case "less_or_equal", "<=" -> ordering <= 0;
+            default -> throw invalid("Unsupported comparison operator: " + operator);
+        };
+    }
+
+    private static Entity requiredTarget(ConditionContext context) {
+        if (context.target() == null) throw invalid("Target is required");
+        return context.target();
+    }
+
+    private static String text(Map<String, Object> params, String key) {
+        Object value = params.get(key);
+        if (!(value instanceof String string) || string.isBlank()) throw invalid(key + " must be a non-blank string");
+        return string.trim();
+    }
+
+    private static double number(Map<String, Object> params, String key) {
+        Object value = params.get(key);
+        if (!(value instanceof Number number)) throw invalid(key + " must be numeric");
+        return number.doubleValue();
+    }
+
+    public void setAuraScheduler(AuraScheduler auraScheduler) {
+        this.auraScheduler = auraScheduler;
+    }
+
     private void registerBuiltins() {
         register("target_within", (context, params) -> {
             Entity target = requiredTarget(context);
@@ -150,7 +216,6 @@ public final class ConditionRegistry {
             Location loc = subject.getLocation();
             if (loc == null || loc.getWorld() == null) return false;
             try {
-                // Paper Structure API or check
                 return loc.getWorld().getName().toLowerCase(Locale.ROOT).contains(expected.toLowerCase(Locale.ROOT));
             } catch (Throwable ignored) {
                 return false;
@@ -355,69 +420,193 @@ public final class ConditionRegistry {
             String distSpec = params.containsKey("distance") ? String.valueOf(params.get("distance"))
                     : params.containsKey("d") ? String.valueOf(params.get("d")) : null;
             if (distSpec == null) return true;
-            distSpec = distSpec.trim();
-            if (distSpec.startsWith("<=")) return dist <= Double.parseDouble(distSpec.substring(2));
-            if (distSpec.startsWith("<")) return dist < Double.parseDouble(distSpec.substring(1));
-            if (distSpec.startsWith(">=")) return dist >= Double.parseDouble(distSpec.substring(2));
-            if (distSpec.startsWith(">")) return dist > Double.parseDouble(distSpec.substring(1));
-            if (distSpec.startsWith("==")) return dist == Double.parseDouble(distSpec.substring(2));
-            return dist <= Double.parseDouble(distSpec);
+            return evaluateComparison(dist, distSpec);
+        });
+
+        // --- MythicMobs Parity Conditions (Phase 2) ---
+
+        ConditionEvaluator distanceEvaluator = (context, params) -> {
+            Entity target = context.target();
+            if (target == null) return false;
+            Location cLoc = context.caster().getLocation();
+            Location tLoc = target.getLocation();
+            if (cLoc == null || tLoc == null) return false;
+            if (cLoc.getWorld() != null && tLoc.getWorld() != null) {
+                if (!Objects.equals(cLoc.getWorld().getName(), tLoc.getWorld().getName())) return false;
+            }
+            double dist;
+            try {
+                dist = cLoc.distance(tLoc);
+            }
+            catch (Throwable ignored) {
+                double dx = cLoc.getX() - tLoc.getX();
+                double dy = cLoc.getY() - tLoc.getY();
+                double dz = cLoc.getZ() - tLoc.getZ();
+                dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            }
+            String distSpec = params.containsKey("distance") ? String.valueOf(params.get("distance")) : params.containsKey("d") ? String.valueOf(params.get("d")) : params.containsKey("radius") ? "<=" + params.get("radius") : null;
+            if (distSpec == null) return true;
+            return evaluateComparison(dist, distSpec);
+        };
+        register("distance", distanceEvaluator);
+        register("targetdistance", distanceEvaluator);
+
+        register("health", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            String hSpec = params.containsKey("health") ? String.valueOf(params.get("health")) : params.containsKey("h") ? String.valueOf(params.get("h")) : params.containsKey("amount") ? String.valueOf(params.get("amount")) : null;
+            if (hSpec == null) return true;
+            hSpec = hSpec.trim();
+            if (hSpec.endsWith("%")) {
+                double maxHealth = 20.0;
+                try {
+                    maxHealth = subject.getMaxHealth();
+                }
+                catch (Throwable ignored) {
+                }
+                double percent = (subject.getHealth() / Math.max(0.1, maxHealth)) * 100.0;
+                return evaluateComparison(percent, hSpec.substring(0, hSpec.length() - 1));
+            }
+            return evaluateComparison(subject.getHealth(), hSpec);
+        });
+
+        register("hasaura", (context, params) -> {
+            if (auraScheduler == null) return false;
+            String auraId = params.containsKey("aura") ? text(params, "aura") : params.containsKey("a") ? text(params, "a") : null;
+            if (auraId == null) return false;
+            LivingEntity subject = context.subjectLivingEntity();
+            return auraScheduler.hasAura(subject.getUniqueId(), auraId);
+        });
+
+        register("moving", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean isMoving = false;
+            try {
+                isMoving = subject.getVelocity().lengthSquared() > 0.001;
+            }
+            catch (Throwable ignored) {
+            }
+            return isMoving == expected;
+        });
+
+        register("sneaking", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean isSneaking = (subject instanceof Player p) && p.isSneaking();
+            return isSneaking == expected;
+        });
+
+        register("inwater", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean inWater = false;
+            try {
+                inWater = subject.isInWater();
+            }
+            catch (Throwable ignored) {
+            }
+            return inWater == expected;
+        });
+
+        register("inlava", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            Location loc = subject.getLocation();
+            if (loc == null || loc.getWorld() == null) return false;
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean inLava = false;
+            try {
+                inLava = loc.getBlock().getType() == Material.LAVA;
+            }
+            catch (Throwable ignored) {
+            }
+            return inLava == expected;
+        });
+
+        register("onfire", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean onFire = subject.getFireTicks() > 0;
+            return onFire == expected;
+        });
+
+        register("haspotion", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            String typeStr = params.containsKey("type") ? text(params, "type") : params.containsKey("potion") ? text(params, "potion") : null;
+            if (typeStr == null) return false;
+            try {
+                PotionEffectType type = PotionEffectType.getByName(typeStr.toUpperCase(Locale.ROOT));
+                return type != null && subject.hasPotionEffect(type);
+            }
+            catch (Throwable ignored) {
+                return false;
+            }
+        });
+
+        register("isplayer", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            return (subject instanceof Player) == expected;
+        });
+
+        register("isdead", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            return (!subject.isValid() || subject.isDead()) == expected;
+        });
+
+        register("raining", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean raining = subject.getWorld() != null && subject.getWorld().hasStorm();
+            return raining == expected;
+        });
+
+        register("thundering", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean thundering = subject.getWorld() != null && subject.getWorld().isThundering();
+            return thundering == expected;
+        });
+
+        register("dayonly", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            World world = subject.getWorld();
+            if (world == null) return false;
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            long time = world.getTime() % 24000L;
+            if (time < 0) time += 24000L;
+            boolean isDay = (time < 12000L || time > 23800L);
+            return isDay == expected;
+        });
+
+        register("threat", (context, params) -> {
+            Entity target = context.target();
+            if (target == null) return false;
+            Object threatVal = context.variables().get("threat");
+            if (threatVal instanceof Number n) {
+                String spec = params.containsKey("amount") ? String.valueOf(params.get("amount")) : params.containsKey("val") ? String.valueOf(params.get("val")) : null;
+                if (spec != null) return evaluateComparison(n.doubleValue(), spec);
+            }
+            return false;
         });
     }
 
-    private static boolean compare(Object actual, Object expected, String operator) {
-        if (actual == null || expected == null) return false;
-        int ordering;
-        if (actual instanceof Number left && expected instanceof Number right) {
-            ordering = Double.compare(left.doubleValue(), right.doubleValue());
-        } else {
-            ordering = String.valueOf(actual).compareTo(String.valueOf(expected));
-        }
-        return switch (operator.toLowerCase(Locale.ROOT)) {
-            case "equals", "==", "=" -> Objects.equals(actual, expected) || String.valueOf(actual).equals(String.valueOf(expected));
-            case "not_equals", "!=", "<>" -> !Objects.equals(actual, expected);
-            case "greater", ">" -> ordering > 0;
-            case "greater_or_equal", ">=" -> ordering >= 0;
-            case "less", "<" -> ordering < 0;
-            case "less_or_equal", "<=" -> ordering <= 0;
-            default -> throw invalid("Unsupported comparison operator: " + operator);
-        };
-    }
-
-    private static Entity requiredTarget(ConditionContext context) {
-        if (context.target() == null) throw invalid("Target is required");
-        return context.target();
-    }
-
-    private static String text(Map<String, Object> params, String key) {
-        Object value = params.get(key);
-        if (!(value instanceof String string) || string.isBlank()) throw invalid(key + " must be a non-blank string");
-        return string.trim();
-    }
-
-    private static double number(Map<String, Object> params, String key) {
-        Object value = params.get(key);
-        if (!(value instanceof Number number)) throw invalid(key + " must be numeric");
-        return number.doubleValue();
-    }
-
-    private static ConditionParameterException invalid(String message) { return new ConditionParameterException(message); }
-
-    private static String normalize(String id) {
-        Objects.requireNonNull(id, "Condition ID must not be null");
-        String normalized = id.trim().toLowerCase(Locale.ROOT);
-        if (normalized.isEmpty()) throw new IllegalArgumentException("Condition ID must not be blank");
-        return normalized;
+    @FunctionalInterface
+    private interface ConditionEvaluator extends Condition {
+        @Override
+        boolean evaluate(ConditionContext context, Map<String, Object> parameters);
     }
 
     public record ConditionCall(String id, Map<String, Object> parameters) {
         public ConditionCall {
             Objects.requireNonNull(id, "Condition ID must not be null");
-            parameters = Map.copyOf(Objects.requireNonNull(parameters, "Condition parameters must not be null"));
+            parameters = parameters == null ? Map.of() : Map.copyOf(parameters);
         }
     }
 
     private static final class ConditionParameterException extends RuntimeException {
-        private ConditionParameterException(String message) { super(message); }
+        private ConditionParameterException(String message) {
+            super(message);
+        }
     }
 }

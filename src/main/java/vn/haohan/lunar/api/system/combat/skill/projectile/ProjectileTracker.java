@@ -1,8 +1,8 @@
 package vn.haohan.lunar.api.system.combat.skill.projectile;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -20,18 +20,25 @@ public final class ProjectileTracker {
     }
 
     public void tick(long currentTick) {
-        Iterator<ActiveProjectile> iterator = projectiles.iterator();
-        while (iterator.hasNext()) {
-            ActiveProjectile p = iterator.next();
+        projectiles.removeIf(p -> {
             p.tick();
-            if (p.isDead()) {
-                projectiles.remove(p);
-            }
-        }
+            return p.isDead();
+        });
     }
 
     public int size() {
         return projectiles.size();
+    }
+
+    public void cleanupShooter(UUID shooterId) {
+        if (shooterId == null) return;
+        projectiles.removeIf(p -> {
+            if (shooterId.equals(p.shooterId())) {
+                p.terminate();
+                return true;
+            }
+            return p.isDead();
+        });
     }
 
     public void clear() {

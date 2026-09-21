@@ -1,15 +1,8 @@
 package vn.haohan.lunar.core.features;
 
-import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Player;
@@ -20,12 +13,14 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.util.BoundingBox;
+import vn.haohan.lunar.HaoHanLunarPlugin;
+import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 import vn.haohan.lunar.core.system.data.PlayerLunarData;
 
-import java.util.Map;
-import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class OxygenMechanic implements Listener, LunarSubSystem {

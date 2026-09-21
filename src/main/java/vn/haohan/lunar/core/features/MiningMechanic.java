@@ -1,7 +1,5 @@
 package vn.haohan.lunar.core.features;
 
-import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -10,10 +8,12 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.NoteBlock;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.EquipmentSlotGroup;
+import vn.haohan.lunar.HaoHanLunarPlugin;
+import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 
 public class MiningMechanic implements Listener, LunarSubSystem {
 

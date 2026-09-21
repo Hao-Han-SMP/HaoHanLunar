@@ -6,11 +6,7 @@ import org.bukkit.entity.Mob;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
@@ -145,6 +141,14 @@ public final class LunarFixedSpawner {
                     if (distSq > hardSq) {
                         entity.teleport(spawnLoc);
                         mob.setSoftLeashed(false);
+                        try {
+                            if (spawnLoc.getWorld() != null) {
+                                spawnLoc.getWorld().spawnParticle(org.bukkit.Particle.REVERSE_PORTAL, spawnLoc, 20, 0.5, 1.0, 0.5, 0.05);
+                                spawnLoc.getWorld().playSound(spawnLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.8f);
+                            }
+                        }
+                        catch (Throwable ignored) {
+                        }
                         if (definition.healOnLeash()) {
                             try {
                                 entity.setHealth(entity.getMaxHealth());

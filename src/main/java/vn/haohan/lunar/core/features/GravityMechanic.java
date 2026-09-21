@@ -1,8 +1,5 @@
 package vn.haohan.lunar.core.features;
 
-import vn.haohan.itemcore.api.HaoHanItemCore;
-import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -12,7 +9,6 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPortalEvent;
@@ -21,7 +17,11 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
+import vn.haohan.itemcore.api.HaoHanItemCore;
+import vn.haohan.lunar.HaoHanLunarPlugin;
+import vn.haohan.lunar.core.subsystem.LunarSubSystem;
 
 public class GravityMechanic implements Listener, LunarSubSystem {
 

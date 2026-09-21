@@ -41,6 +41,37 @@ class ThreatTableTest {
     }
 
     @Test
+    void tauntForcesTargetAndLocksUntilExpiry() {
+        UUID playerA = UUID.randomUUID();
+        UUID tank = UUID.randomUUID();
+
+        table.addThreat(playerA, 200.0, 100L);
+        assertEquals(playerA, table.evaluateTarget(100L).orElseThrow());
+
+        // Tank taunts at tick 100 with 50 bonus threat for 40 ticks (expires at tick 140)
+        table.taunt(tank, 50.0, 40L, 100L);
+        assertTrue(table.getThreat(tank) >= 250.0);
+        assertEquals(tank, table.evaluateTarget(100L).orElseThrow());
+
+        // Player A deals massive damage (total 500), but Tank is locked until tick 140
+        table.addThreat(playerA, 300.0, 110L);
+        assertEquals(tank, table.evaluateTarget(120L).orElseThrow(), "Taunt lock should prevent switching");
+
+        // At tick 145 (taunt expired), evaluateTarget should re-evaluate and pick playerA
+        assertEquals(playerA, table.evaluateTarget(145L).orElseThrow(), "Target should switch back to highest threat after taunt expires");
+    }
+
+    @Test
+    void healAndProximityThreatAndHasTarget() {
+        UUID healer = UUID.randomUUID();
+        assertFalse(table.hasTarget(healer));
+
+        table.addHealThreat(healer, 100.0, 100L); // 100 * 0.5 = 50
+        assertEquals(50.0, table.getThreat(healer), 0.001);
+        assertTrue(table.hasTarget(healer));
+    }
+
+    @Test
     void tracksAndAccumulatesThreatValues() {
         UUID player1 = UUID.randomUUID();
         UUID player2 = UUID.randomUUID();

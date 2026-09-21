@@ -46,7 +46,7 @@ public final class PerformanceMetrics {
         Collections.sort(values);
 
         int index = (int) Math.ceil(0.95 * values.size()) - 1;
-        index = Math.max(0, Math.min(index, values.size() - 1));
+        index = Math.clamp(index, 0, values.size() - 1);
 
         return values.get(index) / 1_000_000.0;
     }
@@ -62,7 +62,7 @@ public final class PerformanceMetrics {
         Collections.sort(values);
 
         int index = (int) Math.ceil(0.99 * values.size()) - 1;
-        index = Math.max(0, Math.min(index, values.size() - 1));
+        index = Math.clamp(index, 0, values.size() - 1);
 
         return values.get(index) / 1_000_000.0;
     }

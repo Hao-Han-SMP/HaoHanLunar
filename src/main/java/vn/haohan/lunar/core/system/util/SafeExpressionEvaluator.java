@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,10 +19,15 @@ import java.util.logging.Logger;
  * Supports +, -, *, /, %, ^, unary minus/plus, parentheses, and math functions:
  * min, max, abs, sin, cos, tan, sqrt, ceil, floor, round, random.
  * Strictly guards against malicious characters, handles division by zero, and provides safe fallbacks.
+ * Features concurrent token and constant caching to reduce GC pressure and allocation in high-frequency tick loops.
  */
 public final class SafeExpressionEvaluator {
 
     private static final Logger LOGGER = Logger.getLogger(SafeExpressionEvaluator.class.getName());
+
+    private static final Map<String, List<Token>> TOKEN_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Double> CONSTANT_CACHE = new ConcurrentHashMap<>();
+    private static final int MAX_CACHE_SIZE = 1024;
 
     private SafeExpressionEvaluator() {
     }
@@ -103,11 +109,35 @@ public final class SafeExpressionEvaluator {
     }
 
     private static double parseAndEvaluate(String expression, Map<String, Double> variables) {
-        Parser parser = new Parser(expression, variables);
+        boolean hasVariables = variables != null && !variables.isEmpty();
+        boolean deterministic = !hasVariables && !expression.contains("random");
+
+        if (deterministic) {
+            Double cached = CONSTANT_CACHE.get(expression);
+            if (cached != null) {
+                return cached;
+            }
+        }
+
+        List<Token> tokens = TOKEN_CACHE.get(expression);
+        if (tokens == null) {
+            validateCharacters(expression);
+            tokens = Parser.tokenize(expression);
+            if (TOKEN_CACHE.size() < MAX_CACHE_SIZE) {
+                TOKEN_CACHE.put(expression, tokens);
+            }
+        }
+
+        Parser parser = new Parser(tokens, variables);
         double result = parser.parse();
         if (Double.isInfinite(result) || Double.isNaN(result)) {
             throw new ArithmeticException("Expression evaluated to NaN or Infinity");
         }
+
+        if (deterministic && CONSTANT_CACHE.size() < MAX_CACHE_SIZE) {
+            CONSTANT_CACHE.put(expression, result);
+        }
+
         return result;
     }
 
@@ -122,18 +152,18 @@ public final class SafeExpressionEvaluator {
     private record Token(TokenType type, String text, double numberValue) {
 
         Token(TokenType type, String text) {
-                this(type, text, 0.0);
-            }
+            this(type, text, 0.0);
         }
+    }
 
     private static final class Parser {
         private final List<Token> tokens;
         private final Map<String, Double> variables;
         private int pos;
 
-        Parser(String text, Map<String, Double> variables) {
+        Parser(List<Token> tokens, Map<String, Double> variables) {
+            this.tokens = tokens;
             this.variables = variables;
-            this.tokens = tokenize(text);
             this.pos = 0;
         }
 
@@ -196,7 +226,7 @@ public final class SafeExpressionEvaluator {
             }
 
             tokens.add(new Token(TokenType.EOF, ""));
-            return tokens;
+            return List.copyOf(tokens);
         }
 
         double parse() {
@@ -212,7 +242,6 @@ public final class SafeExpressionEvaluator {
         }
 
         private void consume() {
-            Token t = tokens.get(pos);
             if (pos < tokens.size() - 1) {
                 pos++;
             }

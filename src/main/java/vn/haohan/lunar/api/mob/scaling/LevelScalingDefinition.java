@@ -1,5 +1,6 @@
 package vn.haohan.lunar.api.mob.scaling;
 
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -23,6 +24,74 @@ public record LevelScalingDefinition(
     }
 
     public static final LevelScalingDefinition DEFAULT = new LevelScalingDefinition(1, 1, 0, 0, 0, 0);
+
+    public static LevelScalingDefinition fromMap(Map<?, ?> map) {
+        if (map == null || map.isEmpty()) return DEFAULT;
+        int min = 1;
+        int max = 1;
+        Object lvlObj = map.get("Level");
+        if (lvlObj == null) lvlObj = map.get("level");
+
+        if (lvlObj instanceof Number n) {
+            min = n.intValue();
+            max = min;
+        } else if (lvlObj instanceof String s) {
+            if (s.contains("-")) {
+                String[] parts = s.split("-", 2);
+                try {
+                    min = Integer.parseInt(parts[0].trim());
+                }
+                catch (Exception ignored) {
+                }
+                try {
+                    max = Integer.parseInt(parts[1].trim());
+                }
+                catch (Exception ignored) {
+                }
+            } else {
+                try {
+                    min = Integer.parseInt(s.trim());
+                    max = min;
+                }
+                catch (Exception ignored) {
+                }
+            }
+        }
+
+        double perHp = 0.0;
+        double perDmg = 0.0;
+        double perArmor = 0.0;
+        double perPower = 0.0;
+
+        Object mods = map.get("LevelModifiers");
+        if (mods == null) mods = map.get("level_modifiers");
+        if (mods == null) mods = map.get("LevelScaling");
+        if (mods == null) mods = map.get("level_scaling");
+
+        if (mods instanceof Map<?, ?> modMap) {
+            perHp = parseDouble(modMap, "Health", "health", "hp");
+            perDmg = parseDouble(modMap, "Damage", "damage", "dmg");
+            perArmor = parseDouble(modMap, "Armor", "armor");
+            perPower = parseDouble(modMap, "Power", "power");
+        }
+
+        return new LevelScalingDefinition(min, max, perHp, perDmg, perArmor, perPower);
+    }
+
+    private static double parseDouble(Map<?, ?> map, String... keys) {
+        for (String key : keys) {
+            Object v = map.get(key);
+            if (v instanceof Number n) return n.doubleValue();
+            if (v instanceof String s) {
+                try {
+                    return Double.parseDouble(s.trim());
+                }
+                catch (Exception ignored) {
+                }
+            }
+        }
+        return 0.0;
+    }
 
     /**
      * Rolls a random level within [minLevel, maxLevel].

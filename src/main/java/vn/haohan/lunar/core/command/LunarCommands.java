@@ -5,11 +5,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Central registry for LunarCommands inspired by LavaHack's Commands registry.
