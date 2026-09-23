@@ -1,7 +1,6 @@
 package vn.haohan.lunar.core.skill.targeter;
 
 import org.bukkit.GameMode;
-import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
@@ -10,8 +9,8 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;

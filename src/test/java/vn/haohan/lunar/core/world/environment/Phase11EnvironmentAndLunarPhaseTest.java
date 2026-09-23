@@ -1,7 +1,7 @@
 package vn.haohan.lunar.core.world.environment;
 
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 
 import vn.haohan.lunar.api.system.world.environment.*;
 
@@ -20,7 +20,7 @@ import vn.haohan.lunar.api.system.combat.skill.condition.ConditionResult;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.core.mob.*;
-import vn.haohan.lunar.api.mob.equipment.MobEquipmentDefinition;
+import vn.haohan.lunar.api.system.mob.equipment.MobEquipmentDefinition;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;

@@ -1,7 +1,7 @@
 package vn.haohan.lunar.core.system.util;
 
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.integration.bridge.placeholder.PlaceholderResolver;
+import vn.haohan.lunar.api.integration.placeholder.PlaceholderResolver;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 import vn.haohan.lunar.core.system.variable.VariableManager;

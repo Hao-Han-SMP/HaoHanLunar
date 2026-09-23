@@ -1,10 +1,11 @@
 package vn.haohan.lunar.core.mob;
 
-import vn.haohan.lunar.api.mob.*;
-
 import org.bukkit.entity.EntityType;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.config.LunarYamlLoader;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -84,7 +85,7 @@ class MobDefinitionRegistryTest {
 
     private static MobDefinition definition(String id) {
         return new MobDefinition(new MobDefinitionId(id), EntityType.IRON_GOLEM, id,
-                null, Map.of(), Map.of(), List.of(), null, Set.of());
+                                 null, Map.of(), Map.of(), List.of(), null, Set.of());
     }
 
     private static void await(CountDownLatch latch) {

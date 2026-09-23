@@ -14,14 +14,14 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.manager.MobManager;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
-import vn.haohan.lunar.api.mob.ai.MobGoalApplier;
-import vn.haohan.lunar.api.mob.ai.antistuck.AntiStuckController;
-import vn.haohan.lunar.api.mob.equipment.EquipmentApplier;
-import vn.haohan.lunar.api.mob.equipment.ItemProviderRegistry;
-import vn.haohan.lunar.api.mob.scaling.MobLevelApplier;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.ai.MobGoalApplier;
+import vn.haohan.lunar.api.system.mob.ai.antistuck.AntiStuckController;
+import vn.haohan.lunar.api.system.mob.equipment.EquipmentApplier;
+import vn.haohan.lunar.api.system.mob.equipment.ItemProviderRegistry;
+import vn.haohan.lunar.api.system.mob.scaling.MobLevelApplier;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.system.throttle.DynamicThrottlingEngine;
 
@@ -111,7 +111,7 @@ public class LunarMobManager implements Listener, MobManager {
         Objects.requireNonNull(activeMob, "Active mob must not be null");
         ActiveMob previous = activeMobs.putIfAbsent(activeMob.entityId(), activeMob);
         if (activeMob.entity() instanceof org.bukkit.entity.Mob mob) {
-            goalApplier.apply(mob, activeMob.definition().aiGoalSelectors(), activeMob.definition().aiTargetSelectors());
+            goalApplier.apply(mob, activeMob.definition().aiGoalSelectors(), activeMob.definition().aiTargetSelectors(), activeMob.threatTable(), () -> this);
         }
         if (activeMob.definition().equipment() != null && !activeMob.definition().equipment().isEmpty()) {
             try {
@@ -232,14 +232,38 @@ public class LunarMobManager implements Listener, MobManager {
                 continue;
             }
 
+            // Boss leash check & reset altar / spawn point
+            if (mob.options() != null && mob.options().leashRange() > 0.0 && mob.spawnLocation() != null) {
+                Location spawn = mob.spawnLocation();
+                if (spawn.getWorld() != null && entity.getWorld() != null) {
+                    if (!Objects.equals(spawn.getWorld(), entity.getWorld())) {
+                        mob.resetToSpawn();
+                        continue;
+                    }
+                    double distSq = entity.getLocation().distanceSquared(spawn);
+                    double hardSq = mob.options().leashRange() * mob.options().leashRange();
+                    if (distSq > hardSq) {
+                        mob.resetToSpawn();
+                        continue;
+                    } else {
+                        double softRadius = mob.options().softLeashRadius();
+                        if (softRadius > 0.0 && distSq > softRadius * softRadius) {
+                            mob.setSoftLeashed(true);
+                        } else if (mob.isSoftLeashed()) {
+                            mob.setSoftLeashed(false);
+                        }
+                    }
+                }
+            }
+
             // CC processing: cleanup expired and restrain movement if stunned or rooted
             if (mob.crowdControl() != null) {
                 mob.crowdControl().cleanupExpired();
                 if (mob.crowdControl().isStunned() || mob.crowdControl().isRooted()) {
                     try {
-                        org.bukkit.util.Vector vel = entity.getVelocity();
+                        Vector vel = entity.getVelocity();
                         if (vel.getX() != 0 || vel.getZ() != 0) {
-                            entity.setVelocity(new org.bukkit.util.Vector(0, vel.getY() > 0 ? 0 : vel.getY(), 0));
+                            entity.setVelocity(new Vector(0, vel.getY() > 0 ? 0 : vel.getY(), 0));
                         }
                     }
                     catch (Throwable ignored) {

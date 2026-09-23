@@ -1,6 +1,6 @@
 package vn.haohan.lunar.core.system.variable;
 
-import vn.haohan.lunar.api.integration.bridge.placeholder.PlaceholderResolver;
+import vn.haohan.lunar.api.integration.placeholder.PlaceholderResolver;
 
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
@@ -11,13 +11,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;

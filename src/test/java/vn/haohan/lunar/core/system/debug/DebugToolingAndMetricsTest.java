@@ -9,7 +9,7 @@ import vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics;
 import vn.haohan.lunar.core.system.debug.trace.SkillTracer;
 import vn.haohan.lunar.core.system.debug.validator.ConfigValidationService;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 
 import java.io.IOException;
 import java.lang.reflect.Proxy;

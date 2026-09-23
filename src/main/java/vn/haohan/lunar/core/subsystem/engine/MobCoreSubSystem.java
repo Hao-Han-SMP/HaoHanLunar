@@ -2,9 +2,9 @@ package vn.haohan.lunar.core.subsystem.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.LunarAPI;
-import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
-import vn.haohan.lunar.api.mob.equipment.ItemProviderRegistry;
+import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.equipment.ItemProviderRegistry;
 import vn.haohan.lunar.api.system.combat.DamagePipeline;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
@@ -96,6 +96,7 @@ public final class MobCoreSubSystem implements LunarSubSystem {
 
         // Wire dependency injection into registries
         conditionRegistry.setAuraScheduler(auraScheduler);
+        conditionRegistry.setMobManagerSupplier(() -> mobManager);
         mechanicRegistry.setAuraScheduler(auraScheduler);
         mechanicRegistry.setAuraRegistry(auraRegistry);
         mechanicRegistry.setProjectileTracker(projectileTracker);
@@ -253,6 +254,16 @@ public final class MobCoreSubSystem implements LunarSubSystem {
             mobSkillRuntime.tick(currentTick);
             performanceMetrics.record("skill_runtime", System.nanoTime() - start);
         }
+
+        // 8. Tick dialogue speech bubbles and typewriter effects
+        try {
+            vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge.tickAll();
+        } catch (Throwable ignored) {}
+
+        // 9. Tick volatile visual FX (client fake block cracks cleanup)
+        try {
+            vn.haohan.lunar.api.presentation.volatilefx.VolatileVisualEngine.tick(currentTick);
+        } catch (Throwable ignored) {}
     }
 
     @Override
@@ -269,6 +280,12 @@ public final class MobCoreSubSystem implements LunarSubSystem {
         if (mobManager != null) {
             mobManager.cleanupAll();
         }
+        try {
+            vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge.clearAll();
+        } catch (Throwable ignored) {}
+        try {
+            vn.haohan.lunar.api.presentation.volatilefx.VolatileVisualEngine.clearAll();
+        } catch (Throwable ignored) {}
         currentTick = 0L;
     }
 

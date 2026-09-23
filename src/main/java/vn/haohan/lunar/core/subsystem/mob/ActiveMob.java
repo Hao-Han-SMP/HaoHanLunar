@@ -1,14 +1,17 @@
 package vn.haohan.lunar.core.subsystem.mob;
 
+import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.mob.Mob;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.MobOptionDefinition;
-import vn.haohan.lunar.api.mob.ai.antistuck.AntiStuckController;
-import vn.haohan.lunar.api.mob.disguise.DisguiseData;
-import vn.haohan.lunar.api.mob.options.MobOptions;
-import vn.haohan.lunar.api.mob.stat.StatHolder;
+import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobOptionDefinition;
+import vn.haohan.lunar.api.system.mob.ai.antistuck.AntiStuckController;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseData;
+import vn.haohan.lunar.api.system.mob.options.MobOptions;
+import vn.haohan.lunar.api.system.mob.stat.StatHolder;
 import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBarTracker;
 import vn.haohan.lunar.api.system.combat.DamageModifierTable;
 import vn.haohan.lunar.api.system.combat.ImmunityTable;
@@ -50,7 +53,7 @@ public class ActiveMob implements Mob {
     private volatile DisguiseData disguise;
     private volatile String activeModelId = null;
     private volatile String activeModelState = null;
-    private volatile vn.haohan.lunar.api.mob.phase.MobPhaseMachine phaseMachine;
+    private volatile vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine phaseMachine;
     private final StatHolder stats = new StatHolder();
 
     private volatile double baseMaxHealth = -1;
@@ -60,6 +63,29 @@ public class ActiveMob implements Mob {
     private volatile double dynamicCooldownReduction = 0.0;
     private volatile int lastTrackedPlayerCount = 0;
     private volatile boolean softLeashed = false;
+    private volatile long invulnerableUntilTick = 0L;
+
+    public boolean isInvulnerable(long currentTick) {
+        if (currentTick < invulnerableUntilTick) return true;
+        if (entity != null) {
+            try {
+                return entity.isInvulnerable();
+            } catch (Throwable ignored) {}
+        }
+        return false;
+    }
+
+    public void setInvulnerableTicks(int ticks, long currentTick) {
+        this.invulnerableUntilTick = currentTick + Math.max(0, ticks);
+        if (entity != null) {
+            try {
+                entity.setInvulnerable(ticks > 0);
+            } catch (Throwable ignored) {}
+        }
+    }
+    private volatile Location spawnLocation = null;
+    private volatile long damageCapWindowStartTick = 0L;
+    private volatile double damageAccumulatedInWindow = 0.0;
     private final java.util.Set<CancellationToken> activeTokens = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private volatile String activeChannelingSkill = null;
     private volatile CancellationToken activeChannelingToken = null;
@@ -75,6 +101,11 @@ public class ActiveMob implements Mob {
         }
         this.threatTable = new ThreatTable(this.entityId);
         this.options = MobOptions.fromMap(definition.options());
+        try {
+            this.spawnLocation = entity.getLocation() != null ? entity.getLocation().clone() : null;
+        } catch (Throwable ignored) {
+            this.spawnLocation = null;
+        }
         initDamageModifiers(definition);
     }
 
@@ -86,7 +117,18 @@ public class ActiveMob implements Mob {
     public AntiStuckController antiStuckController() { return antiStuckController; }
     public StatHolder stats() { return stats; }
 
-    static Object findOption(Map<String, ?> options, String... candidateKeys) {
+    public String faction() {
+        return options != null ? options.faction() : null;
+    }
+
+    public boolean isSameFaction(ActiveMob other) {
+        if (other == null) return false;
+        String f1 = this.faction();
+        String f2 = other.faction();
+        return f1 != null && !f1.isBlank() && f1.equalsIgnoreCase(f2);
+    }
+
+    public static Object findOption(Map<String, ?> options, String... candidateKeys) {
         if (options == null) return null;
         for (String key : candidateKeys) {
             Object obj = options.get(key);
@@ -116,12 +158,13 @@ public class ActiveMob implements Mob {
     }
 
     private void initDamageModifiers(MobDefinition def) {
-        if (def == null || def.options() == null) return;
-        Object dm = findOption(def.options(), "damagemodifiers", "damage_modifiers", "damage-modifiers");
-        Object edm = findOption(def.options(), "entitydamagemodifiers", "entity_damage_modifiers", "entity-damage-modifiers");
-        if (dm != null || edm != null) {
-            this.damageModifiers = DamageModifierTable.fromConfig(dm, edm);
+        if (def == null || def.options() == null) {
+            this.damageModifiers = DamageModifierTable.empty();
+            return;
         }
+        Object causeMods = findOption(def.options(), "damagemodifiers", "damagemodifier", "damagemods");
+        Object entityMods = findOption(def.options(), "entitydamagemodifiers", "entitydamagemodifier", "entitydamagemods");
+        this.damageModifiers = DamageModifierTable.fromConfig(causeMods, entityMods);
     }
 
     public String stance() { return stance; }
@@ -139,14 +182,6 @@ public class ActiveMob implements Mob {
     }
 
     public ThreatTable threatTable() { return threatTable; }
-
-    public vn.haohan.lunar.api.mob.phase.MobPhaseMachine phaseMachine() {
-        return phaseMachine;
-    }
-
-    public void setPhaseMachine(vn.haohan.lunar.api.mob.phase.MobPhaseMachine phaseMachine) {
-        this.phaseMachine = phaseMachine;
-    }
 
     public MobOptions options() { return options; }
     public void setOptions(MobOptions options) {
@@ -166,6 +201,7 @@ public class ActiveMob implements Mob {
     public boolean isBerserk() { return berserk; }
     public void setBerserk(boolean berserk) { this.berserk = berserk; }
 
+    public DisguiseData disguise() { return disguise; }
     public DisguiseData getDisguise() { return disguise; }
     public void setDisguise(DisguiseData disguise) { this.disguise = disguise; }
     public boolean isDisguised() { return disguise != null; }
@@ -175,6 +211,9 @@ public class ActiveMob implements Mob {
 
     public String activeModelState() { return activeModelState; }
     public void setActiveModelState(String activeModelState) { this.activeModelState = activeModelState; }
+
+    public vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine phaseMachine() { return phaseMachine; }
+    public void setPhaseMachine(vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine phaseMachine) { this.phaseMachine = phaseMachine; }
 
     public double baseMaxHealth() { return baseMaxHealth; }
     public void setBaseMaxHealth(double baseMaxHealth) { this.baseMaxHealth = baseMaxHealth; }
@@ -196,6 +235,104 @@ public class ActiveMob implements Mob {
 
     public boolean isSoftLeashed() { return softLeashed; }
     public void setSoftLeashed(boolean softLeashed) { this.softLeashed = softLeashed; }
+
+    public Location spawnLocation() { return spawnLocation; }
+    public void setSpawnLocation(Location spawnLocation) {
+        this.spawnLocation = spawnLocation != null ? spawnLocation.clone() : null;
+    }
+
+    /**
+     * Resolves the maximum health of this mob, inspecting live attributes first
+     * and falling back to definition attributes if not initialized.
+     */
+    public double maxHealth() {
+        try {
+            var attr = entity.getAttribute(Attribute.MAX_HEALTH);
+            if (attr != null) {
+                return attr.getValue();
+            }
+        } catch (Throwable ignored) {}
+        if (definition != null && definition.attributes() != null) {
+            MobAttributeDefinition def = definition.attributes().get("max_health");
+            if (def != null) {
+                return def.baseValue();
+            }
+        }
+        return entity != null ? entity.getHealth() : 20.0;
+    }
+
+    /**
+     * Thread-safely records damage and clamps to a rolling cap per second (20 ticks).
+     */
+    public synchronized double applyDamageCap(double damage, double capPerSecond, long currentTick) {
+        if (capPerSecond <= 0.0) {
+            return damage;
+        }
+        if (currentTick - damageCapWindowStartTick >= 20L || currentTick < damageCapWindowStartTick) {
+            damageCapWindowStartTick = currentTick;
+            damageAccumulatedInWindow = 0.0;
+        }
+        double remaining = Math.max(0.0, capPerSecond - damageAccumulatedInWindow);
+        double allowed = Math.min(damage, remaining);
+        damageAccumulatedInWindow += allowed;
+        return allowed;
+    }
+
+    /**
+     * Fully resets a boss/mob back to its spawn location, clearing threat, soft leash,
+     * restoring full health, and cancelling active channeling abilities.
+     */
+    public void resetToSpawn() {
+        long currentTick;
+        try {
+            currentTick = org.bukkit.Bukkit.getCurrentTick();
+        } catch (Throwable t) {
+            currentTick = System.currentTimeMillis() / 50L;
+        }
+        resetToSpawn(currentTick);
+    }
+
+    public void resetToSpawn(long currentTick) {
+        if (spawnLocation == null || entity == null || !entity.isValid() || entity.isDead()) {
+            return;
+        }
+        // 1. Interrupt active and channeling skills
+        interruptActiveSkills(InterruptReason.COMMAND);
+
+        // 2. Clear threat & target if configured
+        if (options != null && options.resetThreatOnLeash()) {
+            if (threatTable != null) {
+                threatTable.clear();
+            }
+            if (entity instanceof org.bukkit.entity.Mob m) {
+                try {
+                    m.setTarget(null);
+                } catch (Throwable ignored) {}
+            }
+        }
+
+        // 3. Heal to max health if configured
+        if (options != null && options.healOnLeash()) {
+            double targetHealth = maxHealth();
+            try {
+                entity.setHealth(targetHealth);
+            } catch (Throwable ignored) {}
+        }
+
+        // 4. Temporary invulnerability
+        int invulTicks = options != null ? options.leashInvulnerableTicks() : 60;
+        if (invulTicks > 0) {
+            setInvulnerableTicks(invulTicks, currentTick);
+        }
+
+        // 5. Clear soft leash state
+        setSoftLeashed(false);
+
+        // 6. Teleport back to spawn location
+        try {
+            entity.teleport(spawnLocation);
+        } catch (Throwable ignored) {}
+    }
 
     public CancellationToken registerSkillExecution(String skillId, boolean isChanneling, boolean overrideChanneling) {
         if (isChanneling) {

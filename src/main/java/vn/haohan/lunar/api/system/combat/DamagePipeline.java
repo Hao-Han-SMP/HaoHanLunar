@@ -4,7 +4,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import vn.haohan.lunar.api.manager.CombatManager;
-import vn.haohan.lunar.api.mob.Mob;
+import vn.haohan.lunar.api.system.mob.Mob;
 import vn.haohan.lunar.api.spawner.cluster.PackAggroCoordinator;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
@@ -86,6 +86,22 @@ public final class DamagePipeline implements CombatManager {
             });
         });
 
+        // Built-in modifier: victim temporary or native invulnerability
+        registerModifier(ctx -> {
+            asActive(ctx.victimMob()).ifPresent(victim -> {
+                long currentTick;
+                try {
+                    currentTick = org.bukkit.Bukkit.getCurrentTick();
+                } catch (Throwable t) {
+                    currentTick = System.currentTimeMillis() / 50L;
+                }
+                if (victim.isInvulnerable(currentTick)) {
+                    ctx.setFinalDamage(0.0);
+                    ctx.setCancelled(true);
+                }
+            });
+        });
+
         // Built-in modifiers: victim armor mitigation
         registerModifier(ctx -> {
             if (ctx.isIgnoreArmor()) return;
@@ -108,12 +124,23 @@ public final class DamagePipeline implements CombatManager {
             });
         });
 
-        // Built-in modifier: boss maxDamagePerHit capping
+        // Built-in modifier: boss maxDamagePerHit and rolling damageCap capping
         registerModifier(ctx -> {
             asActive(ctx.victimMob()).ifPresent(victim -> {
                 double cap = victim.options().maxDamagePerHit();
                 if (cap > 0.0 && ctx.finalDamage() > cap) {
                     ctx.setFinalDamage(cap);
+                }
+                double dpsCap = victim.options().damageCap();
+                if (dpsCap > 0.0) {
+                    long currentTick;
+                    try {
+                        currentTick = org.bukkit.Bukkit.getCurrentTick();
+                    } catch (Throwable t) {
+                        currentTick = System.currentTimeMillis() / 50L;
+                    }
+                    double allowed = victim.applyDamageCap(ctx.finalDamage(), dpsCap, currentTick);
+                    ctx.setFinalDamage(allowed);
                 }
             });
         });
@@ -196,68 +223,68 @@ public final class DamagePipeline implements CombatManager {
         }
         CALL_DEPTH.set(depth + 1);
         try {
-        // 1. Pre-execution checks
-        for (Function<DamageContext, String> check : preChecks) {
-            String rejectReason = check.apply(context);
-            if (rejectReason != null) {
-                context.cancel(rejectReason);
-                return DamageResult.cancelled(context, rejectReason);
+            // 1. Pre-execution checks
+            for (Function<DamageContext, String> check : preChecks) {
+                String rejectReason = check.apply(context);
+                if (rejectReason != null) {
+                    context.cancel(rejectReason);
+                    return DamageResult.cancelled(context, rejectReason);
+                }
             }
-        }
 
-        // 2. Modifiers
-        for (Consumer<DamageContext> modifier : modifiers) {
-            modifier.accept(context);
-            if (context.isCancelled()) {
-                return DamageResult.cancelled(context, context.cancelReason().orElse("Cancelled by modifier"));
+            // 2. Modifiers
+            for (Consumer<DamageContext> modifier : modifiers) {
+                modifier.accept(context);
+                if (context.isCancelled()) {
+                    return DamageResult.cancelled(context, context.cancelReason().orElse("Cancelled by modifier"));
+                }
             }
-        }
 
-        if (context.finalDamage() <= 0.0) {
-            context.cancel("Damage reduced to zero or below");
-            return DamageResult.cancelled(context, "Damage reduced to zero or below");
-        }
-
-        // 3. Immunity check
-        for (Function<DamageContext, String> checker : immunityCheckers) {
-            String immuneReason = checker.apply(context);
-            if (immuneReason != null) {
-                context.cancel(immuneReason);
-                return DamageResult.cancelled(context, immuneReason);
+            if (context.finalDamage() <= 0.0) {
+                context.cancel("Damage reduced to zero or below");
+                return DamageResult.cancelled(context, "Damage reduced to zero or below");
             }
-        }
 
-        // 4. Execution with recursion lock
-        double appliedDamage = context.finalDamage();
-        LivingEntity victim = context.victim();
-        ActiveMob attackerMob = asActive(context.attackerMob()).orElse(null);
-
-        if (attackerMob != null) {
-            attackerMob.setUsingDamageSkill(true);
-        }
-
-        try {
-            if (context.attacker() != null) {
-                victim.damage(appliedDamage, context.attacker());
-            } else {
-                victim.damage(appliedDamage);
+            // 3. Immunity check
+            for (Function<DamageContext, String> checker : immunityCheckers) {
+                String immuneReason = checker.apply(context);
+                if (immuneReason != null) {
+                    context.cancel(immuneReason);
+                    return DamageResult.cancelled(context, immuneReason);
+                }
             }
-        } finally {
+
+            // 4. Execution with recursion lock
+            double appliedDamage = context.finalDamage();
+            LivingEntity victim = context.victim();
+            ActiveMob attackerMob = asActive(context.attackerMob()).orElse(null);
+
             if (attackerMob != null) {
-                attackerMob.setUsingDamageSkill(false);
+                attackerMob.setUsingDamageSkill(true);
             }
-        }
 
-        // 5. Post-damage notification
-        for (BiConsumer<DamageContext, Double> handler : postHandlers) {
             try {
-                handler.accept(context, appliedDamage);
-            } catch (Throwable ignored) {
-                // Safeguard against buggy third-party post handlers crashing the pipeline
+                if (context.attacker() != null) {
+                    victim.damage(appliedDamage, context.attacker());
+                } else {
+                    victim.damage(appliedDamage);
+                }
+            } finally {
+                if (attackerMob != null) {
+                    attackerMob.setUsingDamageSkill(false);
+                }
             }
-        }
 
-        return DamageResult.success(context, appliedDamage);
+            // 5. Post-damage notification
+            for (BiConsumer<DamageContext, Double> handler : postHandlers) {
+                try {
+                    handler.accept(context, appliedDamage);
+                } catch (Throwable ignored) {
+                    // Safeguard against buggy third-party post handlers crashing the pipeline
+                }
+            }
+
+            return DamageResult.success(context, appliedDamage);
         } finally {
             CALL_DEPTH.set(depth);
         }

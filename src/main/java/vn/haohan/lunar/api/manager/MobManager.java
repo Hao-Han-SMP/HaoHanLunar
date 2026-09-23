@@ -1,7 +1,7 @@
 package vn.haohan.lunar.api.manager;
 
 import org.bukkit.entity.Entity;
-import vn.haohan.lunar.api.mob.Mob;
+import vn.haohan.lunar.api.system.mob.Mob;
 
 import java.util.Collection;
 import java.util.Optional;

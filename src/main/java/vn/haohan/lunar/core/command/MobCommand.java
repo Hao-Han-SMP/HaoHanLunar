@@ -1,6 +1,6 @@
 package vn.haohan.lunar.core.command;
 
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.system.command.LunarMobCommand;
 import vn.haohan.lunar.api.system.config.ConfigValidationReport;
 import vn.haohan.lunar.core.mob.LunarMobManager;

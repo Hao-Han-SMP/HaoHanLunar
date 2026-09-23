@@ -1,13 +1,13 @@
 package vn.haohan.lunar.core.mob.pack;
 
-import vn.haohan.lunar.api.mob.pack.*;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import vn.haohan.lunar.api.system.loot.DropManager;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
+import vn.haohan.lunar.api.system.mob.pack.PackDefinition;
+import vn.haohan.lunar.api.system.mob.pack.PackManager;
 
 import java.io.IOException;
 import java.nio.file.Files;

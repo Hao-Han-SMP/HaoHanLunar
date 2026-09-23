@@ -1,11 +1,10 @@
 package vn.haohan.lunar.api.mob.ai.antistuck;
 
-import vn.haohan.lunar.api.mob.ai.antistuck.*;
-
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import vn.haohan.lunar.api.system.mob.ai.antistuck.AntiStuckController;
 
 import java.lang.reflect.Proxy;
 import java.util.Optional;

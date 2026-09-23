@@ -11,7 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import vn.haohan.lunar.api.event.LunarMobTargetChangeEvent;
+import vn.haohan.lunar.api.event.MobTargetChangeEvent;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
@@ -222,9 +222,9 @@ public final class ThreatManager implements Listener {
                     && living.getWorld().equals(bukkitMob.getWorld())) {
                 LivingEntity currentBukkitTarget = bukkitMob.getTarget();
                 if (currentBukkitTarget == null || !currentBukkitTarget.getUniqueId().equals(targetId)) {
-                    // Fire cancellable LunarMobTargetChangeEvent
+                    // Fire cancellable MobTargetChangeEvent
                     double threat = table.getThreat(targetId);
-                    LunarMobTargetChangeEvent event = new LunarMobTargetChangeEvent(
+                    MobTargetChangeEvent event = new MobTargetChangeEvent(
                             activeMob, currentBukkitTarget, living, threat, TargetChangeReason.DAMAGE_THREAT
                     );
                     try {

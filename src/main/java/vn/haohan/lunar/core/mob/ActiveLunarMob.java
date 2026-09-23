@@ -1,7 +1,7 @@
 package vn.haohan.lunar.core.mob;
 
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 /**

@@ -12,11 +12,11 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.api.mob.disguise.DisguiseData;
-import vn.haohan.lunar.api.mob.disguise.DisguiseManager;
-import vn.haohan.lunar.api.mob.disguise.DisguiseType;
-import vn.haohan.lunar.api.mob.pack.PackCoordinationService;
-import vn.haohan.lunar.api.mob.signal.MobSignalBus;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseData;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseManager;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseType;
+import vn.haohan.lunar.api.system.mob.pack.PackCoordinationService;
+import vn.haohan.lunar.api.system.mob.signal.MobSignalBus;
 import vn.haohan.lunar.api.presentation.audio.SpatialAudioEngine;
 import vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge;
 import vn.haohan.lunar.api.presentation.display.orchestration.*;
@@ -40,6 +40,8 @@ import vn.haohan.lunar.api.system.world.hazard.HazardZoneDefinition;
 import vn.haohan.lunar.api.system.world.hazard.HazardZoneTracker;
 import vn.haohan.lunar.api.system.world.totem.TotemDefinition;
 import vn.haohan.lunar.api.system.world.totem.TotemManager;
+import vn.haohan.lunar.api.system.world.pin.PinManager;
+import vn.haohan.lunar.api.system.world.pin.SinglePin;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 import vn.haohan.lunar.core.system.util.SafeExpressionEvaluator;
@@ -509,6 +511,46 @@ public final class MechanicRegistry {
             }
             if (origin != null && fieldTracker != null) {
                 fieldTracker.addOxygenField(origin, radius, mode, amount, duration, context.cast().startedAtTick());
+            }
+        });
+
+        register("siphon_oxygen", (context, params) -> {
+            int amount = boundedInt(params, "amount", 1, 600);
+            try {
+                vn.haohan.lunar.HaoHanLunarPlugin plugin = vn.haohan.lunar.HaoHanLunarPlugin.getInstance();
+                if (plugin == null || plugin.getLunarDataManager() == null) return;
+                for (TargetRef target : context.targets()) {
+                    if (target.entity() instanceof Player player) {
+                        var data = plugin.getLunarDataManager().get(player);
+                        if (data != null) {
+                            data.setOxygen(Math.max(0, data.getOxygen() - amount));
+                            Location pLoc = player.getLocation();
+                            if (pLoc.getWorld() != null) {
+                                pLoc.getWorld().spawnParticle(Particle.DRAGON_BREATH, pLoc.clone().add(0, 1.2, 0), 12, 0.25, 0.25, 0.25, 0.02);
+                                pLoc.getWorld().playSound(pLoc, Sound.BLOCK_BREWING_STAND_BREW, 1.0f, 0.8f);
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+        });
+
+        register("lunar_launch", (context, params) -> {
+            double strength = optionalNumber(params, "strength", 1.5);
+            if (strength <= 0.0) strength = 1.5;
+            for (TargetRef target : context.targets()) {
+                if (target.entity() instanceof LivingEntity living && valid(living)) {
+                    Vector v = living.getVelocity();
+                    if (v == null) v = new Vector(0, 0, 0);
+                    living.setVelocity(new Vector(v.getX() * 0.3, strength, v.getZ() * 0.3));
+                    try {
+                        Location loc = living.getLocation();
+                        if (loc.getWorld() != null) {
+                            loc.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc, 12, 0.3, 0.2, 0.3, 0.05);
+                            loc.getWorld().playSound(loc, Sound.ENTITY_BAT_TAKEOFF, 1.2f, 0.6f);
+                        }
+                    } catch (Throwable ignored) {}
+                }
             }
         });
 
@@ -1081,17 +1123,100 @@ public final class MechanicRegistry {
             caster.bossBars().remove(barId);
         });
 
-        register("speechbubble", (context, params) -> {
+        Mechanic speakMechanic = (context, params) -> {
             ActiveMob caster = context.cast().caster();
             if (caster == null) return;
-            String text = text(params, "text");
+            String rawText = text(params, "text");
+            if (rawText.isBlank()) rawText = text(params, "message");
+            if (rawText.isBlank()) rawText = text(params, "lines");
+            if (rawText.isBlank()) return;
+
+            String resolved = rawText;
+            if (context.targets() != null && !context.targets().isEmpty()) {
+                TargetRef primary = context.targets().get(0);
+                if (primary.entity() instanceof Player targetPlayer) {
+                    resolved = resolved.replace("<target.name>", targetPlayer.getName())
+                            .replace("<target.health>", String.format(Locale.ROOT, "%.1f", targetPlayer.getHealth()));
+                }
+            }
+            if (caster.entity() != null) {
+                String mobName = caster.entity().getCustomName();
+                if (mobName == null || mobName.isBlank()) mobName = caster.definition().displayName();
+                resolved = resolved.replace("<caster.name>", mobName).replace("<mob.name>", mobName);
+            }
+
             int duration = (int) optionalNumber(params, "duration", 60.0);
             double offsetY = optionalNumber(params, "offsetY", 0.5);
             boolean typewriter = Boolean.parseBoolean(String.valueOf(params.getOrDefault("typewriter", false)));
             String style = text(params, "style");
             double audience = optionalNumber(params, "audience", 24.0);
-            HaoHanDisplayUIBridge.displayBubble(caster, new HaoHanDisplayUIBridge.BubbleOptions(text, duration, offsetY, typewriter, style, audience));
-        });
+            boolean chat = Boolean.parseBoolean(String.valueOf(params.getOrDefault("chat", false)));
+            String sound = text(params, "sound");
+            String charSound = text(params, "charSound");
+            boolean follow = Boolean.parseBoolean(String.valueOf(params.getOrDefault("follow", true)));
+
+            List<String> lines = resolved.contains("|") ? List.of(resolved.split("\\|")) : List.of(resolved);
+
+            HaoHanDisplayUIBridge.displayBubble(caster, new HaoHanDisplayUIBridge.BubbleOptions(
+                    resolved, lines, duration, offsetY, typewriter, style, audience,
+                    null, true, false, 200, sound, charSound, follow, chat
+            ));
+
+            if (chat && caster.entity() != null && caster.entity().getWorld() != null) {
+                Component chatComp = MiniMessage.miniMessage().deserialize(lines.get(0));
+                double rSq = audience * audience;
+                Location loc = caster.entity().getLocation();
+                for (Player p : caster.entity().getWorld().getPlayers()) {
+                    if (p.getLocation().distanceSquared(loc) <= rSq) {
+                        p.sendMessage(chatComp);
+                    }
+                }
+            }
+        };
+
+        register("speechbubble", speakMechanic);
+        register("speak", speakMechanic);
+        register("dialogue", speakMechanic);
+
+        Mechanic promptMechanic = (context, params) -> {
+            ActiveMob caster = context.cast().caster();
+            String message = text(params, "message");
+            if (message.isBlank()) message = text(params, "text");
+            String rawOptions = text(params, "options");
+            if (message.isBlank() || rawOptions.isBlank()) return;
+
+            if (caster != null && caster.entity() != null) {
+                String mobName = caster.entity().getCustomName();
+                if (mobName == null || mobName.isBlank()) mobName = caster.definition().displayName();
+                message = message.replace("<caster.name>", mobName).replace("<mob.name>", mobName);
+            }
+
+            List<HaoHanDisplayUIBridge.DialogueChoice> choices = new ArrayList<>();
+            for (String opt : rawOptions.split("\\|")) {
+                String[] parts = opt.split(":");
+                if (parts.length >= 2) {
+                    String label = parts[0].trim();
+                    String signal = parts[1].trim();
+                    String hover = parts.length >= 3 ? parts[2].trim() : ("Click to choose " + label);
+                    choices.add(new HaoHanDisplayUIBridge.DialogueChoice(label, signal, hover));
+                }
+            }
+
+            double radius = optionalNumber(params, "radius", 16.0);
+            double rSq = radius * radius;
+            Location loc = caster != null && caster.entity() != null ? caster.entity().getLocation() : null;
+
+            for (TargetRef target : context.targets()) {
+                if (target.entity() instanceof Player player) {
+                    if (loc == null || player.getLocation().distanceSquared(loc) <= rSq) {
+                        HaoHanDisplayUIBridge.sendDialoguePrompt(player, caster, message, choices);
+                    }
+                }
+            }
+        };
+
+        register("dialogue_prompt", promptMechanic);
+        register("prompt", promptMechanic);
 
         register("message", (context, params) -> {
             ActiveMob caster = context.cast().caster();
@@ -1412,6 +1537,383 @@ public final class MechanicRegistry {
         };
         register("effect:arc", arcHandler);
         register("arc", arcHandler);
+
+        // MythicMobs Combat & Utility Mechanics Parity
+        register("pull", (context, params) -> {
+            double velocity = optionalNumber(context, null, params, "velocity", 1.0);
+            if (params.containsKey("v")) velocity = optionalNumber(context, null, params, "v", velocity);
+            if (params.containsKey("strength")) velocity = optionalNumber(context, null, params, "strength", velocity);
+            double upward = optionalNumber(context, null, params, "y", 0.0);
+            if (params.containsKey("upward")) upward = optionalNumber(context, null, params, "upward", upward);
+
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            LivingEntity casterEntity = caster != null ? caster.entity() : null;
+            Location origin = casterEntity != null ? casterEntity.getLocation() : null;
+
+            for (TargetRef ref : context.targets()) {
+                if (ref.entity() instanceof LivingEntity target && valid(target)) {
+                    Location targetLoc = target.getLocation();
+                    Location pullOrigin = origin != null ? origin : (ref.location() != null ? ref.location() : null);
+                    if (pullOrigin != null) {
+                        Vector dir = pullOrigin.toVector().subtract(targetLoc.toVector());
+                        if (dir.lengthSquared() > 0.001) {
+                            Vector v = dir.normalize().multiply(velocity);
+                            if (upward != 0.0) v.setY(upward);
+                            target.setVelocity(v);
+                        }
+                    }
+                }
+            }
+        });
+
+        var throwHandler = (Mechanic) (context, params) -> {
+            double velocity = optionalNumber(context, null, params, "velocity", 1.0);
+            if (params.containsKey("v")) velocity = optionalNumber(context, null, params, "v", velocity);
+            double upward = optionalNumber(context, null, params, "upward", 0.5);
+            if (params.containsKey("y")) upward = optionalNumber(context, null, params, "y", upward);
+
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            LivingEntity casterEntity = caster != null ? caster.entity() : null;
+
+            for (TargetRef ref : context.targets()) {
+                if (ref.entity() instanceof LivingEntity target && valid(target)) {
+                    Vector dir;
+                    if (casterEntity != null) {
+                        dir = casterEntity.getLocation().getDirection().clone();
+                    } else {
+                        dir = target.getLocation().getDirection().clone();
+                    }
+                    Vector v = dir.multiply(velocity);
+                    v.setY(upward);
+                    target.setVelocity(v);
+                }
+            }
+        };
+        register("throw", throwHandler);
+        register("toss", throwHandler);
+
+        register("swap", (context, params) -> {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            LivingEntity casterEntity = caster != null ? caster.entity() : null;
+            if (casterEntity == null || !valid(casterEntity)) return;
+
+            for (TargetRef ref : context.targets()) {
+                if (ref.entity() instanceof LivingEntity target && valid(target) && !target.equals(casterEntity)) {
+                    Location casterLoc = casterEntity.getLocation().clone();
+                    Location targetLoc = target.getLocation().clone();
+                    casterEntity.teleport(targetLoc);
+                    target.teleport(casterLoc);
+                    break;
+                }
+            }
+        });
+
+        register("ignite", (context, params) -> {
+            int ticks = (int) optionalNumber(context, null, params, "ticks", 100);
+            if (params.containsKey("duration")) {
+                ticks = (int) (optionalNumber(context, null, params, "duration", 5.0) * 20.0);
+            }
+            for (TargetRef ref : context.targets()) {
+                if (ref.entity() != null && valid(ref.entity())) {
+                    ref.entity().setFireTicks(Math.max(0, ticks));
+                }
+            }
+        });
+
+        register("extinguish", (context, params) -> {
+            for (TargetRef ref : context.targets()) {
+                if (ref.entity() != null && valid(ref.entity())) {
+                    ref.entity().setFireTicks(0);
+                }
+            }
+        });
+
+        register("healpercent", (context, params) -> {
+            double percent = optionalNumber(context, null, params, "percent", 0.1);
+            if (params.containsKey("percentage")) percent = optionalNumber(context, null, params, "percentage", percent);
+            if (params.containsKey("amount")) percent = optionalNumber(context, null, params, "amount", percent);
+            if (percent > 1.0) percent = percent / 100.0;
+            percent = Math.max(0.0, Math.min(1.0, percent));
+
+            for (TargetRef target : context.targets()) {
+                if (target.entity() instanceof LivingEntity living && valid(living)) {
+                    double max = living.getMaxHealth();
+                    double healAmount = max * percent;
+                    living.setHealth(Math.min(max, living.getHealth() + healAmount));
+                }
+            }
+        });
+
+        register("damagepercent", (context, params) -> {
+            double percent = optionalNumber(context, null, params, "percent", 0.1);
+            if (params.containsKey("percentage")) percent = optionalNumber(context, null, params, "percentage", percent);
+            if (params.containsKey("amount")) percent = optionalNumber(context, null, params, "amount", percent);
+            if (percent > 1.0) percent = percent / 100.0;
+            percent = Math.max(0.0, Math.min(1.0, percent));
+
+            boolean currentHp = params.containsKey("currenthp") && Boolean.parseBoolean(params.get("currenthp").toString());
+            LivingEntity caster = context.cast() != null && context.cast().caster() != null ? context.cast().caster().entity() : null;
+
+            for (TargetRef target : context.targets()) {
+                if (target.entity() instanceof LivingEntity living && valid(living)) {
+                    double base = currentHp ? living.getHealth() : living.getMaxHealth();
+                    double amount = base * percent;
+                    living.damage(amount, caster);
+                }
+            }
+        });
+
+        register("feed", (context, params) -> {
+            int amount = (int) optionalNumber(context, null, params, "amount", 20);
+            if (params.containsKey("food")) amount = (int) optionalNumber(context, null, params, "food", amount);
+            float saturation = (float) optionalNumber(context, null, params, "saturation", 5.0);
+
+            for (TargetRef target : context.targets()) {
+                if (target.entity() instanceof Player player && valid(player)) {
+                    player.setFoodLevel(Math.min(20, Math.max(0, player.getFoodLevel() + amount)));
+                    player.setSaturation(Math.min(20.0f, Math.max(0.0f, player.getSaturation() + saturation)));
+                }
+            }
+        });
+
+        // Spatial Pin Mechanics
+        register("setpin", (context, params) -> {
+            String pinName = text(params, "pin");
+            if (pinName.isBlank()) pinName = text(params, "name");
+            if (pinName.isBlank()) pinName = text(params, "id");
+            if (pinName.isBlank()) return;
+
+            Location targetLoc = null;
+            if (!context.targets().isEmpty()) {
+                TargetRef ref = context.targets().get(0);
+                targetLoc = ref.location() != null ? ref.location() : (ref.entity() != null ? ref.entity().getLocation() : null);
+            }
+            if (targetLoc == null && context.cast() != null && context.cast().caster() != null && context.cast().caster().entity() != null) {
+                targetLoc = context.cast().caster().entity().getLocation();
+            }
+            if (targetLoc != null && targetLoc.getWorld() != null) {
+                SinglePin pin = SinglePin.fromLocation(pinName, targetLoc);
+                PinManager.get().addPin(pin);
+            }
+        });
+
+        register("removepin", (context, params) -> {
+            String pinName = text(params, "pin");
+            if (pinName.isBlank()) pinName = text(params, "name");
+            if (pinName.isBlank()) pinName = text(params, "id");
+            if (!pinName.isBlank()) {
+                PinManager.get().removePin(pinName);
+            }
+        });
+
+        register("teleporttopin", (context, params) -> {
+            String pinName = text(params, "pin");
+            if (pinName.isBlank()) pinName = text(params, "name");
+            if (pinName.isBlank()) pinName = text(params, "id");
+            if (pinName.isBlank()) return;
+
+            Location dest = PinManager.get().getPin(pinName)
+                    .map(SinglePin::toLocation)
+                    .orElse(null);
+
+            if (dest != null && dest.getWorld() != null) {
+                for (TargetRef ref : context.targets()) {
+                    if (ref.entity() != null && valid(ref.entity())) {
+                        ref.entity().teleport(dest.clone());
+                    }
+                }
+            }
+        });
+
+        // Volatile Visual FX Parity (Fake Block Cracks & Camera Shake)
+        Mechanic fakeCrackMechanic = (context, params) -> {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            Location origin = resolveOriginLocation(context, caster);
+            if (origin == null || origin.getWorld() == null) return;
+            double radius = optionalNumber(params, "radius", 5.0);
+            int duration = (int) optionalNumber(params, "duration", 30.0);
+            float stage = (float) optionalNumber(params, "stage", 0.85);
+            vn.haohan.lunar.api.presentation.volatilefx.VolatileVisualEngine.playGroundCrack(origin, radius, duration, stage, null);
+        };
+        register("fake_block_crack", fakeCrackMechanic);
+        register("ground_crack", fakeCrackMechanic);
+
+        Mechanic cameraShakeMechanic = (context, params) -> {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            Location origin = resolveOriginLocation(context, caster);
+            if (origin == null || origin.getWorld() == null) return;
+            double radius = optionalNumber(params, "radius", 16.0);
+            float intensity = (float) optionalNumber(params, "intensity", 1.0);
+            vn.haohan.lunar.api.presentation.volatilefx.VolatileVisualEngine.playCameraShake(origin, radius, intensity, null);
+        };
+        register("camera_shake", cameraShakeMechanic);
+        register("screen_shake", cameraShakeMechanic);
+
+        Mechanic groundSlamMechanic = (context, params) -> {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            Location origin = resolveOriginLocation(context, caster);
+            if (origin == null || origin.getWorld() == null) return;
+            double radius = optionalNumber(params, "radius", 6.0);
+            int duration = (int) optionalNumber(params, "duration", 30.0);
+            float intensity = (float) optionalNumber(params, "intensity", 1.0);
+            vn.haohan.lunar.api.presentation.volatilefx.VolatileVisualEngine.playGroundSlam(origin, radius, duration, intensity);
+        };
+        register("ground_slam_fx", groundSlamMechanic);
+        register("volatile_slam", groundSlamMechanic);
+
+        Mechanic clearTargetMechanic = (context, params) -> {
+            boolean clearThreat = params.containsKey("threat") && Boolean.parseBoolean(params.get("threat").toString());
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            if (caster != null) {
+                if (caster.entity() instanceof org.bukkit.entity.Mob mob) {
+                    mob.setTarget(null);
+                }
+                if (clearThreat && caster.threatTable() != null) {
+                    caster.threatTable().clear();
+                }
+            }
+            if (context.targets() != null) {
+                for (TargetRef target : context.targets()) {
+                    if (target.entity() instanceof org.bukkit.entity.Mob mob) {
+                        mob.setTarget(null);
+                        if (clearThreat && mobManager != null) {
+                            ActiveMob act = mobManager.get(mob.getUniqueId());
+                            if (act != null && act.threatTable() != null) {
+                                act.threatTable().clear();
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        register("cleartarget", clearTargetMechanic);
+        register("clear_target", clearTargetMechanic);
+
+        Mechanic modifyThreatMechanic = (context, params) -> {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            if (caster == null || caster.threatTable() == null) return;
+            double amount = params.containsKey("amount") ? ((Number) params.get("amount")).doubleValue()
+                    : params.containsKey("a") ? ((Number) params.get("a")).doubleValue() : 0.0;
+            String action = (params.containsKey("action") ? text(params, "action")
+                    : params.containsKey("mode") ? text(params, "mode") : "ADD").toUpperCase(Locale.ROOT);
+
+            List<TargetRef> targets = context.targets();
+            if (targets == null || targets.isEmpty()) return;
+            long currentTick = context.cast() != null ? context.cast().startedAtTick() : 0L;
+            for (TargetRef target : targets) {
+                if (target.entity() != null) {
+                    UUID targetId = target.entity().getUniqueId();
+                    double current = caster.threatTable().getThreat(targetId);
+                    double updated = switch (action) {
+                        case "SUBTRACT", "SUB" -> Math.max(0.0, current - amount);
+                        case "SET" -> Math.max(0.0, amount);
+                        case "MULTIPLY", "MULT" -> Math.max(0.0, current * amount);
+                        default -> Math.max(0.0, current + amount);
+                    };
+                    caster.threatTable().setThreat(targetId, updated, currentTick);
+                }
+            }
+        };
+        register("modifythreat", modifyThreatMechanic);
+
+        Mechanic blockSoundMechanic = (context, params) -> {
+            String matName = text(params, "material");
+            if (matName.isBlank()) matName = text(params, "m");
+            if (matName.isBlank()) return;
+            Material mat;
+            try {
+                mat = Material.valueOf(matName.toUpperCase(Locale.ROOT));
+            } catch (Exception e) {
+                return;
+            }
+            if (!mat.isBlock()) return;
+            SoundGroup soundGroup = mat.createBlockData().getSoundGroup();
+            String soundType = (params.containsKey("type") ? text(params, "type") : "HIT").toUpperCase(Locale.ROOT);
+            Sound sound = switch (soundType) {
+                case "BREAK" -> soundGroup.getBreakSound();
+                case "FALL" -> soundGroup.getFallSound();
+                case "PLACE" -> soundGroup.getPlaceSound();
+                case "STEP" -> soundGroup.getStepSound();
+                default -> soundGroup.getHitSound();
+            };
+            float volume = (float) optionalNumber(params, "volume", 1.0);
+            float pitch = (float) optionalNumber(params, "pitch", 1.0);
+            for (Location loc : locations(context.targets())) {
+                if (loc.getWorld() != null) {
+                    loc.getWorld().playSound(loc, sound, volume, pitch);
+                }
+            }
+        };
+        register("blocksound", blockSoundMechanic);
+        register("playblocksound", blockSoundMechanic);
+
+        Mechanic ramMechanic = (context, params) -> {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            LivingEntity casterEntity = caster != null ? caster.entity() : null;
+            if (casterEntity == null) return;
+            Vector dir = null;
+            if (context.targets() != null && !context.targets().isEmpty()) {
+                TargetRef ref = context.targets().get(0);
+                if (ref.entity() != null) {
+                    dir = ref.entity().getLocation().toVector().subtract(casterEntity.getLocation().toVector());
+                } else if (ref.location() != null) {
+                    dir = ref.location().toVector().subtract(casterEntity.getLocation().toVector());
+                }
+            }
+            if (dir == null || dir.lengthSquared() == 0) {
+                dir = casterEntity.getLocation().getDirection();
+            }
+            dir.setY(0);
+            if (dir.lengthSquared() > 0) {
+                dir.normalize();
+            }
+            double speed = optionalNumber(params, "speed", 1.5);
+            double upward = optionalNumber(params, "upward", 0.2);
+            casterEntity.setVelocity(dir.clone().multiply(speed).setY(upward));
+
+            double damage = optionalNumber(params, "damage", 0.0);
+            double knockback = optionalNumber(params, "knockback", 1.0);
+            if (damage > 0 || knockback > 0) {
+                for (TargetRef ref : context.targets()) {
+                    if (ref.entity() instanceof LivingEntity victim && valid(victim) && !victim.getUniqueId().equals(casterEntity.getUniqueId())) {
+                        if (knockback > 0) {
+                            victim.setVelocity(dir.clone().multiply(knockback).setY(0.3));
+                        }
+                        if (damage > 0) {
+                            victim.damage(damage, casterEntity);
+                        }
+                    }
+                }
+            }
+        };
+        register("goatram", ramMechanic);
+        register("ram", ramMechanic);
+
+        Mechanic disengageMechanic = (context, params) -> {
+            ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
+            LivingEntity casterEntity = caster != null ? caster.entity() : null;
+            if (casterEntity == null) return;
+            Vector dir = null;
+            if (context.targets() != null && !context.targets().isEmpty()) {
+                TargetRef ref = context.targets().get(0);
+                if (ref.entity() != null) {
+                    dir = casterEntity.getLocation().toVector().subtract(ref.entity().getLocation().toVector());
+                } else if (ref.location() != null) {
+                    dir = casterEntity.getLocation().toVector().subtract(ref.location().toVector());
+                }
+            }
+            if (dir == null || dir.lengthSquared() == 0) {
+                dir = casterEntity.getLocation().getDirection().multiply(-1);
+            }
+            dir.setY(0);
+            if (dir.lengthSquared() > 0) {
+                dir.normalize();
+            }
+            double speed = optionalNumber(params, "speed", 1.2);
+            double upward = optionalNumber(params, "upward", 0.4);
+            casterEntity.setVelocity(dir.clone().multiply(speed).setY(upward));
+        };
+        register("disengage", disengageMechanic);
     }
 
     private static Location resolveOriginLocation(MechanicContext context, ActiveMob caster) {

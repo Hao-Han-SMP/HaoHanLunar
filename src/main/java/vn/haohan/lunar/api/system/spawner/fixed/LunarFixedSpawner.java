@@ -1,8 +1,11 @@
 package vn.haohan.lunar.api.system.spawner.fixed;
 
 import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
+import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
@@ -13,9 +16,19 @@ import java.util.function.Predicate;
 /**
  * Runtime controller for an active fixed-location mob spawner.
  * Handles cooldown, warmup, max mob limits, proximity activation, soft/hard leashing,
- * condition checks, and dynamic respawn waves.
+ * condition checks, dynamic respawn waves, and state snapshotting/persistence.
  */
 public final class LunarFixedSpawner {
+
+    public record SpawnerState(int warmupTicks,
+                               int cooldownTicks,
+                               int waveIndex,
+                               boolean waveInProgress,
+                               Set<UUID> trackedMobs) {
+        public SpawnerState {
+            trackedMobs = trackedMobs != null ? Set.copyOf(trackedMobs) : Set.of();
+        }
+    }
 
     private final SpawnerDefinition definition;
     private final Set<UUID> trackedMobs = ConcurrentHashMap.newKeySet();
@@ -102,6 +115,30 @@ public final class LunarFixedSpawner {
         return currentWaveIndex;
     }
 
+    public boolean isWaveInProgress() {
+        return waveInProgress;
+    }
+
+    public SpawnerState captureState() {
+        return new SpawnerState(
+                currentWarmupTicks,
+                currentCooldownTicks,
+                currentWaveIndex,
+                waveInProgress,
+                trackedMobs
+        );
+    }
+
+    public void restoreState(SpawnerState state) {
+        if (state == null) return;
+        this.currentWarmupTicks = Math.max(0, state.warmupTicks());
+        this.currentCooldownTicks = Math.max(0, state.cooldownTicks());
+        this.currentWaveIndex = Math.max(0, state.waveIndex());
+        this.waveInProgress = state.waveInProgress();
+        this.trackedMobs.clear();
+        this.trackedMobs.addAll(state.trackedMobs());
+    }
+
     public void setConditionEvaluator(Predicate<SpawnerDefinition> conditionEvaluator) {
         this.conditionEvaluator = conditionEvaluator != null ? conditionEvaluator : def -> true;
     }
@@ -137,41 +174,51 @@ public final class LunarFixedSpawner {
                 if (loc.getWorld() != null && loc.getWorld().equals(spawnLoc.getWorld())) {
                     double distSq = loc.distanceSquared(spawnLoc);
 
-                    // Hard Leash breach: force teleport back, 100% full heal, clear threats
+                    // Hard Leash breach: force full reset to spawn location
                     if (distSq > hardSq) {
                         entity.teleport(spawnLoc);
                         mob.setSoftLeashed(false);
                         try {
                             if (spawnLoc.getWorld() != null) {
-                                spawnLoc.getWorld().spawnParticle(org.bukkit.Particle.REVERSE_PORTAL, spawnLoc, 20, 0.5, 1.0, 0.5, 0.05);
-                                spawnLoc.getWorld().playSound(spawnLoc, org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.8f);
+                                spawnLoc.getWorld().spawnParticle(Particle.REVERSE_PORTAL, spawnLoc, 20, 0.5, 1.0, 0.5, 0.05);
+                                spawnLoc.getWorld().playSound(spawnLoc, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.8f);
                             }
-                        }
-                        catch (Throwable ignored) {
-                        }
+                        } catch (Throwable ignored) {}
+
                         if (definition.healOnLeash()) {
+                            double healAmount = mob.maxHealth();
                             try {
-                                entity.setHealth(entity.getMaxHealth());
+                                entity.setHealth(healAmount);
                             } catch (Throwable ignored) {
+                                try {
+                                    entity.setHealth(entity.getMaxHealth());
+                                } catch (Throwable ignored2) {}
                             }
                         }
+
                         if (definition.resetThreatOnLeash()) {
                             if (entity instanceof Mob m) {
                                 try {
                                     m.setTarget(null);
-                                } catch (Throwable ignored) {
-                                }
+                                } catch (Throwable ignored) {}
                             }
-                            mob.threatTable().clear();
+                            if (mob.threatTable() != null) {
+                                mob.threatTable().clear();
+                            }
+                        }
+
+                        mob.interruptActiveSkills(InterruptReason.COMMAND);
+                        int invulTicks = mob.options() != null ? mob.options().leashInvulnerableTicks() : 60;
+                        if (invulTicks > 0) {
+                            mob.setInvulnerableTicks(invulTicks, tickNumber);
                         }
                     } else if (distSq > softSq) {
-                        // Soft Leash breach: apply 90% resistance, refuse chase, return home
+                        // Soft Leash breach: mark soft leashed, clear target to return
                         mob.setSoftLeashed(true);
                         if (entity instanceof Mob m) {
                             try {
                                 m.setTarget(null);
-                            } catch (Throwable ignored) {
-                            }
+                            } catch (Throwable ignored) {}
                         }
                     } else {
                         // Safely within soft boundary

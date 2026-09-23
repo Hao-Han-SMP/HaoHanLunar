@@ -1,37 +1,22 @@
 package vn.haohan.lunar.core.loot;
 
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
-import vn.haohan.lunar.api.mob.equipment.EquipmentApplier;
-import vn.haohan.lunar.api.mob.equipment.EquipmentSlot;
-import vn.haohan.lunar.api.mob.equipment.ItemProviderRegistry;
-import vn.haohan.lunar.api.mob.equipment.MobEquipmentDefinition;
-import vn.haohan.lunar.api.mob.scaling.LevelScalingDefinition;
-import vn.haohan.lunar.api.mob.scaling.MobLevelApplier;
+import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.equipment.EquipmentApplier;
+import vn.haohan.lunar.api.system.mob.equipment.EquipmentSlot;
+import vn.haohan.lunar.api.system.mob.equipment.ItemProviderRegistry;
+import vn.haohan.lunar.api.system.mob.equipment.MobEquipmentDefinition;
+import vn.haohan.lunar.api.system.mob.scaling.LevelScalingDefinition;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.api.system.loot.*;
-import vn.haohan.lunar.api.system.loot.pity.PityManager;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
-import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
-import java.lang.reflect.Proxy;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -252,5 +237,62 @@ public class DynamicLootAndDropTest {
         for (Future<Integer> f : futures) {
             assertTrue(f.get() > 0);
         }
+    }
+
+    @Test
+    @DisplayName("DropTableDefinition parses inline conditions and DropsHaveBeamByDefault option")
+    void testInlineConditionsAndBeamOption() {
+        Map<String, Object> yamlMap = new HashMap<>();
+        yamlMap.put("RollMode", "INDEPENDENT");
+        yamlMap.put("Rolls", 1);
+
+        Map<String, Object> opts = new HashMap<>();
+        opts.put("DropsHaveBeamByDefault", true);
+        yamlMap.put("Options", opts);
+
+        List<Object> drops = new ArrayList<>();
+        drops.add("DIAMOND 1-3 1.0 ?health{<50%} ?playerwithin{d=30}");
+        yamlMap.put("Drops", drops);
+
+        DropTableDefinition table = DropTableDefinition.fromMap("beam_table", yamlMap, conditionRegistry);
+        assertNotNull(table);
+        assertTrue(table.options().dropsHaveBeamByDefault());
+        assertEquals(1, table.entries().size());
+
+        DropEntry entry = table.entries().get(0);
+        assertEquals("DIAMOND", entry.itemId());
+        assertEquals(2, entry.conditions().size());
+        assertEquals("health", entry.conditions().get(0).id());
+        assertTrue(entry.conditions().get(0).parameters().containsKey("<50%"));
+        assertEquals("playerwithin", entry.conditions().get(1).id());
+        assertEquals(30, entry.conditions().get(1).parameters().get("d"));
+    }
+
+    @Test
+    @DisplayName("LootGenerateEvent can be cancelled or its item list modified")
+    void testLootGenerateEventContract() {
+        ItemStack item1 = new MockItemStack(Material.DIAMOND, 2);
+        ItemStack item2 = new MockItemStack(Material.EMERALD, 5);
+        List<ItemStack> original = new ArrayList<>(List.of(item1, item2));
+
+        vn.haohan.lunar.api.system.mob.Mob mockMob = (vn.haohan.lunar.api.system.mob.Mob) java.lang.reflect.Proxy.newProxyInstance(
+                vn.haohan.lunar.api.system.mob.Mob.class.getClassLoader(),
+                new Class<?>[]{vn.haohan.lunar.api.system.mob.Mob.class},
+                (p, m, a) -> null);
+        vn.haohan.lunar.api.event.LootGenerateEvent event = new vn.haohan.lunar.api.event.LootGenerateEvent(mockMob, null, original);
+        assertFalse(event.isCancelled());
+        assertEquals(2, event.drops().size());
+
+        // Cancel
+        event.setCancelled(true);
+        assertTrue(event.isCancelled());
+
+        // Modify drop list
+        event.setCancelled(false);
+        ItemStack item3 = new MockItemStack(Material.GOLD_INGOT, 10);
+        event.drops().clear();
+        event.drops().add(item3);
+        assertEquals(1, event.drops().size());
+        assertEquals(Material.GOLD_INGOT, event.drops().get(0).getType());
     }
 }

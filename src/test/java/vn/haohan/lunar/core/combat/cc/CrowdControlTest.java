@@ -1,9 +1,7 @@
 package vn.haohan.lunar.core.combat.cc;
 
 import vn.haohan.lunar.api.system.combat.cc.*;
-import vn.haohan.lunar.api.system.combat.*;
 
-import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -11,15 +9,14 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.DamageContext;
 import vn.haohan.lunar.api.system.combat.DamagePipeline;
 import vn.haohan.lunar.api.system.combat.DamageResult;
-import vn.haohan.lunar.api.system.combat.DamageType;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobAttributeDefinition;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
@@ -31,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,10 +1,12 @@
 package vn.haohan.lunar.core.mob.ai;
 
-import vn.haohan.lunar.api.mob.ai.*;
-
 import org.bukkit.entity.Mob;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
+import vn.haohan.lunar.api.system.mob.ai.AIGoalEntry;
+import vn.haohan.lunar.api.system.mob.ai.AIGoalType;
+import vn.haohan.lunar.api.system.mob.ai.MobGoalApplier;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -47,6 +49,19 @@ public class MobGoalApplierTest {
 
         AIGoalEntry players = AIGoalEntry.parse("targetplayers");
         assertEquals(AIGoalType.TARGET_PLAYERS, players.type());
+
+        AIGoalEntry threat = AIGoalEntry.parse("threat");
+        assertEquals(AIGoalType.TARGET_THREAT, threat.type());
+
+        AIGoalEntry circle = AIGoalEntry.parse("circle{radius=10;speed=1.5}");
+        assertEquals(AIGoalType.CIRCLE, circle.type());
+        assertEquals(10.0, circle.getParamOrArg("radius", 1, 8.0), 0.001);
+        assertEquals(1.5, circle.getParamOrArg("speed", 0, 1.0), 0.001);
+
+        AIGoalEntry fleePlayers = AIGoalEntry.parse("fleeplayers{distance=12.5;speed=1.8}");
+        assertEquals(AIGoalType.FLEE_PLAYERS, fleePlayers.type());
+        assertEquals(12.5, fleePlayers.getParamOrArg("distance", 1, 8.0), 0.001);
+        assertEquals(1.8, fleePlayers.getParamOrArg("speed", 0, 1.2), 0.001);
     }
 
     @Test
@@ -74,6 +89,11 @@ public class MobGoalApplierTest {
             public void addTarget(Mob mob, int priority, AIGoalEntry entry) {
                 actions.add("addTarget:" + priority + ":" + entry.type());
             }
+
+            @Override
+            public void addTarget(Mob mob, int priority, AIGoalEntry entry, ThreatTable threatTable) {
+                actions.add("addTargetWithThreat:" + priority + ":" + entry.type() + ":" + (threatTable != null));
+            }
         };
 
         MobGoalApplier applier = new MobGoalApplier(mockExecutor);
@@ -84,29 +104,31 @@ public class MobGoalApplierTest {
                     return null;
                 });
 
+        ThreatTable threatTable = new ThreatTable(UUID.randomUUID());
+
         List<String> goalSelectors = List.of(
                 "clear",
                 "movetotarget 1.25",
-                "meleeattack 1.2",
-                "lookatplayers 8.0"
+                "circle{radius=10;speed=1.5}",
+                "fleeplayers{distance=12;speed=1.8}"
         );
 
         List<String> targetSelectors = List.of(
                 "clear",
                 "targetdamagers",
-                "targetplayers"
+                "targetthreat"
         );
 
-        applier.apply(mockMob, goalSelectors, targetSelectors);
+        applier.apply(mockMob, goalSelectors, targetSelectors, threatTable);
 
         // Verification order
         assertEquals("clearGoals", actions.get(0));
         assertEquals("addGoal:1:MOVE_TO_TARGET", actions.get(1));
-        assertEquals("addGoal:2:MELEE_ATTACK", actions.get(2));
-        assertEquals("addGoal:3:LOOK_AT_PLAYERS", actions.get(3));
+        assertEquals("addGoal:2:CIRCLE", actions.get(2));
+        assertEquals("addGoal:3:FLEE_PLAYERS", actions.get(3));
 
         assertEquals("clearTargets", actions.get(4));
-        assertEquals("addTarget:1:TARGET_DAMAGERS", actions.get(5));
-        assertEquals("addTarget:2:TARGET_PLAYERS", actions.get(6));
+        assertEquals("addTargetWithThreat:1:TARGET_DAMAGERS:true", actions.get(5));
+        assertEquals("addTargetWithThreat:2:TARGET_THREAT:true", actions.get(6));
     }
 }

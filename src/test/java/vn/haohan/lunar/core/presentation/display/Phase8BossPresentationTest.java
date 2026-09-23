@@ -1,7 +1,5 @@
 package vn.haohan.lunar.api.presentation.display;
 
-import vn.haohan.lunar.api.presentation.display.*;
-
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -21,8 +19,8 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;

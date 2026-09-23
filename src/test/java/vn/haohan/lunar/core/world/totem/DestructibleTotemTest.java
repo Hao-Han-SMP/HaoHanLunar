@@ -4,7 +4,6 @@ import vn.haohan.lunar.api.system.world.totem.*;
 
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -13,8 +12,8 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
@@ -26,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

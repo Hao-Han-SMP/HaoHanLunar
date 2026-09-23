@@ -12,9 +12,16 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
+import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraScheduler;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
+import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.SinglePin;
+import org.bukkit.entity.Ageable;
+import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
+import java.util.function.Supplier;
 
 import java.util.*;
 
@@ -23,9 +30,29 @@ public final class ConditionRegistry {
 
     private final Map<String, Condition> conditions = new LinkedHashMap<>();
     private AuraScheduler auraScheduler;
+    private Supplier<LunarMobManager> mobManagerSupplier;
 
     public ConditionRegistry() {
         registerBuiltins();
+    }
+
+    public void setMobManagerSupplier(Supplier<LunarMobManager> supplier) {
+        this.mobManagerSupplier = supplier;
+    }
+
+    public void setMobManager(LunarMobManager manager) {
+        this.mobManagerSupplier = () -> manager;
+    }
+
+    private ActiveMob resolveActiveMob(Entity entity) {
+        if (entity == null) return null;
+        if (mobManagerSupplier != null) {
+            LunarMobManager mgr = mobManagerSupplier.get();
+            if (mgr != null) {
+                return mgr.get(entity.getUniqueId());
+            }
+        }
+        return null;
     }
 
     public static boolean evaluateComparison(double actual, String spec) {
@@ -403,7 +430,7 @@ public final class ConditionRegistry {
         // P20 Conditions
         register("inpinregion", (context, params) -> {
             String regionName = params.containsKey("region") ? text(params, "region")
-                    : text(params, "r");
+                    : params.containsKey("r") ? text(params, "r") : "";
             LivingEntity subject = context.target() instanceof LivingEntity le ? le : context.subjectLivingEntity();
             if (subject == null || subject.getLocation() == null) return false;
             return PinManager.get().isInsideRegion(regionName, subject.getLocation());
@@ -489,12 +516,16 @@ public final class ConditionRegistry {
             return isMoving == expected;
         });
 
-        register("sneaking", (context, params) -> {
+        ConditionEvaluator sneakingEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
             boolean isSneaking = (subject instanceof Player p) && p.isSneaking();
             return isSneaking == expected;
-        });
+        };
+        register("sneaking", sneakingEvaluator);
+        register("crouching", sneakingEvaluator);
+        register("issneaking", sneakingEvaluator);
+        register("iscrouching", sneakingEvaluator);
 
         register("inwater", (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
@@ -522,12 +553,15 @@ public final class ConditionRegistry {
             return inLava == expected;
         });
 
-        register("onfire", (context, params) -> {
+        ConditionEvaluator onFireEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
             boolean onFire = subject.getFireTicks() > 0;
             return onFire == expected;
-        });
+        };
+        register("onfire", onFireEvaluator);
+        register("burning", onFireEvaluator);
+        register("isburning", onFireEvaluator);
 
         register("haspotion", (context, params) -> {
             LivingEntity subject = context.subjectLivingEntity();
@@ -589,6 +623,203 @@ public final class ConditionRegistry {
             }
             return false;
         });
+
+        register("gliding", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean isGliding = (subject instanceof LivingEntity le) && le.isGliding();
+            return isGliding == expected;
+        });
+
+        register("swimming", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean isSwimming = (subject instanceof LivingEntity le) && le.isSwimming();
+            return isSwimming == expected;
+        });
+
+        ConditionEvaluator behindEvaluator = (context, params) -> {
+            Entity target = context.target();
+            if (target == null) return false;
+            LivingEntity caster = context.caster();
+            if (caster == null) return false;
+            Vector facing = caster.getLocation().getDirection().setY(0).normalize();
+            Vector toTarget = target.getLocation().toVector().subtract(caster.getLocation().toVector()).setY(0).normalize();
+            if (Double.isNaN(facing.getX()) || Double.isNaN(toTarget.getX())) return false;
+            double dot = facing.dot(toTarget);
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            return (dot < -0.2) == expected;
+        };
+        register("behind", behindEvaluator);
+        register("isbehind", behindEvaluator);
+
+        ConditionEvaluator inFrontEvaluator = (context, params) -> {
+            Entity target = context.target();
+            if (target == null) return false;
+            LivingEntity caster = context.caster();
+            if (caster == null) return false;
+            Vector facing = caster.getLocation().getDirection().setY(0).normalize();
+            Vector toTarget = target.getLocation().toVector().subtract(caster.getLocation().toVector()).setY(0).normalize();
+            if (Double.isNaN(facing.getX()) || Double.isNaN(toTarget.getX())) return false;
+            double dot = facing.dot(toTarget);
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            return (dot > 0.2) == expected;
+        };
+        register("infront", inFrontEvaluator);
+        register("isinfront", inFrontEvaluator);
+
+        register("haspin", (context, params) -> {
+            String pinName = params.containsKey("pin") ? text(params, "pin")
+                    : params.containsKey("name") ? text(params, "name") : "";
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            return PinManager.get().getPin(pinName).isPresent() == expected;
+        });
+
+        register("pindistance", (context, params) -> {
+            String pinName = text(params, "pin");
+            var pinOpt = PinManager.get().getPin(pinName);
+            if (pinOpt.isEmpty()) return false;
+            SinglePin pin = pinOpt.get();
+            LivingEntity subject = context.target() instanceof LivingEntity le ? le : context.subjectLivingEntity();
+            if (subject == null || subject.getLocation() == null) return false;
+            double dist = pin.distance(subject.getLocation());
+            String distSpec = params.containsKey("distance") ? String.valueOf(params.get("distance"))
+                    : params.containsKey("d") ? String.valueOf(params.get("d")) : null;
+            if (distSpec == null) return true;
+            return evaluateComparison(dist, distSpec);
+        });
+
+        register("lightlevel", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            Location loc = subject.getLocation();
+            if (loc == null || loc.getWorld() == null) return false;
+            try {
+                int light = loc.getBlock().getLightLevel();
+                String spec = params.containsKey("level") ? String.valueOf(params.get("level"))
+                        : params.containsKey("amount") ? String.valueOf(params.get("amount")) : null;
+                if (spec == null && params.containsKey("compare")) {
+                    double expected = number(params, "value");
+                    String op = text(params, "compare");
+                    return compare(light, expected, op);
+                }
+                if (spec != null) return evaluateComparison(light, spec);
+                return light > 0;
+            } catch (Throwable ignored) {
+                return false;
+            }
+        });
+
+        register("hasitem", (context, params) -> {
+            LivingEntity subject = context.subjectLivingEntity();
+            String matName = params.containsKey("material") ? text(params, "material")
+                    : params.containsKey("item") ? text(params, "item") : "";
+            if (matName.isBlank()) return false;
+            Material mat;
+            try {
+                mat = Material.valueOf(matName.toUpperCase(Locale.ROOT));
+            } catch (Exception e) {
+                return false;
+            }
+            if (subject instanceof Player player) {
+                return player.getInventory().contains(mat);
+            }
+            EntityEquipment eq = subject.getEquipment();
+            if (eq != null) {
+                return (eq.getItemInMainHand() != null && eq.getItemInMainHand().getType() == mat)
+                        || (eq.getItemInOffHand() != null && eq.getItemInOffHand().getType() == mat);
+            }
+            return false;
+        });
+
+        register("oxygen", (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            if (!(subject instanceof Player player)) return false;
+            try {
+                HaoHanLunarPlugin plugin = HaoHanLunarPlugin.getInstance();
+                if (plugin == null || plugin.getLunarDataManager() == null) return false;
+                var data = plugin.getLunarDataManager().get(player);
+                if (data == null) return false;
+                int o2 = data.getOxygen();
+                String spec = params.containsKey("amount") ? String.valueOf(params.get("amount"))
+                        : params.containsKey("value") ? String.valueOf(params.get("value")) : null;
+                if (spec != null) return evaluateComparison(o2, spec);
+                return o2 > 0;
+            } catch (Throwable ignored) {
+                return false;
+            }
+        });
+        register("oxygenlevel", conditions.get("oxygen")::evaluate);
+
+        // Faction conditions
+        ConditionEvaluator factionEvaluator = (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            if (subject == null) return false;
+            ActiveMob act = resolveActiveMob(subject);
+            String actual = (act != null && act.faction() != null) ? act.faction() : "";
+            String expected = params.containsKey("faction") ? text(params, "faction")
+                    : params.containsKey("f") ? text(params, "f") : "";
+            boolean bool = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean match = !expected.isBlank() && actual.equalsIgnoreCase(expected);
+            return match == bool;
+        };
+        register("faction", factionEvaluator);
+        register("targetfaction", factionEvaluator);
+
+        ConditionEvaluator sameFactionEvaluator = (context, params) -> {
+            Entity caster = context.caster();
+            Entity target = context.target();
+            if (caster == null || target == null) return false;
+            ActiveMob casterMob = resolveActiveMob(caster);
+            ActiveMob targetMob = resolveActiveMob(target);
+            boolean bool = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean same = casterMob != null && targetMob != null && casterMob.isSameFaction(targetMob);
+            return same == bool;
+        };
+        register("samefaction", sameFactionEvaluator);
+        register("same_faction", sameFactionEvaluator);
+
+        // Shield blocking condition
+        ConditionEvaluator blockingEvaluator = (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean isBlocking = false;
+            if (subject instanceof org.bukkit.entity.HumanEntity he) {
+                isBlocking = he.isBlocking();
+            } else if (subject instanceof LivingEntity le) {
+                isBlocking = le.isHandRaised();
+            }
+            return isBlocking == expected;
+        };
+        register("blocking", blockingEvaluator);
+        register("isblocking", blockingEvaluator);
+
+        // Baby condition
+        ConditionEvaluator babyEvaluator = (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
+            boolean isBaby = (subject instanceof Ageable a) && !a.isAdult();
+            return isBaby == expected;
+        };
+        register("baby", babyEvaluator);
+        register("isbaby", babyEvaluator);
+
+        // Distance from spawn condition
+        ConditionEvaluator spawnDistEvaluator = (context, params) -> {
+            Entity subject = context.target() != null ? context.target() : context.caster();
+            if (subject == null) return false;
+            ActiveMob activeMob = resolveActiveMob(subject);
+            Location spawn = activeMob != null ? activeMob.spawnLocation() : null;
+            if (spawn == null) return false;
+            Location curr = subject.getLocation();
+            if (curr == null || curr.getWorld() == null || !curr.getWorld().equals(spawn.getWorld())) return false;
+            double dist = curr.distance(spawn);
+            String spec = params.containsKey("distance") ? String.valueOf(params.get("distance"))
+                    : params.containsKey("d") ? String.valueOf(params.get("d")) : null;
+            if (spec == null) return true;
+            return evaluateComparison(dist, spec);
+        };
+        register("distancefromspawn", spawnDistEvaluator);
+        register("spawndistance", spawnDistEvaluator);
     }
 
     @FunctionalInterface

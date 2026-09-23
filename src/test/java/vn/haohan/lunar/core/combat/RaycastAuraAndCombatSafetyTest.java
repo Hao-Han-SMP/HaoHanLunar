@@ -2,16 +2,11 @@ package vn.haohan.lunar.core.combat;
 
 import org.bukkit.Location;
 import org.bukkit.World;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.util.Vector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.api.mob.MobAttributeDefinition;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.options.MobOptions;
 import vn.haohan.lunar.api.system.combat.DamageContext;
 import vn.haohan.lunar.api.system.combat.DamagePipeline;
 import vn.haohan.lunar.api.system.combat.DamageResult;
@@ -21,9 +16,6 @@ import vn.haohan.lunar.api.system.combat.raycast.Ray;
 import vn.haohan.lunar.api.system.combat.raycast.RaycastEngine;
 import vn.haohan.lunar.api.system.combat.raycast.RaycastHit;
 import vn.haohan.lunar.api.system.combat.skill.aura.*;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
-import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.mob.LunarMobManager;
 
 import java.lang.reflect.Proxy;
 import java.util.*;

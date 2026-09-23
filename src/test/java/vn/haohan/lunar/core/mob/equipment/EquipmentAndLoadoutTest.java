@@ -1,14 +1,16 @@
 package vn.haohan.lunar.core.mob.equipment;
 
-import vn.haohan.lunar.api.mob.equipment.*;
-
 import org.bukkit.Material;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.mob.equipment.EquipmentApplier;
+import vn.haohan.lunar.api.system.mob.equipment.EquipmentSlot;
+import vn.haohan.lunar.api.system.mob.equipment.ItemProviderRegistry;
+import vn.haohan.lunar.api.system.mob.equipment.MobEquipmentDefinition;
 
 import java.lang.reflect.Proxy;
 import java.util.HashMap;

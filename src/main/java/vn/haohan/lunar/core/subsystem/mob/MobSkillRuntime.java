@@ -16,12 +16,12 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.projectiles.ProjectileSource;
-import vn.haohan.lunar.api.event.LunarMobTargetChangeEvent;
-import vn.haohan.lunar.api.event.LunarSkillPostCastEvent;
-import vn.haohan.lunar.api.event.LunarSkillPreCastEvent;
-import vn.haohan.lunar.api.mob.phase.MobPhase;
-import vn.haohan.lunar.api.mob.phase.MobPhaseMachine;
-import vn.haohan.lunar.api.mob.phase.PhaseContext;
+import vn.haohan.lunar.api.event.MobTargetChangeEvent;
+import vn.haohan.lunar.api.event.SkillPostCastEvent;
+import vn.haohan.lunar.api.event.SkillPreCastEvent;
+import vn.haohan.lunar.api.system.mob.phase.MobPhase;
+import vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine;
+import vn.haohan.lunar.api.system.mob.phase.PhaseContext;
 import vn.haohan.lunar.api.system.combat.skill.*;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionContext;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
@@ -186,9 +186,9 @@ public class MobSkillRuntime implements Listener {
 
             LivingEntity primaryTarget = triggerEntity instanceof LivingEntity le ? le : (!targets.isEmpty() && targets.get(0).entity() instanceof LivingEntity le2 ? le2 : null);
 
-            // Fire LunarSkillPreCastEvent
+            // Fire SkillPreCastEvent
             try {
-                LunarSkillPreCastEvent preCast = new LunarSkillPreCastEvent(mob, chain.definition(), primaryTarget, 1.0);
+                SkillPreCastEvent preCast = new SkillPreCastEvent(mob, chain.definition(), primaryTarget, 1.0);
                 Bukkit.getPluginManager().callEvent(preCast);
                 if (preCast.isCancelled()) {
                     continue;
@@ -209,9 +209,9 @@ public class MobSkillRuntime implements Listener {
 
             executeMechanics(mob, chain, castContext, targets);
 
-            // Fire LunarSkillPostCastEvent
+            // Fire SkillPostCastEvent
             try {
-                LunarSkillPostCastEvent postCast = new LunarSkillPostCastEvent(mob, chain.definition(), primaryTarget, true);
+                SkillPostCastEvent postCast = new SkillPostCastEvent(mob, chain.definition(), primaryTarget, true);
                 Bukkit.getPluginManager().callEvent(postCast);
             }
             catch (Throwable ignored) {
@@ -404,7 +404,7 @@ public class MobSkillRuntime implements Listener {
                         Entity newTargetEntity = Bukkit.getEntity(newTargetId);
                         if (newTargetEntity instanceof LivingEntity newTargetLiving) {
                             LivingEntity prevLiving = previousTarget != null && Bukkit.getEntity(previousTarget) instanceof LivingEntity pl ? pl : null;
-                            LunarMobTargetChangeEvent targetEvent = new LunarMobTargetChangeEvent(activeVictim, prevLiving, newTargetLiving, activeVictim.threatTable().getThreat(newTargetId), TargetChangeReason.DAMAGE_THREAT);
+                            MobTargetChangeEvent targetEvent = new MobTargetChangeEvent(activeVictim, prevLiving, newTargetLiving, activeVictim.threatTable().getThreat(newTargetId), TargetChangeReason.DAMAGE_THREAT);
                             try {
                                 Bukkit.getPluginManager().callEvent(targetEvent);
                                 if (!targetEvent.isCancelled()) {
@@ -528,7 +528,7 @@ public class MobSkillRuntime implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onTargetChange(LunarMobTargetChangeEvent event) {
+    public void onTargetChange(MobTargetChangeEvent event) {
         ActiveMob mob = event.mob();
         if (mob != null) {
             dispatchTrigger(mob, SkillTrigger.ON_TARGET_CHANGE, event.newTarget().orElse(null), mob.entity().getLocation(), Map.of("reason", event.reason().name()), skillScheduler.currentTick());

@@ -1,9 +1,11 @@
 package vn.haohan.lunar.core.mob;
 
-import vn.haohan.lunar.api.mob.*;
-
 import org.bukkit.entity.EntityType;
 import org.junit.jupiter.api.Test;
+import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobOptionDefinition;
 
 import java.util.List;
 import java.util.Map;

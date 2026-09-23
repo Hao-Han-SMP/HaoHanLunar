@@ -3,22 +3,18 @@ package vn.haohan.lunar.core.loot;
 import vn.haohan.lunar.api.system.loot.*;
 
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.system.loot.instanced.InstancedDropTracker;
 import vn.haohan.lunar.api.system.loot.luck.LuckModifier;
 
 import java.lang.reflect.Proxy;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 

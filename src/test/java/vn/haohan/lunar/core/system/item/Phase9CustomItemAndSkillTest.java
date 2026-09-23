@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.command.LunarMobCommand;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;

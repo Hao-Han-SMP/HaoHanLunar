@@ -1,8 +1,7 @@
 package vn.haohan.lunar.core.mob.scaling;
 
-import vn.haohan.lunar.api.mob.scaling.*;
-
 import org.junit.jupiter.api.Test;
+import vn.haohan.lunar.api.system.mob.scaling.LevelScalingDefinition;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

@@ -1,6 +1,6 @@
 package vn.haohan.lunar.core.integration.modelengine;
 
-import vn.haohan.lunar.api.integration.bridge.modelengine.BoneLocationResolver;
+import vn.haohan.lunar.api.integration.modelengine.BoneLocationResolver;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -10,8 +10,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;

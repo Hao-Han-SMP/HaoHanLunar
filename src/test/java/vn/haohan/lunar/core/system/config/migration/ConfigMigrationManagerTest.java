@@ -5,14 +5,14 @@ import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
 
 import java.io.IOException;

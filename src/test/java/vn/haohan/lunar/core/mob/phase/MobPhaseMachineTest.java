@@ -1,14 +1,16 @@
 package vn.haohan.lunar.core.mob.phase;
 
-import vn.haohan.lunar.api.mob.phase.*;
-
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
+import vn.haohan.lunar.api.system.mob.phase.MobPhase;
+import vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine;
+import vn.haohan.lunar.api.system.mob.phase.PhaseCondition;
+import vn.haohan.lunar.api.system.mob.phase.PhaseContext;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 
 import java.lang.reflect.Proxy;
@@ -30,7 +32,7 @@ class MobPhaseMachineTest {
         MobPhaseMachine machine = new MobPhaseMachine(List.of(
                 new MobPhase("enraged", 0.5, "enter_enraged", null, true),
                 new MobPhase("normal", 1.0, "enter_normal", "exit_normal", false)),
-                new CooldownRegistry(), phaseSkill -> skills.add(phaseSkill.skillId()));
+                                                      new CooldownRegistry(), phaseSkill -> skills.add(phaseSkill.skillId()));
         ActiveLunarMob mob = mob();
 
         assertTrue(machine.update(mob, 100, 100, 1).changed());

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.DamageType;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 
@@ -59,7 +59,7 @@ class PublicEventApiTest {
         Location loc = new Location(mockWorld, 10.0, 64.0, 20.0);
         ActiveLunarMob mob = createMockMob("lunar_skeleton", loc);
 
-        LunarMobSpawnEvent event = new LunarMobSpawnEvent(mob, loc, "spawner_1");
+        MobSpawnEvent event = new MobSpawnEvent(mob, loc, "spawner_1");
         assertEquals(mob, event.mob());
         assertEquals(10.0, event.location().getX());
         assertEquals("spawner_1", event.spawnInstanceId());
@@ -67,7 +67,7 @@ class PublicEventApiTest {
 
         event.setCancelled(true);
         assertTrue(event.isCancelled());
-        assertNotNull(LunarMobSpawnEvent.getHandlerList());
+        assertNotNull(MobSpawnEvent.getHandlerList());
     }
 
     @Test
@@ -81,7 +81,7 @@ class PublicEventApiTest {
         List<ItemStack> drops = new ArrayList<>();
         drops.add(mockItem);
 
-        LunarMobDeathEvent event = new LunarMobDeathEvent(mob, killer, drops, 2500.0);
+        MobDeathEvent event = new MobDeathEvent(mob, killer, drops, 2500.0);
         assertEquals(mob, event.mob());
         assertTrue(event.killer().isPresent());
         assertEquals(killer, event.killer().get());
@@ -104,7 +104,7 @@ class PublicEventApiTest {
         SkillDefinition skill = new SkillDefinition("fireball", Set.of(SkillTrigger.ON_TIMER), 20L);
 
         // PreCast
-        LunarSkillPreCastEvent preEvent = new LunarSkillPreCastEvent(caster, skill, target1, 1.0);
+        SkillPreCastEvent preEvent = new SkillPreCastEvent(caster, skill, target1, 1.0);
         assertEquals(caster, preEvent.caster());
         assertEquals(skill, preEvent.skill());
         assertEquals(target1, preEvent.target().orElse(null));
@@ -120,7 +120,7 @@ class PublicEventApiTest {
         assertTrue(preEvent.isCancelled());
 
         // PostCast
-        LunarSkillPostCastEvent postEvent = new LunarSkillPostCastEvent(caster, skill, target2, true);
+        SkillPostCastEvent postEvent = new SkillPostCastEvent(caster, skill, target2, true);
         assertEquals(caster, postEvent.caster());
         assertEquals(skill, postEvent.skill());
         assertTrue(postEvent.success());
@@ -133,7 +133,7 @@ class PublicEventApiTest {
         ActiveLunarMob victim = createMockMob("boss", loc);
         Player attacker = mockPlayer("Attacker1");
 
-        LunarMobDamageEvent event = new LunarMobDamageEvent(victim, attacker, DamageType.MAGICAL, DamageCause.ENTITY_ATTACK, 150.0);
+        MobDamageEvent event = new MobDamageEvent(victim, attacker, DamageType.MAGICAL, DamageCause.ENTITY_ATTACK, 150.0);
         assertEquals(victim, event.victim());
         assertEquals(attacker, event.source().orElse(null));
         assertEquals(DamageType.MAGICAL, event.damageType());
@@ -153,7 +153,7 @@ class PublicEventApiTest {
         Location loc = new Location(mockWorld, 0.0, 64.0, 0.0);
         ActiveLunarMob mob = createMockMob("phase_boss", loc);
 
-        LunarMobPhaseChangeEvent event = new LunarMobPhaseChangeEvent(mob, 1, 2);
+        MobPhaseChangeEvent event = new MobPhaseChangeEvent(mob, 1, 2);
         assertEquals(mob, event.mob());
         assertEquals(1, event.previousPhase());
         assertEquals(2, event.newPhase());
@@ -172,7 +172,7 @@ class PublicEventApiTest {
 
         List<ItemStack> drops = new ArrayList<>();
         drops.add(new DummyItemStack(Material.NETHERITE_INGOT, 1));
-        LunarLootGenerateEvent event = new LunarLootGenerateEvent(mob, recipient, drops);
+        LootGenerateEvent event = new LootGenerateEvent(mob, recipient, drops);
 
         assertEquals(mob, event.mob());
         assertEquals(recipient, event.recipient().orElse(null));

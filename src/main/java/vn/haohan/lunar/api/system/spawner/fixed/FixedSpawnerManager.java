@@ -14,8 +14,8 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import vn.haohan.lunar.api.manager.SpawnerManager;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
@@ -82,6 +82,22 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
 
     public Map<String, LunarFixedSpawner> snapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(spawners));
+    }
+
+    public Map<String, LunarFixedSpawner.SpawnerState> captureAllStates() {
+        Map<String, LunarFixedSpawner.SpawnerState> states = new LinkedHashMap<>();
+        spawners.forEach((id, spawner) -> states.put(id, spawner.captureState()));
+        return Collections.unmodifiableMap(states);
+    }
+
+    public void restoreAllStates(Map<String, LunarFixedSpawner.SpawnerState> states) {
+        if (states == null || states.isEmpty()) return;
+        states.forEach((id, state) -> {
+            LunarFixedSpawner spawner = spawners.get(id.toLowerCase(Locale.ROOT));
+            if (spawner != null) {
+                spawner.restoreState(state);
+            }
+        });
     }
 
     public void setCustomSpawnerCallback(LunarFixedSpawner.SpawnerCallback callback) {

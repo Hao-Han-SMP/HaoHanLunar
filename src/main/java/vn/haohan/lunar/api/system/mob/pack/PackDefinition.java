@@ -1,0 +1,35 @@
+package vn.haohan.lunar.api.system.mob.pack;
+
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.combat.skill.SkillChainDefinition;
+import vn.haohan.lunar.api.system.loot.DropTableDefinition;
+
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+/**
+ * Encapsulates all content registered by a specific content pack.
+ */
+public record PackDefinition(
+        PackManifest manifest,
+        Path packDirectory,
+        Map<String, MobDefinition> mobs,
+        Map<String, SkillChainDefinition> skills,
+        Map<String, DropTableDefinition> drops,
+        List<String> modelAssets
+) {
+    public PackDefinition {
+        Objects.requireNonNull(manifest, "Manifest must not be null");
+        mobs = mobs != null ? Collections.unmodifiableMap(mobs) : Map.of();
+        skills = skills != null ? Collections.unmodifiableMap(skills) : Map.of();
+        drops = drops != null ? Collections.unmodifiableMap(drops) : Map.of();
+        modelAssets = modelAssets != null ? Collections.unmodifiableList(modelAssets) : List.of();
+    }
+
+    public String name() {
+        return manifest.name();
+    }
+}

@@ -1,11 +1,11 @@
 package vn.haohan.lunar.core.system.config.migration;
 
 import org.bukkit.entity.EntityType;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
-import vn.haohan.lunar.api.mob.equipment.MobEquipmentDefinition;
-import vn.haohan.lunar.api.mob.scaling.DynamicScalingDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.equipment.MobEquipmentDefinition;
+import vn.haohan.lunar.api.system.mob.scaling.DynamicScalingDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainParser;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;

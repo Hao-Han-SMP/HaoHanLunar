@@ -1,8 +1,8 @@
 package vn.haohan.lunar.api.system.loot;
 
 import org.bukkit.inventory.ItemStack;
-import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.mob.scaling.MobLevelApplier;
+import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.api.system.mob.scaling.MobLevelApplier;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionContext;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
@@ -10,12 +10,15 @@ import vn.haohan.lunar.api.system.loot.luck.LuckModifier;
 import vn.haohan.lunar.api.system.loot.pity.PityManager;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 /**
  * Immutable configuration for a loot drop table.
  * Supports independent roll mode (each entry rolls on its own chance)
  * and weighted roll mode (selects 1-of-N based on relative weight).
  * Integrated with DropOptions, LuckModifier, and PityManager.
+ * Supports ITEM drops, EXP drops, and nested DROP_TABLE delegation.
  */
 public record DropTableDefinition(String id,
                                   RollMode mode,
@@ -152,6 +155,7 @@ public record DropTableDefinition(String id,
             int min = 1;
             int max = 1;
             double chance = 1.0;
+            List<ConditionRegistry.ConditionCall> conditions = new ArrayList<>();
 
             if (tokens.length > 1) {
                 String amountStr = tokens[1];
@@ -159,31 +163,42 @@ public record DropTableDefinition(String id,
                     String[] parts = amountStr.split("-", 2);
                     try {
                         min = Integer.parseInt(parts[0]);
-                    }
-                    catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                     try {
                         max = Integer.parseInt(parts[1]);
-                    }
-                    catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                 } else {
                     try {
                         min = Integer.parseInt(amountStr);
                         max = min;
-                    }
-                    catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                 }
             }
             if (tokens.length > 2) {
                 try {
                     chance = Double.parseDouble(tokens[2]);
+                } catch (NumberFormatException ignored) {}
+            }
+
+            for (int i = 3; i < tokens.length; i++) {
+                String tok = tokens[i].trim();
+                if (tok.startsWith("?")) {
+                    tok = tok.substring(1);
                 }
-                catch (NumberFormatException ignored) {
+                if (!tok.isBlank()) {
+                    int bStart = tok.indexOf('{');
+                    int bEnd = tok.lastIndexOf('}');
+                    if (bStart > 0 && bEnd > bStart) {
+                        String cId = tok.substring(0, bStart).trim();
+                        String cContent = tok.substring(bStart + 1, bEnd).trim();
+                        conditions.add(new ConditionRegistry.ConditionCall(cId, parseInlineParams(cContent)));
+                    } else {
+                        conditions.add(new ConditionRegistry.ConditionCall(tok.trim(), Map.of()));
+                    }
                 }
             }
-            return new DropEntry(itemId, chance, min, max);
+
+            return new DropEntry(itemId, chance, min, max, conditions);
         } else if (raw instanceof Map<?, ?> map) {
             String itemId = String.valueOf(find(map, "item", "id"));
             double chance = 1.0;
@@ -200,18 +215,69 @@ public record DropTableDefinition(String id,
                 String[] parts = str.split("-", 2);
                 try {
                     min = Integer.parseInt(parts[0]);
-                }
-                catch (NumberFormatException ignored) {
-                }
+                } catch (NumberFormatException ignored) {}
                 try {
                     max = Integer.parseInt(parts[1]);
-                }
-                catch (NumberFormatException ignored) {
+                } catch (NumberFormatException ignored) {}
+            }
+
+            List<ConditionRegistry.ConditionCall> conditions = new ArrayList<>();
+            Object condObj = find(map, "conditions", "condition");
+            if (condObj instanceof Collection<?> col) {
+                for (Object item : col) {
+                    if (item instanceof String cStr) {
+                        String tok = cStr.trim();
+                        if (tok.startsWith("?")) tok = tok.substring(1);
+                        int bStart = tok.indexOf('{');
+                        int bEnd = tok.lastIndexOf('}');
+                        if (bStart > 0 && bEnd > bStart) {
+                            String cId = tok.substring(0, bStart).trim();
+                            conditions.add(new ConditionRegistry.ConditionCall(cId, parseInlineParams(tok.substring(bStart + 1, bEnd).trim())));
+                        } else {
+                            conditions.add(new ConditionRegistry.ConditionCall(tok.trim(), Map.of()));
+                        }
+                    } else if (item instanceof Map<?, ?> cMap) {
+                        String cId = String.valueOf(find(cMap, "id", "type"));
+                        Map<String, Object> params = new LinkedHashMap<>();
+                        cMap.forEach((k, v) -> {
+                            if (!"id".equals(k) && !"type".equals(k)) {
+                                params.put(String.valueOf(k), v);
+                            }
+                        });
+                        conditions.add(new ConditionRegistry.ConditionCall(cId, params));
+                    }
                 }
             }
-            return new DropEntry(itemId, chance, min, max);
+
+            return new DropEntry(itemId, chance, min, max, conditions);
         }
         return null;
+    }
+
+    private static Map<String, Object> parseInlineParams(String content) {
+        if (content == null || content.isBlank()) return Map.of();
+        Map<String, Object> map = new LinkedHashMap<>();
+        for (String pair : content.split("[;,]")) {
+            String p = pair.trim();
+            if (p.isEmpty()) continue;
+            int eq = p.indexOf('=');
+            if (eq > 0) {
+                String k = p.substring(0, eq).trim();
+                String v = p.substring(eq + 1).trim();
+                try {
+                    if (v.contains(".")) {
+                        map.put(k, Double.parseDouble(v));
+                    } else {
+                        map.put(k, Integer.parseInt(v));
+                    }
+                } catch (NumberFormatException e) {
+                    map.put(k, v);
+                }
+            } else {
+                map.put(p, true);
+            }
+        }
+        return Collections.unmodifiableMap(map);
     }
 
     /**
@@ -222,14 +288,32 @@ public record DropTableDefinition(String id,
                                 HaoHanItemBridge itemBridge,
                                 ConditionRegistry conditionRegistry,
                                 PityManager pityManager) {
+        return rollComposite(metadata, random, itemBridge, conditionRegistry, pityManager, null, 0).items();
+    }
+
+    /**
+     * Executes the full composite roll returning item drops, experience orbs, and recursively rolled sub-tables.
+     */
+    public DropRollResult rollComposite(DropMetadata metadata,
+                                       Random random,
+                                       HaoHanItemBridge itemBridge,
+                                       ConditionRegistry conditionRegistry,
+                                       PityManager pityManager,
+                                       Function<String, Optional<DropTableDefinition>> tableResolver,
+                                       int currentDepth) {
         Objects.requireNonNull(random, "Random generator must not be null");
         Objects.requireNonNull(itemBridge, "Item bridge must not be null");
 
+        if (currentDepth > 5) {
+            return DropRollResult.EMPTY;
+        }
+
         List<ItemStack> items = new ArrayList<>();
+        AtomicInteger totalExp = new AtomicInteger(0);
+        List<String> subTables = new ArrayList<>();
+
         UUID playerUuid = metadata != null && metadata.killer() != null ? metadata.killer().getUniqueId() : null;
 
-        // Base amountModifier is already applied inside DropEntry.rollAmount().
-        // luckBonus only scales extra bonus luck and bonus mob levels.
         double luckBonus = 1.0;
         double luck = (metadata != null && metadata.killer() != null)
                 ? LuckModifier.calculateLuck(metadata.killer())
@@ -255,7 +339,6 @@ public record DropTableDefinition(String id,
                 for (DropEntry entry : entries) {
                     boolean guaranteedByPity = false;
                     if (pityManager != null && playerUuid != null) {
-                        // If item has a pity condition or check
                         if (pityManager.isPityTriggered(playerUuid, entry.itemId(), 50)) {
                             guaranteedByPity = true;
                         }
@@ -265,7 +348,7 @@ public record DropTableDefinition(String id,
                     if (should) {
                         int amount = (int) Math.round(entry.rollAmount(metadata, random) * luckBonus);
                         amount = Math.max(1, amount);
-                        itemBridge.createItemStack(entry.itemId(), amount).ifPresent(items::add);
+                        applyEntryOutcome(entry.itemId(), amount, items, totalExp, subTables, metadata, random, itemBridge, conditionRegistry, pityManager, tableResolver, currentDepth);
                         if (pityManager != null && playerUuid != null) {
                             pityManager.recordSuccess(playerUuid, entry.itemId());
                         }
@@ -302,10 +385,46 @@ public record DropTableDefinition(String id,
 
                 int amount = (int) Math.round(selected.rollAmount(metadata, random) * luckBonus);
                 amount = Math.max(1, amount);
-                itemBridge.createItemStack(selected.itemId(), amount).ifPresent(items::add);
+                applyEntryOutcome(selected.itemId(), amount, items, totalExp, subTables, metadata, random, itemBridge, conditionRegistry, pityManager, tableResolver, currentDepth);
             }
         }
 
-        return List.copyOf(items);
+        return new DropRollResult(items, totalExp.get(), subTables);
+    }
+
+    private void applyEntryOutcome(String itemId,
+                                   int amount,
+                                   List<ItemStack> items,
+                                   AtomicInteger totalExp,
+                                   List<String> subTables,
+                                   DropMetadata metadata,
+                                   Random random,
+                                   HaoHanItemBridge itemBridge,
+                                   ConditionRegistry conditionRegistry,
+                                   PityManager pityManager,
+                                   Function<String, Optional<DropTableDefinition>> tableResolver,
+                                   int currentDepth) {
+        String lower = itemId.toLowerCase(Locale.ROOT);
+        if (lower.equals("exp") || lower.equals("experience") || lower.startsWith("exp:") || lower.startsWith("experience:")) {
+            totalExp.addAndGet(amount);
+            return;
+        }
+
+        if (lower.startsWith("table:") || lower.startsWith("droptable:")) {
+            String targetTableId = lower.contains(":") ? lower.substring(lower.indexOf(':') + 1).trim() : lower;
+            subTables.add(targetTableId);
+            if (tableResolver != null) {
+                for (int i = 0; i < amount; i++) {
+                    tableResolver.apply(targetTableId).ifPresent(subTable -> {
+                        DropRollResult subResult = subTable.rollComposite(metadata, random, itemBridge, conditionRegistry, pityManager, tableResolver, currentDepth + 1);
+                        items.addAll(subResult.items());
+                        totalExp.addAndGet(subResult.experience());
+                    });
+                }
+            }
+            return;
+        }
+
+        itemBridge.createItemStack(itemId, amount).ifPresent(items::add);
     }
 }

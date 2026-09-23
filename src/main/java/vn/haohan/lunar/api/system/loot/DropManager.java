@@ -1,6 +1,10 @@
 package vn.haohan.lunar.api.system.loot;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.World;
+import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -10,12 +14,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.api.integration.bridge.itemcore.HaoHanItemBridge;
+import vn.haohan.lunar.HaoHanLunarPlugin;
+import vn.haohan.lunar.api.event.LootGenerateEvent;
+import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.manager.LootManager;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionRegistry;
-import vn.haohan.lunar.api.mob.equipment.EquipmentApplier;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
+import vn.haohan.lunar.api.system.mob.equipment.EquipmentApplier;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
 import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.api.system.loot.instanced.InstancedDropTracker;
@@ -29,7 +36,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Manages loot drop tables and handles loot generation when an ActiveMob dies.
- * Supports Per-Player Instanced Drops, Lootsplosion, Item Glowing, and Pity Guarantee.
+ * Supports Per-Player Instanced Drops, Lootsplosion, Item Glowing, Particle Beams,
+ * Experience Orbs, Recursive Sub-Tables, and firing LootGenerateEvent for external interception/customization.
  */
 public final class DropManager implements LootManager, Listener {
 
@@ -52,9 +60,9 @@ public final class DropManager implements LootManager, Listener {
                        LunarMobManager mobManager,
                        HaoHanItemBridge itemBridge,
                        ConditionRegistry conditionRegistry) {
-        this.mobDefinitions = Objects.requireNonNull(mobDefinitions, "Mob definitions must not be null");
-        this.mobManager = Objects.requireNonNull(mobManager, "Mob manager must not be null");
-        this.itemBridge = Objects.requireNonNull(itemBridge, "Item bridge must not be null");
+        this.mobDefinitions = mobDefinitions;
+        this.mobManager = mobManager;
+        this.itemBridge = itemBridge != null ? itemBridge : HaoHanItemBridge.get();
         this.conditionRegistry = conditionRegistry != null ? conditionRegistry : new ConditionRegistry();
     }
 
@@ -62,7 +70,7 @@ public final class DropManager implements LootManager, Listener {
         return pityManager;
     }
 
-    public InstancedDropTracker instancedDropTracker() {
+    public InstancedDropTracker instancedTracker() {
         return instancedDropTracker;
     }
 
@@ -102,7 +110,8 @@ public final class DropManager implements LootManager, Listener {
 
     /**
      * Resolves loot for an active mob death using the specified random generator.
-     * Supports per-player drops if configured in the drop table options.
+     * Fires LootGenerateEvent for external listeners to inspect, modify, or cancel drops.
+     * Supports per-player instanced drops if configured in the drop table options.
      */
     public List<ItemStack> handleDeathDrops(ActiveMob mob,
                                             LivingEntity killer,
@@ -131,22 +140,73 @@ public final class DropManager implements LootManager, Listener {
                     if (percent >= minPercent) {
                         Player p = null;
                         try {
-                            p = org.bukkit.Bukkit.getPlayer(entry.getKey());
+                            p = Bukkit.getPlayer(entry.getKey());
                         }
                         catch (Throwable ignored) {
                         }
                         LivingEntity contributor = p != null ? p : killer;
                         DropMetadata meta = DropMetadata.of(mob, contributor, deathLocation);
-                        List<ItemStack> pDrops = table.roll(meta, random, itemBridge, conditionRegistry, pityManager);
-                        spawnDrops(pDrops, deathLocation, opts, random, contributor != null ? contributor.getUniqueId() : null);
-                        totalSpawned.addAll(pDrops);
+                        DropRollResult rollResult = table.rollComposite(meta, random, itemBridge, conditionRegistry, pityManager, this::get, 0);
+                        List<ItemStack> pDrops = rollResult.items();
+
+                        if (rollResult.experience() > 0 && deathLocation.getWorld() != null) {
+                            try {
+                                deathLocation.getWorld().spawn(deathLocation, ExperienceOrb.class, orb -> orb.setExperience(rollResult.experience()));
+                            } catch (Throwable ignored) {}
+                        }
+
+                        if (!pDrops.isEmpty()) {
+                            Player recipient = p != null ? p : (contributor instanceof Player cp ? cp : (killer instanceof Player kp ? kp : null));
+                            List<ItemStack> finalDrops = pDrops;
+                            try {
+                                LootGenerateEvent lootEvent = new LootGenerateEvent(mob, recipient, pDrops);
+                                if (Bukkit.getServer() != null && Bukkit.getPluginManager() != null) {
+                                    Bukkit.getPluginManager().callEvent(lootEvent);
+                                    if (lootEvent.isCancelled()) {
+                                        continue;
+                                    }
+                                    finalDrops = lootEvent.drops();
+                                }
+                            } catch (Throwable ignored) {}
+
+                            if (!finalDrops.isEmpty()) {
+                                spawnDrops(finalDrops, deathLocation, opts, random, contributor != null ? contributor.getUniqueId() : null);
+                                totalSpawned.addAll(finalDrops);
+                            }
+                        }
                     }
                 }
             } else {
                 DropMetadata metadata = DropMetadata.of(mob, killer, deathLocation);
-                List<ItemStack> drops = table.roll(metadata, random, itemBridge, conditionRegistry, pityManager);
-                spawnDrops(drops, deathLocation, opts, random, killer != null ? killer.getUniqueId() : null);
-                totalSpawned.addAll(drops);
+                DropRollResult rollResult = table.rollComposite(metadata, random, itemBridge, conditionRegistry, pityManager, this::get, 0);
+                List<ItemStack> drops = rollResult.items();
+
+                if (rollResult.experience() > 0 && deathLocation.getWorld() != null) {
+                    try {
+                        deathLocation.getWorld().spawn(deathLocation, ExperienceOrb.class, orb -> orb.setExperience(rollResult.experience()));
+                    } catch (Throwable ignored) {}
+                }
+
+                if (!drops.isEmpty()) {
+                    Player recipient = killer instanceof Player kp ? kp : null;
+                    List<ItemStack> finalDrops = drops;
+                    try {
+                        LootGenerateEvent lootEvent = new LootGenerateEvent(mob, recipient, drops);
+                        if (Bukkit.getServer() != null && Bukkit.getPluginManager() != null) {
+                            Bukkit.getPluginManager().callEvent(lootEvent);
+                            if (lootEvent.isCancelled()) {
+                                finalDrops = List.of();
+                            } else {
+                                finalDrops = lootEvent.drops();
+                            }
+                        }
+                    } catch (Throwable ignored) {}
+
+                    if (!finalDrops.isEmpty()) {
+                        spawnDrops(finalDrops, deathLocation, opts, random, killer != null ? killer.getUniqueId() : null);
+                        totalSpawned.addAll(finalDrops);
+                    }
+                }
             }
         }
 
@@ -161,9 +221,8 @@ public final class DropManager implements LootManager, Listener {
         return List.copyOf(totalSpawned);
     }
 
-
     private void spawnDrops(List<ItemStack> drops, Location loc, DropOptions opts, Random random, UUID ownerUuid) {
-        if (loc == null || loc.getWorld() == null || drops.isEmpty()) return;
+        if (loc == null || loc.getWorld() == null || drops == null || drops.isEmpty()) return;
 
         for (ItemStack drop : drops) {
             try {
@@ -179,15 +238,54 @@ public final class DropManager implements LootManager, Listener {
                     double vy = 0.35 + random.nextDouble() * 0.2;
                     itemEntity.setVelocity(new Vector(vx, vy, vz));
                 }
+                if (opts.dropsHaveBeamByDefault()) {
+                    spawnItemBeam(itemEntity);
+                }
                 if (ownerUuid != null) {
                     long curTick = 0L;
                     try {
-                        curTick = org.bukkit.Bukkit.getCurrentTick();
+                        curTick = Bukkit.getCurrentTick();
                     } catch (Throwable ignored) {}
                     instancedDropTracker.protect(itemEntity.getUniqueId(), ownerUuid, curTick);
                 }
             } catch (Throwable ignored) {
             }
+        }
+    }
+
+    private void spawnItemBeam(Item itemEntity) {
+        if (itemEntity == null) return;
+        try {
+            HaoHanLunarPlugin plugin = HaoHanLunarPlugin.getInstance();
+            if (plugin == null || !plugin.isEnabled()) {
+                renderBeamColumn(itemEntity.getLocation());
+                return;
+            }
+            new BukkitRunnable() {
+                private int ticksRemaining = 60; // Max 60 seconds (60 repeats @ 20 ticks)
+
+                @Override
+                public void run() {
+                    if (!itemEntity.isValid() || itemEntity.isDead() || --ticksRemaining <= 0) {
+                        cancel();
+                        return;
+                    }
+                    renderBeamColumn(itemEntity.getLocation());
+                }
+            }.runTaskTimer(plugin, 0L, 20L);
+        } catch (Throwable ignored) {
+            renderBeamColumn(itemEntity.getLocation());
+        }
+    }
+
+    private void renderBeamColumn(Location loc) {
+        if (loc == null || loc.getWorld() == null) return;
+        World world = loc.getWorld();
+        double x = loc.getX();
+        double y = loc.getY();
+        double z = loc.getZ();
+        for (double dy = 0.5; dy <= 10.0; dy += 0.8) {
+            world.spawnParticle(Particle.END_ROD, x, y + dy, z, 1, 0.02, 0.02, 0.02, 0.0);
         }
     }
 
@@ -204,6 +302,12 @@ public final class DropManager implements LootManager, Listener {
             return;
         }
 
+        // Prevent vanilla drops if custom mob options request it
+        if (mob.options() != null && mob.options().preventOtherDrops()) {
+            event.getDrops().clear();
+            event.setDroppedExp(0);
+        }
+
         Player killer = entity.getKiller();
         handleDeathDrops(mob, killer, entity.getLocation(), ThreadLocalRandom.current());
     }
@@ -216,7 +320,7 @@ public final class DropManager implements LootManager, Listener {
 
         long currentTick = 0L;
         try {
-            currentTick = org.bukkit.Bukkit.getCurrentTick();
+            currentTick = Bukkit.getCurrentTick();
         } catch (Throwable ignored) {}
 
         if (!instancedDropTracker.canPickup(player.getUniqueId(), item.getUniqueId(), currentTick)) {
@@ -241,6 +345,6 @@ public final class DropManager implements LootManager, Listener {
         ActiveMob mob = (victim != null && mobManager != null) ? mobManager.get(victim.getUniqueId()) : null;
         Location loc = victim != null ? victim.getLocation() : (killer != null ? killer.getLocation() : null);
         DropMetadata metadata = new DropMetadata(mob, killer, loc, luckBonus <= 0 ? 1.0 : luckBonus, 0L);
-        return table.roll(metadata, ThreadLocalRandom.current(), itemBridge, conditionRegistry, pityManager);
+        return table.rollComposite(metadata, ThreadLocalRandom.current(), itemBridge, conditionRegistry, pityManager, this::get, 0).items();
     }
 }

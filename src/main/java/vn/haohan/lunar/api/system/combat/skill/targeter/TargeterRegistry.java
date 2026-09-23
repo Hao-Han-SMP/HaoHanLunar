@@ -185,6 +185,11 @@ public final class TargeterRegistry {
         registerEntityTargeter("audience", audience);
         registerEntityTargeter("skillaudience", audience);
 
+        EntityTargeter raycast = new RaycastTargeter();
+        registerEntityTargeter("raycast", raycast);
+        registerEntityTargeter("ray", raycast);
+        registerEntityTargeter("eyeraycast", raycast);
+
         // Location targeters
         LocationTargeter origin = new OriginTargeter();
         registerLocationTargeter("origin", origin);
@@ -199,6 +204,12 @@ public final class TargeterRegistry {
         LocationTargeter highestBlock = new HighestBlockTargeter();
         registerLocationTargeter("highest_block", highestBlock);
         registerLocationTargeter("highestblock", highestBlock);
+
+        LocationTargeter raycastLocation = new RaycastLocationTargeter();
+        registerLocationTargeter("raycast_location", raycastLocation);
+        registerLocationTargeter("raycastlocation", raycastLocation);
+        registerLocationTargeter("raylocation", raycastLocation);
+
         // P20 Pin Targeters
         EntityTargeter entitiesNearPin = new EntitiesNearPinTargeter();
         registerEntityTargeter("entities_near_pin", entitiesNearPin);
@@ -207,6 +218,11 @@ public final class TargeterRegistry {
         LocationTargeter blocksInPinRegion = new BlocksInPinRegionTargeter();
         registerLocationTargeter("blocks_in_pin_region", blocksInPinRegion);
         registerLocationTargeter("blocksinpinregion", blocksInPinRegion);
+
+        LocationTargeter pinLocation = new PinTargeter();
+        registerLocationTargeter("pin", pinLocation);
+        registerLocationTargeter("spatial_pin", pinLocation);
+        registerLocationTargeter("spatialpin", pinLocation);
     }
 
     public static String normalizeKey(String raw) {

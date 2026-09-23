@@ -1,7 +1,5 @@
 package vn.haohan.lunar.core.mob.scaling;
 
-import vn.haohan.lunar.api.mob.scaling.*;
-
 import org.bukkit.GameMode;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -9,11 +7,11 @@ import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
-import vn.haohan.lunar.api.mob.scaling.DynamicScalingDefinition;
-import vn.haohan.lunar.api.mob.scaling.DynamicScalingResult;
-import vn.haohan.lunar.api.mob.scaling.DynamicScalingService;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.scaling.DynamicScalingDefinition;
+import vn.haohan.lunar.api.system.mob.scaling.DynamicScalingResult;
+import vn.haohan.lunar.api.system.mob.scaling.DynamicScalingService;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

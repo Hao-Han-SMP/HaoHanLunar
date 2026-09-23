@@ -1,7 +1,5 @@
 package vn.haohan.lunar.core.mob.disguise;
 
-import vn.haohan.lunar.api.mob.disguise.*;
-
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
@@ -11,10 +9,13 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseData;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseManager;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseType;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;

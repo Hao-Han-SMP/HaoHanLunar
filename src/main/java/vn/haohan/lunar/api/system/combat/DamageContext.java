@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.system.combat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
-import vn.haohan.lunar.api.mob.Mob;
+import vn.haohan.lunar.api.system.mob.Mob;
 
 import java.util.Objects;
 import java.util.Optional;

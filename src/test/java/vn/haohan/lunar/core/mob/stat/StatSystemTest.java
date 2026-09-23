@@ -1,8 +1,6 @@
 package vn.haohan.lunar.core.mob.stat;
 
-import vn.haohan.lunar.api.integration.bridge.placeholder.PlaceholderResolver;
-
-import vn.haohan.lunar.api.mob.stat.*;
+import vn.haohan.lunar.api.integration.placeholder.PlaceholderResolver;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -15,18 +13,17 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.DamageContext;
 import vn.haohan.lunar.api.system.combat.DamagePipeline;
 import vn.haohan.lunar.api.system.combat.DamageResult;
+import vn.haohan.lunar.api.system.mob.stat.*;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.api.mob.MobDefinition;
-import vn.haohan.lunar.api.mob.MobDefinitionId;
+import vn.haohan.lunar.api.system.mob.MobDefinition;
+import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 
 import java.lang.reflect.Proxy;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
