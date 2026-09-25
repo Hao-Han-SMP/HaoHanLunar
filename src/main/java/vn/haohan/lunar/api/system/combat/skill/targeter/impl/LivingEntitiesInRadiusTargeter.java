@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
 import java.util.*;
@@ -14,7 +14,7 @@ import java.util.*;
  * Automatically excludes dead/invalid entities, Spectators, and Creatives.
  * Caps radius at {@link TargeterFilter#MAX_RADIUS} blocks.
  */
-public final class LivingEntitiesInRadiusTargeter implements EntityTargeter {
+public final class LivingEntitiesInRadiusTargeter implements IEntityTargeter {
 
     @Override
     public String name() {

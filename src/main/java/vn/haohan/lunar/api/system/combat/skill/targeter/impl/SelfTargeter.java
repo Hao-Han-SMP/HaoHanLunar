@@ -2,7 +2,7 @@ package vn.haohan.lunar.api.system.combat.skill.targeter.impl;
 
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
 import java.util.Collection;
@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Targets the caster entity.
  */
-public final class SelfTargeter implements EntityTargeter {
+public final class SelfTargeter implements IEntityTargeter {
 
     @Override
     public String name() {

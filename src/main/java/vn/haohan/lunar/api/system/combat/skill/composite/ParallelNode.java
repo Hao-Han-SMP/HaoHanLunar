@@ -10,11 +10,11 @@ import java.util.Objects;
  * Executes child skill nodes in parallel within the current tick pass.
  * Each branch operates on an isolated cloned context sharing the cancellation token.
  */
-public final class ParallelNode implements CompositeSkillNode {
+public final class ParallelNode implements ICompositeSkillNode {
 
-    private final List<CompositeSkillNode> children;
+    private final List<ICompositeSkillNode> children;
 
-    public ParallelNode(List<CompositeSkillNode> children) {
+    public ParallelNode(List<ICompositeSkillNode> children) {
         this.children = List.copyOf(Objects.requireNonNull(children, "Children must not be null"));
     }
 
@@ -24,7 +24,7 @@ public final class ParallelNode implements CompositeSkillNode {
             return CompositeResult.failure("Skill cancelled before parallel execution");
         }
         boolean allSuccess = true;
-        for (CompositeSkillNode child : children) {
+        for (ICompositeSkillNode child : children) {
             if (context.isCancelled()) {
                 context.setLastStepSuccess(false);
                 return CompositeResult.failure("Skill cancelled during parallel execution");

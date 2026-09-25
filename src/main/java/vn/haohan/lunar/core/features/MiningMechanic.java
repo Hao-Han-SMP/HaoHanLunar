@@ -15,9 +15,9 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlotGroup;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 
-public class MiningMechanic implements Listener, LunarSubSystem {
+public class MiningMechanic implements Listener, ILunarSubSystem {
 
     private final NamespacedKey slowMiningKey;
     private final NamespacedKey noMiningKey;

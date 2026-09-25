@@ -8,7 +8,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
-import vn.haohan.lunar.api.system.combat.ThreatTable;
+import vn.haohan.lunar.api.system.combat.threat.IThreatTable;
 
 import java.util.EnumSet;
 import java.util.Objects;
@@ -24,11 +24,11 @@ public class ThreatTargetGoal implements Goal<Mob> {
     private static final EnumSet<GoalType> TYPES = EnumSet.of(GoalType.TARGET);
 
     private final Mob mob;
-    private final ThreatTable threatTable;
+    private final IThreatTable threatTable;
     private LivingEntity target;
     private int tickCounter = 0;
 
-    public ThreatTargetGoal(Mob mob, ThreatTable threatTable) {
+    public ThreatTargetGoal(Mob mob, IThreatTable threatTable) {
         this.mob = Objects.requireNonNull(mob, "Mob must not be null");
         this.threatTable = Objects.requireNonNull(threatTable, "ThreatTable must not be null");
     }
@@ -127,7 +127,7 @@ public class ThreatTargetGoal implements Goal<Mob> {
         return mob;
     }
 
-    public ThreatTable getThreatTable() {
+    public IThreatTable getThreatTable() {
         return threatTable;
     }
 

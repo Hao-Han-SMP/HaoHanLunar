@@ -9,7 +9,7 @@ import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
-import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.system.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
 import vn.haohan.lunar.core.features.boss.warden.WardenState;
 
@@ -34,7 +34,7 @@ public final class WardenBossBar {
         if (golem.getAttribute(Attribute.MAX_HEALTH) != null) {
             maxHp = golem.getAttribute(Attribute.MAX_HEALTH).getValue();
         }
-        double currentHp = MathUtil.clamp(golem.getHealth(), 0.0, maxHp);
+        double currentHp = Math.clamp(golem.getHealth(), 0.0, maxHp);
 
         state.animTick++;
         if (state.animTick % 2 == 0) {
@@ -79,7 +79,7 @@ public final class WardenBossBar {
     public static Component buildBossBarTitle(double currentHp, double maxHp, long tick) {
         float ratio = MathUtil.clamp01((float) (currentHp / maxHp));
         int pct = Math.round(ratio * 100.0f);
-        pct = MathUtil.clamp(pct, 0, 100);
+        pct = Math.clamp(pct, 0, 100);
 
         int animFrame = (int) ((tick / 2) % 8);
         char fillChar = (char) (0xE400 + (pct * 8) + animFrame);
@@ -90,7 +90,7 @@ public final class WardenBossBar {
     }
 
     public static Component buildBossBarShatter(int frame) {
-        int clamped = MathUtil.clamp(frame, 0, 11);
+        int clamped = Math.clamp(frame, 0, 11);
         char shatterChar = (char) (0xE800 + clamped);
         return Component.text(String.valueOf(shatterChar)).font(Key.key("haohan", "bossbar"));
     }

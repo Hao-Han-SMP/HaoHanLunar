@@ -4,12 +4,12 @@ import org.bukkit.event.Listener;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.system.world.pin.PinBoundaryListener;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 
 /**
  * SubSystem managing pin-based region boundaries and boundary transition events.
  */
-public final class PinSubSystem implements LunarSubSystem, Listener {
+public final class PinSubSystem implements ILunarSubSystem, Listener {
 
     private PinBoundaryListener boundaryListener;
 

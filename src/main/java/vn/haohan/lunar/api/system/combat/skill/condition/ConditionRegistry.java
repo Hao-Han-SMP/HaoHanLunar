@@ -28,7 +28,7 @@ import java.util.*;
 /** Safe condition registry. Invalid parameters become validation results, never combat-tick exceptions. */
 public final class ConditionRegistry {
 
-    private final Map<String, Condition> conditions = new LinkedHashMap<>();
+    private final Map<String, ICondition> conditions = new LinkedHashMap<>();
     private AuraScheduler auraScheduler;
     private Supplier<LunarMobManager> mobManagerSupplier;
 
@@ -72,22 +72,22 @@ public final class ConditionRegistry {
         }
     }
 
-    public synchronized void register(String id, Condition condition) {
+    public synchronized void register(String id, ICondition condition) {
         String normalized = normalize(id);
-        Objects.requireNonNull(condition, "Condition must not be null");
+        Objects.requireNonNull(condition, "ICondition must not be null");
         if (conditions.putIfAbsent(normalized, condition) != null) {
-            throw new IllegalArgumentException("Condition ID already registered: " + normalized);
+            throw new IllegalArgumentException("ICondition ID already registered: " + normalized);
         }
     }
 
-    public Optional<Condition> get(String id) {
+    public Optional<ICondition> get(String id) {
         return Optional.ofNullable(conditions.get(normalize(id)));
     }
 
     public ConditionResult evaluate(String id, ConditionContext context, Map<String, Object> parameters) {
-        if (context == null) return ConditionResult.invalid("Condition context must not be null");
-        if (parameters == null) return ConditionResult.invalid("Condition parameters must not be null");
-        Condition condition;
+        if (context == null) return ConditionResult.invalid("ICondition context must not be null");
+        if (parameters == null) return ConditionResult.invalid("ICondition parameters must not be null");
+        ICondition condition;
         try {
             condition = get(id).orElse(null);
         } catch (RuntimeException exception) {
@@ -116,15 +116,15 @@ public final class ConditionRegistry {
         return result.valid() ? ConditionResult.matched(!result.matched()) : result;
     }
 
-    public Map<String, Condition> snapshot() {
+    public Map<String, ICondition> snapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(conditions));
     }
 
     private ConditionResult combine(ConditionContext context, List<ConditionCall> calls, boolean all) {
-        if (calls == null || calls.isEmpty()) return ConditionResult.invalid("Condition group must not be empty");
+        if (calls == null || calls.isEmpty()) return ConditionResult.invalid("ICondition group must not be empty");
         boolean result = all;
         for (ConditionCall call : calls) {
-            if (call == null) return ConditionResult.invalid("Condition group contains null entry");
+            if (call == null) return ConditionResult.invalid("ICondition group contains null entry");
             ConditionResult evaluated = evaluate(call.id(), context, call.parameters());
             if (!evaluated.valid()) return evaluated;
             if (all && !evaluated.matched()) return ConditionResult.matched(false);
@@ -139,9 +139,9 @@ public final class ConditionRegistry {
     }
 
     private static String normalize(String id) {
-        Objects.requireNonNull(id, "Condition ID must not be null");
+        Objects.requireNonNull(id, "ICondition ID must not be null");
         String normalized = id.trim().toLowerCase(Locale.ROOT);
-        if (normalized.isBlank()) throw new IllegalArgumentException("Condition ID must not be blank");
+        if (normalized.isBlank()) throw new IllegalArgumentException("ICondition ID must not be blank");
         return normalized;
     }
 
@@ -452,7 +452,7 @@ public final class ConditionRegistry {
 
         // --- MythicMobs Parity Conditions (Phase 2) ---
 
-        ConditionEvaluator distanceEvaluator = (context, params) -> {
+        IConditionEvaluator distanceEvaluator = (context, params) -> {
             Entity target = context.target();
             if (target == null) return false;
             Location cLoc = context.caster().getLocation();
@@ -516,7 +516,7 @@ public final class ConditionRegistry {
             return isMoving == expected;
         });
 
-        ConditionEvaluator sneakingEvaluator = (context, params) -> {
+        IConditionEvaluator sneakingEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
             boolean isSneaking = (subject instanceof Player p) && p.isSneaking();
@@ -553,7 +553,7 @@ public final class ConditionRegistry {
             return inLava == expected;
         });
 
-        ConditionEvaluator onFireEvaluator = (context, params) -> {
+        IConditionEvaluator onFireEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
             boolean onFire = subject.getFireTicks() > 0;
@@ -638,7 +638,7 @@ public final class ConditionRegistry {
             return isSwimming == expected;
         });
 
-        ConditionEvaluator behindEvaluator = (context, params) -> {
+        IConditionEvaluator behindEvaluator = (context, params) -> {
             Entity target = context.target();
             if (target == null) return false;
             LivingEntity caster = context.caster();
@@ -653,7 +653,7 @@ public final class ConditionRegistry {
         register("behind", behindEvaluator);
         register("isbehind", behindEvaluator);
 
-        ConditionEvaluator inFrontEvaluator = (context, params) -> {
+        IConditionEvaluator inFrontEvaluator = (context, params) -> {
             Entity target = context.target();
             if (target == null) return false;
             LivingEntity caster = context.caster();
@@ -751,7 +751,7 @@ public final class ConditionRegistry {
         register("oxygenlevel", conditions.get("oxygen")::evaluate);
 
         // Faction conditions
-        ConditionEvaluator factionEvaluator = (context, params) -> {
+        IConditionEvaluator factionEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             if (subject == null) return false;
             ActiveMob act = resolveActiveMob(subject);
@@ -765,7 +765,7 @@ public final class ConditionRegistry {
         register("faction", factionEvaluator);
         register("targetfaction", factionEvaluator);
 
-        ConditionEvaluator sameFactionEvaluator = (context, params) -> {
+        IConditionEvaluator sameFactionEvaluator = (context, params) -> {
             Entity caster = context.caster();
             Entity target = context.target();
             if (caster == null || target == null) return false;
@@ -779,7 +779,7 @@ public final class ConditionRegistry {
         register("same_faction", sameFactionEvaluator);
 
         // Shield blocking condition
-        ConditionEvaluator blockingEvaluator = (context, params) -> {
+        IConditionEvaluator blockingEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
             boolean isBlocking = false;
@@ -794,7 +794,7 @@ public final class ConditionRegistry {
         register("isblocking", blockingEvaluator);
 
         // Baby condition
-        ConditionEvaluator babyEvaluator = (context, params) -> {
+        IConditionEvaluator babyEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             boolean expected = !params.containsKey("bool") || Boolean.parseBoolean(params.get("bool").toString());
             boolean isBaby = (subject instanceof Ageable a) && !a.isAdult();
@@ -804,7 +804,7 @@ public final class ConditionRegistry {
         register("isbaby", babyEvaluator);
 
         // Distance from spawn condition
-        ConditionEvaluator spawnDistEvaluator = (context, params) -> {
+        IConditionEvaluator spawnDistEvaluator = (context, params) -> {
             Entity subject = context.target() != null ? context.target() : context.caster();
             if (subject == null) return false;
             ActiveMob activeMob = resolveActiveMob(subject);
@@ -823,14 +823,14 @@ public final class ConditionRegistry {
     }
 
     @FunctionalInterface
-    private interface ConditionEvaluator extends Condition {
+    private interface IConditionEvaluator extends ICondition {
         @Override
         boolean evaluate(ConditionContext context, Map<String, Object> parameters);
     }
 
     public record ConditionCall(String id, Map<String, Object> parameters) {
         public ConditionCall {
-            Objects.requireNonNull(id, "Condition ID must not be null");
+            Objects.requireNonNull(id, "ICondition ID must not be null");
             parameters = parameters == null ? Map.of() : Map.copyOf(parameters);
         }
     }

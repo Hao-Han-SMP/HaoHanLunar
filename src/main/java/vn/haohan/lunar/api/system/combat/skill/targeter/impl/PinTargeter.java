@@ -2,7 +2,7 @@ package vn.haohan.lunar.api.system.combat.skill.targeter.impl;
 
 import org.bukkit.Location;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.ILocationTargeter;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.SinglePin;
 
@@ -14,7 +14,7 @@ import java.util.Map;
  * Targets the spatial location of a named persistent Pin registered in {@link PinManager}.
  * Syntax: {@code @Pin{name=pedestal_center}} or {@code @Pin{pin=portal_1}}
  */
-public final class PinTargeter implements LocationTargeter {
+public final class PinTargeter implements ILocationTargeter {
 
     @Override
     public String name() {

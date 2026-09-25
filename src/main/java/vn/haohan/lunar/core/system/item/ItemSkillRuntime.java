@@ -24,13 +24,13 @@ import java.util.function.Consumer;
 public final class ItemSkillRuntime implements Listener {
 
     @FunctionalInterface
-    public interface SkillInvoker {
+    public interface ISkillInvoker {
         void invoke(Player caster, String skillId, TargetRef target);
     }
 
     private final ItemDefinitionRegistry itemRegistry;
     private final ItemCooldownManager cooldownManager;
-    private SkillInvoker skillInvoker;
+    private ISkillInvoker skillInvoker;
     private Consumer<Player> onCooldownNotification = (p) -> {};
 
     public ItemSkillRuntime(ItemDefinitionRegistry itemRegistry, ItemCooldownManager cooldownManager) {
@@ -38,7 +38,7 @@ public final class ItemSkillRuntime implements Listener {
         this.cooldownManager = Objects.requireNonNull(cooldownManager, "Cooldown manager must not be null");
     }
 
-    public void setSkillInvoker(SkillInvoker skillInvoker) {
+    public void setSkillInvoker(ISkillInvoker skillInvoker) {
         this.skillInvoker = skillInvoker;
     }
 

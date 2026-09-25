@@ -18,7 +18,7 @@ public record ProjectileDefinition(
         double bounceMultiplier,
         boolean homing,
         double turnRateDegrees,
-        ProjectileCallback callback
+        IProjectileCallback callback
 ) {
     public ProjectileDefinition {
         Objects.requireNonNull(id, "Projectile ID must not be null");
@@ -32,7 +32,7 @@ public record ProjectileDefinition(
         maxPierces = Math.max(1, maxPierces);
         bounceMultiplier = Math.max(0.0, Math.min(bounceMultiplier, 1.5));
         turnRateDegrees = Math.max(0.1, Math.min(turnRateDegrees, 180.0));
-        callback = callback != null ? callback : new ProjectileCallback() {};
+        callback = callback != null ? callback : new IProjectileCallback() {};
     }
 
     public static Builder builder(String id) {
@@ -51,7 +51,7 @@ public record ProjectileDefinition(
         private double bounceMultiplier = 0.7;
         private boolean homing = false;
         private double turnRateDegrees = 15.0;
-        private ProjectileCallback callback = new ProjectileCallback() {};
+        private IProjectileCallback callback = new IProjectileCallback() {};
 
         private Builder(String id) {
             this.id = id;
@@ -107,7 +107,7 @@ public record ProjectileDefinition(
             return this;
         }
 
-        public Builder callback(ProjectileCallback callback) {
+        public Builder callback(IProjectileCallback callback) {
             this.callback = callback;
             return this;
         }

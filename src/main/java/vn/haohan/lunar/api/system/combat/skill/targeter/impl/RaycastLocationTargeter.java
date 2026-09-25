@@ -7,18 +7,18 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.ILocationTargeter;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Paper 1.21.1 Native Raycast Location Targeter.
+ * Paper 1.21.1 Native Raycast Location ITargeter.
  * Traces a ray along the caster's sight and returns the precise point of impact or maximum range location.
  * Syntax: {@code @RaycastLocation{distance=30;ignoreEntities=true;offset=-0.2}}
  */
-public final class RaycastLocationTargeter implements LocationTargeter {
+public final class RaycastLocationTargeter implements ILocationTargeter {
 
     @Override
     public Collection<Location> resolve(SkillCastContext context, Map<String, Object> parameters) {

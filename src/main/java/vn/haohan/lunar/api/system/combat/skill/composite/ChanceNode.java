@@ -10,12 +10,12 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Conditionally executes a child node based on a probabilistic roll (0.0 to 1.0).
  */
-public final class ChanceNode implements CompositeSkillNode {
+public final class ChanceNode implements ICompositeSkillNode {
 
     private final double chance;
-    private final CompositeSkillNode child;
+    private final ICompositeSkillNode child;
 
-    public ChanceNode(double chance, CompositeSkillNode child) {
+    public ChanceNode(double chance, ICompositeSkillNode child) {
         if (!Double.isFinite(chance) || chance < 0.0 || chance > 1.0) {
             throw new IllegalArgumentException("Chance must be between 0.0 and 1.0");
         }

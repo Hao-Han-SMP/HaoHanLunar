@@ -13,7 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import vn.haohan.lunar.api.manager.SpawnerManager;
+import vn.haohan.lunar.api.manager.ISpawnerManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.core.mob.LunarMobManager;
@@ -25,16 +25,16 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Centrally manages all active fixed spawners on the server.
  */
-public final class FixedSpawnerManager implements SpawnerManager, Listener {
+public final class FixedSpawnerManager implements ISpawnerManager, Listener {
 
     private static final NamespacedKey SPAWNER_ID_KEY = new NamespacedKey("haohan", "spawner_id");
 
     private final MobDefinitionRegistry mobDefinitions;
     private final LunarMobManager mobManager;
-    private final Map<String, LunarFixedSpawner> spawners = new ConcurrentHashMap<>();
+    private final Map<String, FixedSpawner> spawners = new ConcurrentHashMap<>();
 
-    private LunarFixedSpawner.SpawnerCallback customSpawnerCallback;
-    private LunarFixedSpawner.ProximityChecker customProximityChecker;
+    private FixedSpawner.ISpawnerCallback customSpawnerCallback;
+    private FixedSpawner.IProximityChecker customProximityChecker;
 
     public FixedSpawnerManager(MobDefinitionRegistry mobDefinitions, LunarMobManager mobManager) {
         this.mobDefinitions = mobDefinitions;
@@ -47,19 +47,19 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
 
     public void register(SpawnerDefinition definition) {
         Objects.requireNonNull(definition, "Spawner definition must not be null");
-        spawners.put(definition.id(), new LunarFixedSpawner(definition, mobDefinitions, mobManager));
+        spawners.put(definition.id(), new FixedSpawner(definition, mobDefinitions, mobManager));
     }
 
-    public void register(LunarFixedSpawner spawner) {
+    public void register(FixedSpawner spawner) {
         Objects.requireNonNull(spawner, "Spawner must not be null");
         spawners.put(spawner.id(), spawner);
     }
 
     public void replaceAll(java.util.Collection<SpawnerDefinition> definitions) {
         Objects.requireNonNull(definitions, "Spawner definitions must not be null");
-        Map<String, LunarFixedSpawner> newSpawners = new ConcurrentHashMap<>();
+        Map<String, FixedSpawner> newSpawners = new ConcurrentHashMap<>();
         for (SpawnerDefinition def : definitions) {
-            newSpawners.put(def.id(), new LunarFixedSpawner(def, mobDefinitions, mobManager));
+            newSpawners.put(def.id(), new FixedSpawner(def, mobDefinitions, mobManager));
         }
         spawners.clear();
         spawners.putAll(newSpawners);
@@ -70,41 +70,41 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
         return spawners.containsKey(id.trim().toLowerCase(Locale.ROOT));
     }
 
-    public Optional<LunarFixedSpawner> unregister(String id) {
+    public Optional<FixedSpawner> unregister(String id) {
         if (id == null) return Optional.empty();
         return Optional.ofNullable(spawners.remove(id.trim().toLowerCase(Locale.ROOT)));
     }
 
-    public Optional<LunarFixedSpawner> get(String id) {
+    public Optional<FixedSpawner> get(String id) {
         if (id == null) return Optional.empty();
         return Optional.ofNullable(spawners.get(id.trim().toLowerCase(Locale.ROOT)));
     }
 
-    public Map<String, LunarFixedSpawner> snapshot() {
+    public Map<String, FixedSpawner> snapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(spawners));
     }
 
-    public Map<String, LunarFixedSpawner.SpawnerState> captureAllStates() {
-        Map<String, LunarFixedSpawner.SpawnerState> states = new LinkedHashMap<>();
+    public Map<String, FixedSpawner.SpawnerState> captureAllStates() {
+        Map<String, FixedSpawner.SpawnerState> states = new LinkedHashMap<>();
         spawners.forEach((id, spawner) -> states.put(id, spawner.captureState()));
         return Collections.unmodifiableMap(states);
     }
 
-    public void restoreAllStates(Map<String, LunarFixedSpawner.SpawnerState> states) {
+    public void restoreAllStates(Map<String, FixedSpawner.SpawnerState> states) {
         if (states == null || states.isEmpty()) return;
         states.forEach((id, state) -> {
-            LunarFixedSpawner spawner = spawners.get(id.toLowerCase(Locale.ROOT));
+            FixedSpawner spawner = spawners.get(id.toLowerCase(Locale.ROOT));
             if (spawner != null) {
                 spawner.restoreState(state);
             }
         });
     }
 
-    public void setCustomSpawnerCallback(LunarFixedSpawner.SpawnerCallback callback) {
+    public void setCustomSpawnerCallback(FixedSpawner.ISpawnerCallback callback) {
         this.customSpawnerCallback = callback;
     }
 
-    public void setCustomProximityChecker(LunarFixedSpawner.ProximityChecker checker) {
+    public void setCustomProximityChecker(FixedSpawner.IProximityChecker checker) {
         this.customProximityChecker = checker;
     }
 
@@ -112,15 +112,15 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
      * Ticks all registered fixed spawners centrally on the server main thread.
      */
     public void tickAll(long tickNumber) {
-        LunarFixedSpawner.SpawnerCallback callback = customSpawnerCallback != null
+        FixedSpawner.ISpawnerCallback callback = customSpawnerCallback != null
                 ? customSpawnerCallback
                 : this::defaultSpawn;
 
-        LunarFixedSpawner.ProximityChecker proximity = customProximityChecker != null
+        FixedSpawner.IProximityChecker proximity = customProximityChecker != null
                 ? customProximityChecker
                 : this::defaultProximityCheck;
 
-        for (LunarFixedSpawner spawner : spawners.values()) {
+        for (FixedSpawner spawner : spawners.values()) {
             try {
                 spawner.tick(tickNumber, mobManager, callback, proximity);
             } catch (Throwable ignored) {
@@ -193,7 +193,7 @@ public final class FixedSpawnerManager implements SpawnerManager, Listener {
         }
     }
 
-    // --- SpawnerManager API Implementation ---
+    // --- ISpawnerManager API Implementation ---
     @Override
     public int activeSpawnerCount() {
         return spawners.size();

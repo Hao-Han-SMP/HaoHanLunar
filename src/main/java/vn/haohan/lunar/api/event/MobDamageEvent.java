@@ -5,7 +5,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.IMob;
 import vn.haohan.lunar.api.system.combat.DamageType;
 
 import java.util.Objects;
@@ -19,14 +19,14 @@ public final class MobDamageEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final Mob victim;
+    private final IMob victim;
     private final LivingEntity source;
     private final DamageType damageType;
     private final DamageCause cause;
     private double damage;
     private boolean cancelled;
 
-    public MobDamageEvent(Mob victim, LivingEntity source, DamageType damageType, DamageCause cause, double damage) {
+    public MobDamageEvent(IMob victim, LivingEntity source, DamageType damageType, DamageCause cause, double damage) {
         this.victim = Objects.requireNonNull(victim, "Victim must not be null");
         this.source = source;
         this.damageType = damageType != null ? damageType : DamageType.PHYSICAL;
@@ -39,7 +39,7 @@ public final class MobDamageEvent extends Event implements Cancellable {
      *
      * @return the victim mob
      */
-    public Mob victim() {
+    public IMob victim() {
         return victim;
     }
 

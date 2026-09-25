@@ -11,7 +11,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,7 +21,7 @@ import java.util.function.Predicate;
 /**
  * Manages active lunar beacon shields, ticking their visual fields and lifecycle events.
  */
-public final class BeaconShieldMechanic implements Listener, LunarSubSystem {
+public final class BeaconShieldMechanic implements Listener, ILunarSubSystem {
 
     private final List<BeaconShield> shields = new ArrayList<>();
     private final List<ItemDisplay> displays = new ArrayList<>();

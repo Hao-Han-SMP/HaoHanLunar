@@ -3,6 +3,7 @@ package vn.haohan.lunar.core.mob.ai;
 import org.bukkit.entity.Mob;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import vn.haohan.lunar.api.system.combat.threat.IThreatTable;
 import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.api.system.mob.ai.AIGoalEntry;
 import vn.haohan.lunar.api.system.mob.ai.AIGoalType;
@@ -69,7 +70,7 @@ public class MobGoalApplierTest {
     void testMobGoalApplierExecution() {
         List<String> actions = new ArrayList<>();
 
-        MobGoalApplier.GoalExecutor mockExecutor = new MobGoalApplier.GoalExecutor() {
+        MobGoalApplier.IGoalExecutor mockExecutor = new MobGoalApplier.IGoalExecutor() {
             @Override
             public void clearGoals(Mob mob) {
                 actions.add("clearGoals");
@@ -91,7 +92,7 @@ public class MobGoalApplierTest {
             }
 
             @Override
-            public void addTarget(Mob mob, int priority, AIGoalEntry entry, ThreatTable threatTable) {
+            public void addTarget(Mob mob, int priority, AIGoalEntry entry, IThreatTable threatTable) {
                 actions.add("addTargetWithThreat:" + priority + ":" + entry.type() + ":" + (threatTable != null));
             }
         };

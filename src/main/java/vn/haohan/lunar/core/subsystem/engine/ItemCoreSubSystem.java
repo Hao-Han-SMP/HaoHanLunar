@@ -1,13 +1,13 @@
 package vn.haohan.lunar.core.subsystem.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 import vn.haohan.lunar.core.system.item.LunarItems;
 
 /**
  * Subsystem registering custom item definitions and handlers with the external HaoHanItemCore runtime.
  */
-public final class ItemCoreSubSystem implements LunarSubSystem {
+public final class ItemCoreSubSystem implements ILunarSubSystem {
 
     @Override
     public String name() {

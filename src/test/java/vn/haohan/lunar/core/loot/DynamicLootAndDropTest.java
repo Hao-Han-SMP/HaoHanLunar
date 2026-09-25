@@ -275,9 +275,9 @@ public class DynamicLootAndDropTest {
         ItemStack item2 = new MockItemStack(Material.EMERALD, 5);
         List<ItemStack> original = new ArrayList<>(List.of(item1, item2));
 
-        vn.haohan.lunar.api.system.mob.Mob mockMob = (vn.haohan.lunar.api.system.mob.Mob) java.lang.reflect.Proxy.newProxyInstance(
-                vn.haohan.lunar.api.system.mob.Mob.class.getClassLoader(),
-                new Class<?>[]{vn.haohan.lunar.api.system.mob.Mob.class},
+        vn.haohan.lunar.api.system.mob.IMob mockMob = (vn.haohan.lunar.api.system.mob.IMob) java.lang.reflect.Proxy.newProxyInstance(
+                vn.haohan.lunar.api.system.mob.IMob.class.getClassLoader(),
+                new Class<?>[]{vn.haohan.lunar.api.system.mob.IMob.class},
                 (p, m, a) -> null);
         vn.haohan.lunar.api.event.LootGenerateEvent event = new vn.haohan.lunar.api.event.LootGenerateEvent(mockMob, null, original);
         assertFalse(event.isCancelled());

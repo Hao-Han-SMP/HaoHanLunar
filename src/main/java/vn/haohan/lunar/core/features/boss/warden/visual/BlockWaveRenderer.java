@@ -14,7 +14,7 @@ import org.bukkit.util.Vector;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.system.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.core.features.boss.warden.util.WardenLocationUtil;
 
@@ -176,7 +176,7 @@ public final class BlockWaveRenderer {
             WardenEntityManager.registerTempEntity(bd);
 
             final int safeTotalTicks = Math.max(6, totalTicks);
-            final double safeRiseFraction = MathUtil.clamp(riseFraction, 0.15, 0.38);
+            final double safeRiseFraction = Math.clamp(riseFraction, 0.15, 0.38);
             final Quaternionf closestFlatTarget = findClosestFlatOrientation(maxRotation);
 
             new BukkitRunnable() {

@@ -17,9 +17,9 @@ public final class AuraScheduler {
     /**
      * Applies an aura to the specified attachment point according to the aura's configured StackMode.
      */
-    public ActiveAura applyAura(AuraDefinition definition, AuraAttachment attachment, UUID ownerId, long currentTick) {
+    public ActiveAura applyAura(AuraDefinition definition, IAuraAttachment attachment, UUID ownerId, long currentTick) {
         Objects.requireNonNull(definition, "AuraDefinition must not be null");
-        Objects.requireNonNull(attachment, "AuraAttachment must not be null");
+        Objects.requireNonNull(attachment, "IAuraAttachment must not be null");
 
         String key = buildKey(attachment.attachmentKey(), definition.id());
         ActiveAura existing = auras.get(key);
@@ -73,7 +73,7 @@ public final class AuraScheduler {
         }
     }
 
-    public Optional<ActiveAura> getActive(AuraAttachment attachment, String auraId) {
+    public Optional<ActiveAura> getActive(IAuraAttachment attachment, String auraId) {
         if (attachment == null || auraId == null) return Optional.empty();
         return Optional.ofNullable(auras.get(buildKey(attachment.attachmentKey(), auraId)));
     }

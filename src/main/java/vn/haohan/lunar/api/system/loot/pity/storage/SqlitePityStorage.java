@@ -9,7 +9,7 @@ import java.util.*;
 /**
  * SQLite embedded persistence provider for player Pity counters.
  */
-public final class SqlitePityStorage implements PityStorage {
+public final class SqlitePityStorage implements IPityStorage {
 
     private final String jdbcUrl;
     private Connection connection;

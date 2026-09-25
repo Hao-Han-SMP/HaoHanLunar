@@ -154,7 +154,7 @@ class DialogueAndSpeechBubbleTest {
     }
 
     @Test
-    @DisplayName("Mechanic speak/dialogue replaces placeholders and registers session")
+    @DisplayName("IMechanic speak/dialogue replaces placeholders and registers session")
     void testSpeakMechanicWithPlaceholders() {
         ActiveLunarMob mob = createDummyMob("lunar_boss", "Moon Guardian");
         Player mockPlayer = (Player) Proxy.newProxyInstance(Player.class.getClassLoader(),
@@ -179,7 +179,7 @@ class DialogueAndSpeechBubbleTest {
     }
 
     @Test
-    @DisplayName("Mechanic dialogue_prompt parses options and sends clickable prompts to target players")
+    @DisplayName("IMechanic dialogue_prompt parses options and sends clickable prompts to target players")
     void testDialoguePromptMechanic() {
         ActiveLunarMob mob = createDummyMob("alien_scout", "Alien Scout");
         AtomicReference<Component> receivedMessage = new AtomicReference<>();

@@ -88,11 +88,11 @@ class LunarFixedSpawnerTest {
                 .activationRange(0.0) // always active
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(def);
+        FixedSpawner spawner = new FixedSpawner(def);
         AtomicInteger spawnCalls = new AtomicInteger(0);
         UUID dummyMobId = UUID.randomUUID();
 
-        LunarFixedSpawner.SpawnerCallback callback = (mobId, loc, sId) -> {
+        FixedSpawner.ISpawnerCallback callback = (mobId, loc, sId) -> {
             spawnCalls.incrementAndGet();
             return java.util.Optional.of(dummyMobId);
         };
@@ -134,11 +134,11 @@ class LunarFixedSpawnerTest {
                 .cooldownSeconds(1)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(def);
+        FixedSpawner spawner = new FixedSpawner(def);
         spawner.setCooldownTicks(0);
 
         List<UUID> spawned = new ArrayList<>();
-        LunarFixedSpawner.SpawnerCallback callback = (mobId, loc, sId) -> {
+        FixedSpawner.ISpawnerCallback callback = (mobId, loc, sId) -> {
             UUID id = UUID.randomUUID();
             spawned.add(id);
             return java.util.Optional.of(id);
@@ -165,7 +165,7 @@ class LunarFixedSpawnerTest {
                 .cooldownSeconds(10)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(def);
+        FixedSpawner spawner = new FixedSpawner(def);
         int initialCooldown = spawner.currentCooldownTicks();
 
         // Proximity checker returns false (no player within 30 blocks)
@@ -184,7 +184,7 @@ class LunarFixedSpawnerTest {
                 .resetThreatOnLeash(true)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(def);
+        FixedSpawner spawner = new FixedSpawner(def);
 
         // Mob entity placed 80 blocks away (exceeds 50 block leash range)
         AtomicBoolean teleported = new AtomicBoolean(false);
@@ -218,7 +218,7 @@ class LunarFixedSpawnerTest {
                 .cooldownSeconds(1)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(def);
+        FixedSpawner spawner = new FixedSpawner(def);
         spawner.setCooldownTicks(0);
         manager.register(spawner);
 

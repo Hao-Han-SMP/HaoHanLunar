@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.event;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.IMob;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 
 import java.util.Objects;
@@ -16,12 +16,12 @@ public final class SkillPostCastEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final Mob caster;
+    private final IMob caster;
     private final SkillDefinition skill;
     private final LivingEntity target;
     private final boolean success;
 
-    public SkillPostCastEvent(Mob caster, SkillDefinition skill, LivingEntity target, boolean success) {
+    public SkillPostCastEvent(IMob caster, SkillDefinition skill, LivingEntity target, boolean success) {
         this.caster = Objects.requireNonNull(caster, "Caster must not be null");
         this.skill = Objects.requireNonNull(skill, "Skill must not be null");
         this.target = target;
@@ -33,7 +33,7 @@ public final class SkillPostCastEvent extends Event {
      *
      * @return the casting mob
      */
-    public Mob caster() {
+    public IMob caster() {
         return caster;
     }
 

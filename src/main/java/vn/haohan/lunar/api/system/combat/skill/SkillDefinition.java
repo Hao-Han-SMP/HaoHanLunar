@@ -29,9 +29,9 @@ public final class SkillDefinition {
             throw new IllegalArgumentException("Skill cooldown must not be negative");
         }
         this.cooldownTicks = cooldownTicks;
-        Objects.requireNonNull(mechanicReferences, "Mechanic references must not be null");
+        Objects.requireNonNull(mechanicReferences, "IMechanic references must not be null");
         this.mechanicReferences = List.copyOf(mechanicReferences.stream()
-                .map(value -> requireText(value, "Mechanic reference"))
+                .map(value -> requireText(value, "IMechanic reference"))
                 .toList());
         this.cooldownGroup = cooldownGroup != null && !cooldownGroup.isBlank() ? cooldownGroup.trim().toUpperCase(Locale.ROOT) : null;
         this.groupCooldownTicks = Math.max(0, groupCooldownTicks);

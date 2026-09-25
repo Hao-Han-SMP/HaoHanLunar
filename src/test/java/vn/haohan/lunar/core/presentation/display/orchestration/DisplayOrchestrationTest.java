@@ -71,7 +71,7 @@ public class DisplayOrchestrationTest {
         DisplayEntityManager manager = new DisplayEntityManager();
         AtomicInteger removedCount = new AtomicInteger(0);
 
-        manager.setEntityHandler(new DisplayEntityManager.DisplayEntityHandler() {
+        manager.setEntityHandler(new DisplayEntityManager.IDisplayEntityHandler() {
             @Override
             public Display spawn(Location location, DisplaySpawnOptions options) {
                 return null;

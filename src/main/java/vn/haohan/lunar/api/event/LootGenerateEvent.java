@@ -5,7 +5,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.IMob;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +20,13 @@ public final class LootGenerateEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final Mob mob;
+    private final IMob mob;
     private final Player recipient;
     private final List<ItemStack> drops;
     private boolean cancelled;
 
-    public LootGenerateEvent(Mob mob, Player recipient, List<ItemStack> drops) {
-        this.mob = Objects.requireNonNull(mob, "Mob must not be null");
+    public LootGenerateEvent(IMob mob, Player recipient, List<ItemStack> drops) {
+        this.mob = Objects.requireNonNull(mob, "IMob must not be null");
         this.recipient = recipient;
         this.drops = drops != null ? new ArrayList<>(drops) : new ArrayList<>();
     }
@@ -36,7 +36,7 @@ public final class LootGenerateEvent extends Event implements Cancellable {
      *
      * @return the mob instance
      */
-    public Mob mob() {
+    public IMob mob() {
         return mob;
     }
 

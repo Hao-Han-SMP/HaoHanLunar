@@ -9,7 +9,6 @@ import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionContext;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
@@ -19,11 +18,9 @@ import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterRegistry;
 import vn.haohan.lunar.api.system.mob.ai.AIGoalType;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Mob;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.loot.DropEntry;
-import vn.haohan.lunar.api.system.loot.DropMetadata;
 import vn.haohan.lunar.api.system.loot.DropRollResult;
 import vn.haohan.lunar.api.system.loot.DropTableDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -31,9 +28,8 @@ import vn.haohan.lunar.api.system.mob.MobOptionDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.mob.options.MobOptions;
 import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
-import vn.haohan.lunar.api.system.spawner.fixed.LunarFixedSpawner;
+import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawner;
 import vn.haohan.lunar.api.system.spawner.fixed.SpawnerDefinition;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import java.lang.reflect.Proxy;
@@ -132,7 +128,7 @@ class BetterMobsEnhancementsTest {
                 .warmupSeconds(10)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(def);
+        FixedSpawner spawner = new FixedSpawner(def);
         UUID mob1 = UUID.randomUUID();
         UUID mob2 = UUID.randomUUID();
         spawner.attachTrackedMob(mob1);
@@ -140,13 +136,13 @@ class BetterMobsEnhancementsTest {
         spawner.setCooldownTicks(400);
         spawner.setWarmupTicks(50);
 
-        LunarFixedSpawner.SpawnerState state = spawner.captureState();
+        FixedSpawner.SpawnerState state = spawner.captureState();
         assertEquals(400, state.cooldownTicks());
         assertEquals(50, state.warmupTicks());
         assertEquals(2, state.trackedMobs().size());
 
         // Create new spawner and restore
-        LunarFixedSpawner newSpawner = new LunarFixedSpawner(def);
+        FixedSpawner newSpawner = new FixedSpawner(def);
         newSpawner.restoreState(state);
 
         assertEquals(400, newSpawner.currentCooldownTicks());
@@ -159,7 +155,7 @@ class BetterMobsEnhancementsTest {
         FixedSpawnerManager manager = new FixedSpawnerManager();
         manager.register(newSpawner);
 
-        Map<String, LunarFixedSpawner.SpawnerState> captured = manager.captureAllStates();
+        Map<String, FixedSpawner.SpawnerState> captured = manager.captureAllStates();
         assertTrue(captured.containsKey("dungeon_spawner"));
 
         manager.restoreAllStates(captured);

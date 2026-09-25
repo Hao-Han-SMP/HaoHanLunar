@@ -50,7 +50,7 @@ class MobCoreSubSystemTest {
         MobCoreSubSystem subSystem = new MobCoreSubSystem();
         subSystem.init(null);
 
-        assertNotNull(subSystem.getMobManager(), "MobManager must be initialized");
+        assertNotNull(subSystem.getMobManager(), "IMobManager must be initialized");
         assertNotNull(subSystem.getMobRegistry(), "MobRegistry must be initialized");
         assertNotNull(subSystem.getSkillRegistry(), "SkillRegistry must be initialized");
         assertNotNull(subSystem.getDamagePipeline(), "DamagePipeline must be initialized");

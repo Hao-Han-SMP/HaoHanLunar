@@ -10,17 +10,17 @@ import java.util.Objects;
  * Executes a sequence of skill nodes in order.
  * Stops execution immediately if the cancellation token is tripped or duration expires.
  */
-public final class SequenceNode implements CompositeSkillNode {
+public final class SequenceNode implements ICompositeSkillNode {
 
-    private final List<CompositeSkillNode> children;
+    private final List<ICompositeSkillNode> children;
     private final boolean stopOnFailure;
     private final boolean cloneContextPerChild;
 
-    public SequenceNode(List<CompositeSkillNode> children) {
+    public SequenceNode(List<ICompositeSkillNode> children) {
         this(children, true, false);
     }
 
-    public SequenceNode(List<CompositeSkillNode> children, boolean stopOnFailure, boolean cloneContextPerChild) {
+    public SequenceNode(List<ICompositeSkillNode> children, boolean stopOnFailure, boolean cloneContextPerChild) {
         this.children = List.copyOf(Objects.requireNonNull(children, "Children must not be null"));
         this.stopOnFailure = stopOnFailure;
         this.cloneContextPerChild = cloneContextPerChild;
@@ -31,7 +31,7 @@ public final class SequenceNode implements CompositeSkillNode {
         if (context.isCancelled()) {
             return CompositeResult.failure("Skill cancelled");
         }
-        for (CompositeSkillNode child : children) {
+        for (ICompositeSkillNode child : children) {
             if (context.isCancelled()) {
                 context.setLastStepSuccess(false);
                 return CompositeResult.failure("Skill cancelled during sequence execution");

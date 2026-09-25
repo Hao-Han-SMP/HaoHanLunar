@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.aura.ActiveAura;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraComponent;
+import vn.haohan.lunar.api.system.combat.skill.aura.IAuraComponent;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,7 +14,7 @@ import java.util.UUID;
 /**
  * Highlights living entities within the aura radius with the Minecraft glowing outline effect.
  */
-public final class GlowAuraComponent implements AuraComponent {
+public final class GlowAuraComponent implements IAuraComponent {
 
     private final double radius;
     private final Set<LivingEntity> currentlyGlowing = new HashSet<>();

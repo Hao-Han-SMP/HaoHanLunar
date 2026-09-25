@@ -15,7 +15,7 @@ import java.util.Random;
 public final class ClusterGenerator {
 
     @FunctionalInterface
-    public interface MobSpawnDelegate {
+    public interface IMobSpawnDelegate {
         ActiveMob spawn(String mobId, Location location);
     }
 
@@ -44,7 +44,7 @@ public final class ClusterGenerator {
             Location center,
             int localMobCap,
             int currentEntityCount,
-            MobSpawnDelegate spawner
+            IMobSpawnDelegate spawner
     ) {
         Objects.requireNonNull(definition, "Definition must not be null");
         Objects.requireNonNull(center, "Center location must not be null");

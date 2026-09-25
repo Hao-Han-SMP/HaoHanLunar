@@ -5,7 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.SinglePin;
 
@@ -15,7 +15,7 @@ import java.util.*;
  * Resolves entities within a given radius around a named SinglePin.
  * Syntax: {@code @EntitiesNearPin{pin=CENTER_CRYSTAL;r=8}}
  */
-public final class EntitiesNearPinTargeter implements EntityTargeter {
+public final class EntitiesNearPinTargeter implements IEntityTargeter {
 
     @Override
     public String name() {

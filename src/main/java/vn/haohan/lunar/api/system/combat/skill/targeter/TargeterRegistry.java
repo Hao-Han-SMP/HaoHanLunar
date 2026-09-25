@@ -18,31 +18,31 @@ public final class TargeterRegistry {
 
     private static final Pattern INLINE_TARGETER_PATTERN = Pattern.compile("^@?([a-zA-Z0-9_-]+)(?:\\{(.*)\\})?$");
 
-    private final Map<String, EntityTargeter> entityTargeters = new ConcurrentHashMap<>();
-    private final Map<String, LocationTargeter> locationTargeters = new ConcurrentHashMap<>();
+    private final Map<String, IEntityTargeter> entityTargeters = new ConcurrentHashMap<>();
+    private final Map<String, ILocationTargeter> locationTargeters = new ConcurrentHashMap<>();
 
     public TargeterRegistry() {
         registerBuiltins();
     }
 
-    public void registerEntityTargeter(String name, EntityTargeter targeter) {
-        Objects.requireNonNull(targeter, "Targeter must not be null");
+    public void registerEntityTargeter(String name, IEntityTargeter targeter) {
+        Objects.requireNonNull(targeter, "ITargeter must not be null");
         String key = normalizeKey(name);
         entityTargeters.put(key, targeter);
     }
 
-    public void registerLocationTargeter(String name, LocationTargeter targeter) {
-        Objects.requireNonNull(targeter, "Targeter must not be null");
+    public void registerLocationTargeter(String name, ILocationTargeter targeter) {
+        Objects.requireNonNull(targeter, "ITargeter must not be null");
         String key = normalizeKey(name);
         locationTargeters.put(key, targeter);
     }
 
-    public Optional<EntityTargeter> getEntityTargeter(String name) {
+    public Optional<IEntityTargeter> getEntityTargeter(String name) {
         if (name == null || name.isBlank()) return Optional.empty();
         return Optional.ofNullable(entityTargeters.get(normalizeKey(name)));
     }
 
-    public Optional<LocationTargeter> getLocationTargeter(String name) {
+    public Optional<ILocationTargeter> getLocationTargeter(String name) {
         if (name == null || name.isBlank()) return Optional.empty();
         return Optional.ofNullable(locationTargeters.get(normalizeKey(name)));
     }
@@ -68,7 +68,7 @@ public final class TargeterRegistry {
      */
     public Collection<LivingEntity> resolveEntities(String inlineTargeter, SkillCastContext context) {
         ParsedTargeterCall parsed = parse(inlineTargeter);
-        EntityTargeter targeter = getEntityTargeter(parsed.targeterName()).orElse(null);
+        IEntityTargeter targeter = getEntityTargeter(parsed.targeterName()).orElse(null);
         if (targeter == null) {
             return List.of();
         }
@@ -80,7 +80,7 @@ public final class TargeterRegistry {
      */
     public Collection<Location> resolveLocations(String inlineTargeter, SkillCastContext context) {
         ParsedTargeterCall parsed = parse(inlineTargeter);
-        LocationTargeter targeter = getLocationTargeter(parsed.targeterName()).orElse(null);
+        ILocationTargeter targeter = getLocationTargeter(parsed.targeterName()).orElse(null);
         if (targeter == null) {
             return List.of();
         }
@@ -110,116 +110,116 @@ public final class TargeterRegistry {
         return new ParsedTargeterCall(name, params);
     }
 
-    public Map<String, EntityTargeter> entityTargetersSnapshot() {
+    public Map<String, IEntityTargeter> entityTargetersSnapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(entityTargeters));
     }
 
-    public Map<String, LocationTargeter> locationTargetersSnapshot() {
+    public Map<String, ILocationTargeter> locationTargetersSnapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(locationTargeters));
     }
 
     private void registerBuiltins() {
         // Entity targeters
-        EntityTargeter self = new SelfTargeter();
+        IEntityTargeter self = new SelfTargeter();
         registerEntityTargeter("self", self);
 
-        EntityTargeter target = new TargetTargeter();
+        IEntityTargeter target = new TargetTargeter();
         registerEntityTargeter("target", target);
 
-        EntityTargeter trigger = new TriggerTargeter();
+        IEntityTargeter trigger = new TriggerTargeter();
         registerEntityTargeter("trigger", trigger);
 
-        EntityTargeter playersInRadius = new PlayersInRadiusTargeter();
+        IEntityTargeter playersInRadius = new PlayersInRadiusTargeter();
         registerEntityTargeter("players_in_radius", playersInRadius);
         registerEntityTargeter("playersinradius", playersInRadius);
         registerEntityTargeter("pir", playersInRadius);
 
-        EntityTargeter livingEntitiesInRadius = new LivingEntitiesInRadiusTargeter();
+        IEntityTargeter livingEntitiesInRadius = new LivingEntitiesInRadiusTargeter();
         registerEntityTargeter("living_entities_in_radius", livingEntitiesInRadius);
         registerEntityTargeter("livingentitiesinradius", livingEntitiesInRadius);
         registerEntityTargeter("eir", livingEntitiesInRadius);
 
-        EntityTargeter randomPlayer = new RandomPlayerTargeter();
+        IEntityTargeter randomPlayer = new RandomPlayerTargeter();
         registerEntityTargeter("random_player", randomPlayer);
         registerEntityTargeter("randomplayer", randomPlayer);
 
-        EntityTargeter cone = new ConeTargeter();
+        IEntityTargeter cone = new ConeTargeter();
         registerEntityTargeter("cone", cone);
 
-        EntityTargeter ring = new RingTargeter();
+        IEntityTargeter ring = new RingTargeter();
         registerEntityTargeter("ring", ring);
 
-        EntityTargeter line = new LineTargeter();
+        IEntityTargeter line = new LineTargeter();
         registerEntityTargeter("line", line);
 
-        EntityTargeter sphere = new SphereTargeter();
+        IEntityTargeter sphere = new SphereTargeter();
         registerEntityTargeter("sphere", sphere);
 
-        EntityTargeter cylinder = new CylinderTargeter();
+        IEntityTargeter cylinder = new CylinderTargeter();
         registerEntityTargeter("cylinder", cylinder);
 
-        EntityTargeter threat = new ThreatTableTargeter();
+        IEntityTargeter threat = new ThreatTableTargeter();
         registerEntityTargeter("threat_table_targets", threat);
         registerEntityTargeter("threattabletargets", threat);
         registerEntityTargeter("threattargets", threat);
 
-        EntityTargeter threatTop = new ThreatTopTargeter();
+        IEntityTargeter threatTop = new ThreatTopTargeter();
         registerEntityTargeter("threat_top", threatTop);
         registerEntityTargeter("threattop", threatTop);
         registerEntityTargeter("threat_table_top", threatTop);
         registerEntityTargeter("threattabletop", threatTop);
 
-        EntityTargeter behind = new BehindTargeter();
+        IEntityTargeter behind = new BehindTargeter();
         registerEntityTargeter("behind", behind);
 
-        EntityTargeter inFront = new InFrontTargeter();
+        IEntityTargeter inFront = new InFrontTargeter();
         registerEntityTargeter("infront", inFront);
         registerEntityTargeter("in_front", inFront);
 
-        EntityTargeter nearestPlayer = new NearestPlayerTargeter();
+        IEntityTargeter nearestPlayer = new NearestPlayerTargeter();
         registerEntityTargeter("nearest_player", nearestPlayer);
         registerEntityTargeter("nearestplayer", nearestPlayer);
         registerEntityTargeter("pirnearest", nearestPlayer);
 
-        EntityTargeter audience = new AudienceTargeter();
+        IEntityTargeter audience = new AudienceTargeter();
         registerEntityTargeter("audience", audience);
         registerEntityTargeter("skillaudience", audience);
 
-        EntityTargeter raycast = new RaycastTargeter();
+        IEntityTargeter raycast = new RaycastTargeter();
         registerEntityTargeter("raycast", raycast);
         registerEntityTargeter("ray", raycast);
         registerEntityTargeter("eyeraycast", raycast);
 
         // Location targeters
-        LocationTargeter origin = new OriginTargeter();
+        ILocationTargeter origin = new OriginTargeter();
         registerLocationTargeter("origin", origin);
 
-        LocationTargeter location = new LocationTargeterImpl();
+        ILocationTargeter location = new LocationTargeterImpl();
         registerLocationTargeter("location", location);
 
-        LocationTargeter boneLocation = new BoneLocationTargeter();
+        ILocationTargeter boneLocation = new BoneLocationTargeter();
         registerLocationTargeter("bonelocation", boneLocation);
         registerLocationTargeter("bone", boneLocation);
 
-        LocationTargeter highestBlock = new HighestBlockTargeter();
+        ILocationTargeter highestBlock = new HighestBlockTargeter();
         registerLocationTargeter("highest_block", highestBlock);
         registerLocationTargeter("highestblock", highestBlock);
 
-        LocationTargeter raycastLocation = new RaycastLocationTargeter();
+        ILocationTargeter raycastLocation = new RaycastLocationTargeter();
         registerLocationTargeter("raycast_location", raycastLocation);
         registerLocationTargeter("raycastlocation", raycastLocation);
         registerLocationTargeter("raylocation", raycastLocation);
 
         // P20 Pin Targeters
-        EntityTargeter entitiesNearPin = new EntitiesNearPinTargeter();
+        IEntityTargeter entitiesNearPin = new EntitiesNearPinTargeter();
         registerEntityTargeter("entities_near_pin", entitiesNearPin);
         registerEntityTargeter("entitiesnearpin", entitiesNearPin);
 
-        LocationTargeter blocksInPinRegion = new BlocksInPinRegionTargeter();
+        ILocationTargeter blocksInPinRegion = new BlocksInPinRegionTargeter();
         registerLocationTargeter("blocks_in_pin_region", blocksInPinRegion);
         registerLocationTargeter("blocksinpinregion", blocksInPinRegion);
 
-        LocationTargeter pinLocation = new PinTargeter();
+        ILocationTargeter pinLocation = new PinTargeter();
         registerLocationTargeter("pin", pinLocation);
         registerLocationTargeter("spatial_pin", pinLocation);
         registerLocationTargeter("spatialpin", pinLocation);
@@ -268,7 +268,7 @@ public final class TargeterRegistry {
 
     public record ParsedTargeterCall(String targeterName, Map<String, Object> parameters) {
         public ParsedTargeterCall {
-            Objects.requireNonNull(targeterName, "Targeter name must not be null");
+            Objects.requireNonNull(targeterName, "ITargeter name must not be null");
             parameters = Map.copyOf(Objects.requireNonNull(parameters, "Parameters must not be null"));
         }
     }

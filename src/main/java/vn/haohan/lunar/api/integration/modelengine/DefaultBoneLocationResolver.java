@@ -8,15 +8,15 @@ import org.bukkit.entity.LivingEntity;
  * Standard ModelEngine 4 bone location resolver with safe reflection/soft-dependency guards.
  * Automatically falls back to entity eye or root location without throwing exceptions.
  */
-public class DefaultBoneLocationResolver implements BoneLocationResolver {
+public class DefaultBoneLocationResolver implements IBoneLocationResolver {
 
-    private static volatile BoneLocationResolver instance = new DefaultBoneLocationResolver();
+    private static volatile IBoneLocationResolver instance = new DefaultBoneLocationResolver();
 
-    public static BoneLocationResolver getInstance() {
+    public static IBoneLocationResolver getInstance() {
         return instance;
     }
 
-    public static void setInstance(BoneLocationResolver customResolver) {
+    public static void setInstance(IBoneLocationResolver customResolver) {
         instance = customResolver != null ? customResolver : new DefaultBoneLocationResolver();
     }
 

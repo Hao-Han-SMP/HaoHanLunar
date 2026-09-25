@@ -138,7 +138,7 @@ class Phase8BossPresentationTest {
     @Test
     void testHaoHanDisplayUIProviderDelegation() {
         AtomicBoolean providerCalled = new AtomicBoolean(false);
-        HaoHanDisplayUIBridge.DisplayUIProvider mockProvider = new HaoHanDisplayUIBridge.DisplayUIProvider() {
+        HaoHanDisplayUIBridge.IDisplayUIProvider mockProvider = new HaoHanDisplayUIBridge.IDisplayUIProvider() {
             @Override
             public boolean showSpeechBubble(vn.haohan.lunar.core.subsystem.mob.ActiveMob mob, HaoHanDisplayUIBridge.BubbleOptions options) {
                 providerCalled.set(true);

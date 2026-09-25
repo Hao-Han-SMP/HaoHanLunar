@@ -11,12 +11,12 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 
 import java.util.*;
 
 /** Spreads the lunar beacon's surface conversion as a noisy, staged wave. */
-public final class LunarSurfaceSpreadMechanic implements Listener, LunarSubSystem {
+public final class LunarSurfaceSpreadMechanic implements Listener, ILunarSubSystem {
 
     private static final List<Stage> STAGES = List.of(
             new Stage(Material.STONE, Set.of(Material.STONE, Material.DEEPSLATE, Material.TUFF,

@@ -18,9 +18,9 @@ public final class WardenSkillRegistry {
     public static final String THRUST_FLING = "thrust_fling";
     public static final String PURSUIT = "pursuit";
 
-    private final Map<String, WardenSkillInvoker> skills = new LinkedHashMap<>();
+    private final Map<String, IWardenSkillInvoker> skills = new LinkedHashMap<>();
 
-    public WardenSkillRegistry(WardenSkillInvoker invoker) {
+    public WardenSkillRegistry(IWardenSkillInvoker invoker) {
         Objects.requireNonNull(invoker, "Warden skill invoker must not be null");
         for (String id : skillIds()) skills.put(id, (ignored, context, parameters) -> invoker.invoke(id, context, parameters));
     }
@@ -30,13 +30,13 @@ public final class WardenSkillRegistry {
     }
 
     public boolean cast(String skillId, SkillCastContext context, Map<String, Object> parameters) {
-        WardenSkillInvoker skill = skills.get(normalize(skillId));
+        IWardenSkillInvoker skill = skills.get(normalize(skillId));
         if (skill == null || context == null || context.isCancelled()) return false;
         skill.invoke(normalize(skillId), context, Map.copyOf(Objects.requireNonNull(parameters, "Skill parameters must not be null")));
         return !context.isCancelled();
     }
 
-    public Map<String, WardenSkillInvoker> snapshot() {
+    public Map<String, IWardenSkillInvoker> snapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(skills));
     }
 
@@ -51,7 +51,7 @@ public final class WardenSkillRegistry {
     }
 
     @FunctionalInterface
-    public interface WardenSkillInvoker {
+    public interface IWardenSkillInvoker {
         void invoke(String skillId, SkillCastContext context, Map<String, Object> parameters);
     }
 }

@@ -5,7 +5,7 @@ import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
 import java.util.*;
@@ -15,7 +15,7 @@ import java.util.*;
  * Excludes dead, offline, Spectator and Creative players.
  * Caps radius at {@link TargeterFilter#MAX_RADIUS} blocks.
  */
-public final class PlayersInRadiusTargeter implements EntityTargeter {
+public final class PlayersInRadiusTargeter implements IEntityTargeter {
 
     @Override
     public String name() {

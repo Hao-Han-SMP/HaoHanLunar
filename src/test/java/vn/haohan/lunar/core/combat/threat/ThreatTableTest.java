@@ -133,15 +133,18 @@ class ThreatTableTest {
         LivingEntity shooter = mockEntity(shooterUuid);
         Arrow projectile = mockArrow(shooter);
 
+        // Record direct damage
+        threatManager.recordDamage(mobEntity, shooter, 50.0, 100L);
+
         // Record projectile damage
         threatManager.recordDamage(mobEntity, projectile, 25.0, 100L);
 
         ThreatTable mobTable = threatManager.get(mobUuid).orElseThrow();
-        assertEquals(25.0, mobTable.getThreat(shooterUuid), 0.001);
+        assertEquals(75.0, mobTable.getThreat(shooterUuid), 0.001);
 
         // Player quit removes target
         Player mockPlayer = mockPlayer(shooterUuid, "Sniper");
-        PlayerQuitEvent quitEvent = new PlayerQuitEvent(mockPlayer, (net.kyori.adventure.text.Component) null);
+        PlayerQuitEvent quitEvent = new PlayerQuitEvent(mockPlayer, (net.kyori.adventure.text.Component) null, PlayerQuitEvent.QuitReason.DISCONNECTED);
         threatManager.onPlayerQuit(quitEvent);
 
         assertEquals(0.0, mobTable.getThreat(shooterUuid), 0.001);

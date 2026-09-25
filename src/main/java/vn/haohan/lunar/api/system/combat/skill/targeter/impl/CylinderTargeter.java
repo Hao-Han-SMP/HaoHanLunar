@@ -5,7 +5,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargetFilter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
@@ -18,7 +18,7 @@ import java.util.Map;
  * Selects targets in a vertical cylinder (e.g. lightning strike column, blizzard vortex).
  * Syntax: {@code @Cylinder{radius=10;height=6}}
  */
-public final class CylinderTargeter implements EntityTargeter {
+public final class CylinderTargeter implements IEntityTargeter {
 
     @Override
     public Collection<LivingEntity> resolve(SkillCastContext context, Map<String, Object> parameters) {

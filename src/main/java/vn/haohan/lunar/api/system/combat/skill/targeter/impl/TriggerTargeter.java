@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.system.combat.skill.targeter.impl;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
 import java.util.Collection;
@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Targets the entity that triggered the skill event.
  */
-public final class TriggerTargeter implements EntityTargeter {
+public final class TriggerTargeter implements IEntityTargeter {
 
     @Override
     public String name() {

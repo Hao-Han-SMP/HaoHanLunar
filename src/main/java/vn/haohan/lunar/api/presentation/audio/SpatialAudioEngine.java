@@ -1,6 +1,9 @@
 package vn.haohan.lunar.api.presentation.audio;
 
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
+import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
@@ -155,6 +158,32 @@ public final class SpatialAudioEngine {
         };
 
         return (float) Math.max(0.0, Math.min(baseVolume, baseVolume * factor));
+    }
+
+    /**
+     * Safely resolves a {@link Sound} from a Bukkit constant name (e.g. "BLOCK_GRAVEL_BREAK")
+     * or a namespaced sound key (e.g. "minecraft:block.gravel.break" or "block.gravel.break").
+     *
+     * @param soundName the sound name or key
+     * @return the Sound instance, or null if unresolvable
+     */
+    public static Sound resolveSound(String soundName) {
+        if (soundName == null || soundName.isBlank()) return null;
+        String clean = soundName.trim();
+        try {
+            NamespacedKey key = NamespacedKey.fromString(clean.toLowerCase(Locale.ROOT));
+            if (key != null) {
+                Sound sound = Registry.SOUND_EVENT.get(key);
+                if (sound != null) return sound;
+            }
+        } catch (Throwable ignored) {
+            // Registry may not be available in headless test environments
+        }
+        try {
+            return (Sound) Sound.class.getField(clean.toUpperCase(Locale.ROOT)).get(null);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     public int activeSequenceCount() {

@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargetFilter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
@@ -19,7 +19,7 @@ import java.util.Map;
  * Selects targets in a straight rectangular ray corridor projecting forward from the caster.
  * Syntax: {@code @Line{length=20;width=2}}
  */
-public final class LineTargeter implements EntityTargeter {
+public final class LineTargeter implements IEntityTargeter {
 
     @Override
     public Collection<LivingEntity> resolve(SkillCastContext context, Map<String, Object> parameters) {

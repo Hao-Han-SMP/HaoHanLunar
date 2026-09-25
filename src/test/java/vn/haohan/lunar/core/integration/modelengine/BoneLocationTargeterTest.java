@@ -1,6 +1,6 @@
 package vn.haohan.lunar.core.integration.modelengine;
 
-import vn.haohan.lunar.api.integration.modelengine.BoneLocationResolver;
+import vn.haohan.lunar.api.integration.modelengine.IBoneLocationResolver;
 
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -90,12 +90,12 @@ public class BoneLocationTargeterTest {
     }
 
     @Test
-    @DisplayName("BoneLocationTargeter resolves custom bone with custom BoneLocationResolver")
+    @DisplayName("BoneLocationTargeter resolves custom bone with custom IBoneLocationResolver")
     void testCustomBoneResolver() {
         World world = createMockWorld();
         Location customBoneLoc = new Location(world, 100.0, 70.0, -50.0);
 
-        BoneLocationResolver customResolver = (entity, boneName) -> {
+        IBoneLocationResolver customResolver = (entity, boneName) -> {
             if ("right_hand".equalsIgnoreCase(boneName)) {
                 return customBoneLoc;
             }

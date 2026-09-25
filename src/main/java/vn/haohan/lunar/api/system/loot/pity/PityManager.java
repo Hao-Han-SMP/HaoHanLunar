@@ -1,6 +1,6 @@
 package vn.haohan.lunar.api.system.loot.pity;
 
-import vn.haohan.lunar.api.system.loot.pity.storage.PityStorage;
+import vn.haohan.lunar.api.system.loot.pity.storage.IPityStorage;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,13 +16,13 @@ public final class PityManager implements AutoCloseable {
     private final Map<String, Integer> pityCounters = new ConcurrentHashMap<>();
     private final Map<String, PityRecord> dirtyQueue = new ConcurrentHashMap<>();
     private final Set<UUID> loadedPlayers = ConcurrentHashMap.newKeySet();
-    private final PityStorage storage;
+    private final IPityStorage storage;
 
     public PityManager() {
         this(null);
     }
 
-    public PityManager(PityStorage storage) {
+    public PityManager(IPityStorage storage) {
         this.storage = storage;
         if (this.storage != null) {
             try {

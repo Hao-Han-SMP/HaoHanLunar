@@ -9,10 +9,12 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import vn.haohan.lunar.api.presentation.audio.SpatialAudioEngine;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
 import java.util.*;
@@ -20,17 +22,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Speech bubble, dialogue sequence, and interactive chat prompt bridge.
- * Delegates to HaoHanDisplayUI plugin if available, otherwise executes standalone
- * Paper 1.21.1 TextDisplay Billboard.CENTER fallback with dynamic mob tracking,
- * multi-line typewriter effects, and clickable prompt responses.
+ * Speech bubble, dialogue sequence, and interactive chat prompt bridge.\
+ * Delegates to HaoHanDisplayUI plugin if available, otherwise executes standalone\
+ * Paper 1.21.1 TextDisplay Billboard.CENTER fallback with dynamic mob tracking,\
+ * multi-line typewriter effects, and clickable prompt responses.\
  */
 public final class HaoHanDisplayUIBridge {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
     private static final Map<UUID, ActiveBubbleSession> ACTIVE_SESSIONS = new ConcurrentHashMap<>();
 
-    private static DisplayUIProvider customProvider;
+    private static IDisplayUIProvider customProvider;
 
     public record BubbleOptions(
             String text,
@@ -68,13 +70,13 @@ public final class HaoHanDisplayUIBridge {
         }
     }
 
-    public interface DisplayUIProvider {
+    public interface IDisplayUIProvider {
         boolean showSpeechBubble(ActiveMob mob, BubbleOptions options);
         void cancelSpeechBubble(UUID mobId);
         default void sendDialoguePrompt(Player player, ActiveMob mob, String promptMessage, List<DialogueChoice> choices) {}
     }
 
-    public static void setCustomProvider(DisplayUIProvider provider) {
+    public static void setCustomProvider(IDisplayUIProvider provider) {
         customProvider = provider;
     }
 
@@ -238,8 +240,12 @@ public final class HaoHanDisplayUIBridge {
     private static void playSoundSafely(Location loc, String soundName, float volume, float pitch) {
         if (loc == null || loc.getWorld() == null || soundName == null || soundName.isBlank()) return;
         try {
-            org.bukkit.Sound sound = org.bukkit.Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
-            loc.getWorld().playSound(loc, sound, volume, pitch);
+            Sound sound = SpatialAudioEngine.resolveSound(soundName);
+            if (sound != null) {
+                loc.getWorld().playSound(loc, sound, volume, pitch);
+            } else {
+                loc.getWorld().playSound(loc, soundName.toLowerCase(Locale.ROOT), volume, pitch);
+            }
         } catch (Throwable ignored) {
             // Safe fallback for testing and non-vanilla sound keys
         }

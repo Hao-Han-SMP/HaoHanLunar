@@ -692,7 +692,7 @@ public class SmoothSlashTask extends BukkitRunnable {
             } catch (Throwable ignored) {}
         }
 
-        // Combo Finish Condition:
+        // Combo Finish ICondition:
         // Only restore weapon and exit when animation finishes AND player hasn't queued another attack
         if (finished && tick >= minTicks) {
             postEndBufferTicks++;

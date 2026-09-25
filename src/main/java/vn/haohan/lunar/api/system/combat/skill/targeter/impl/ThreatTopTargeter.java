@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
@@ -15,7 +15,7 @@ import java.util.*;
  * Selects the highest threat living entity from the caster mob's threat table.
  * Syntax: {@code @ThreatTop} or {@code @ThreatTableTop}
  */
-public final class ThreatTopTargeter implements EntityTargeter {
+public final class ThreatTopTargeter implements IEntityTargeter {
 
     @Override
     public Collection<LivingEntity> resolve(SkillCastContext context, Map<String, Object> parameters) {

@@ -173,7 +173,7 @@ class RaycastAuraAndCombatSafetyTest {
         AuraScheduler scheduler = new AuraScheduler();
         LivingEntity entity = createMockLivingEntity(new Location(mockWorld, 0, 0, 0));
         UUID entityId = entity.getUniqueId();
-        AuraAttachment attachment = AuraAttachment.ofEntity(entity);
+        IAuraAttachment attachment = IAuraAttachment.ofEntity(entity);
 
         AuraDefinition auraDef = AuraDefinition.builder("bleed")
                 .durationTicks(100L)
@@ -220,9 +220,9 @@ class RaycastAuraAndCombatSafetyTest {
         AuraDefinition aura1 = AuraDefinition.builder("frostbite").durationTicks(200L).build();
         AuraDefinition aura2 = AuraDefinition.builder("ignite").durationTicks(200L).build();
 
-        scheduler.applyAura(aura1, AuraAttachment.ofEntity(entityAEnt), entityA, 0L);
-        scheduler.applyAura(aura2, AuraAttachment.ofEntity(entityAEnt), entityA, 0L);
-        scheduler.applyAura(aura1, AuraAttachment.ofEntity(entityBEnt), entityB, 0L);
+        scheduler.applyAura(aura1, IAuraAttachment.ofEntity(entityAEnt), entityA, 0L);
+        scheduler.applyAura(aura2, IAuraAttachment.ofEntity(entityAEnt), entityA, 0L);
+        scheduler.applyAura(aura1, IAuraAttachment.ofEntity(entityBEnt), entityB, 0L);
 
         assertEquals(3, scheduler.size());
 

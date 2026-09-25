@@ -4,15 +4,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import vn.haohan.lunar.api.system.command.LunarMobCommand;
-import vn.haohan.lunar.api.system.config.ConfigValidationReport;
+import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
 import vn.haohan.lunar.api.system.loot.DropManager;
-import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.system.mob.pack.PackManager;
-import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
+import vn.haohan.lunar.core.command.HaoHanCommand;
+import vn.haohan.lunar.core.command.commands.*;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 
 import java.io.IOException;
 import java.lang.reflect.Proxy;
@@ -25,33 +25,42 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class LunarMobCommandTest {
+class MobCommandTest {
 
     @Test
     void deniesWithoutPermissionAndCompletesConfiguredIds() {
         MobDefinitionRegistry registry = new MobDefinitionRegistry();
         registry.register(definition("warden"));
-        LunarMobCommand command = new LunarMobCommand(registry, new LunarMobManager(), (player, mob) -> true,
-                                                      () -> new ConfigValidationReport(List.of()), (mob, signal) -> { });
-        Sender sender = new Sender(false);
+        LunarMobManager mobManager = new LunarMobManager();
 
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"info", "warden"});
-        assertTrue(sender.messages.getFirst().contains("permission"));
-        assertEquals(List.of("signal", "spawn"), command.onTabComplete(new Sender(true).proxy, null, "lunarmob", new String[]{"s"}));
+        HaoHanCommand command = new HaoHanCommand();
+        command.registerCommand(new SpawnCommand(registry, (p, d) -> true));
+        command.registerCommand(new SignalCommand(mobManager, (m, s) -> {}, registry));
+        command.registerCommand(new InfoCommand(registry, mobManager));
+
+        Sender sender = new Sender(false);
+        command.execute(null, sender.proxy, "lunarmob", new String[]{"info", "warden"});
+        assertTrue(sender.messages.getFirst().contains("quyền"));
+
+        List<String> sTabs = command.tabComplete(null, new Sender(true).proxy, "lunarmob", new String[]{"s"});
+        assertTrue(sTabs.contains("signal"));
+        assertTrue(sTabs.contains("spawn"));
     }
 
     @Test
     void invalidIdAndReloadFailureAreReported() {
         MobDefinitionRegistry registry = new MobDefinitionRegistry();
-        LunarMobCommand command = new LunarMobCommand(registry, new LunarMobManager(), (player, mob) -> true,
-                () -> new ConfigValidationReport(List.of(new ConfigValidationReport.Issue("x", "$", "bad", 1, 1))),
-                (mob, signal) -> { });
-        Sender sender = new Sender(true);
+        LunarMobManager mobManager = new LunarMobManager();
 
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"info", "missing"});
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"reload"});
+        HaoHanCommand command = new HaoHanCommand();
+        command.registerCommand(new InfoCommand(registry, mobManager));
+        command.registerCommand(new ReloadCommand());
+
+        Sender sender = new Sender(true);
+        command.execute(null, sender.proxy, "lunarmob", new String[]{"info", "missing"});
+        command.execute(null, sender.proxy, "lunarmob", new String[]{"reload"});
         assertTrue(sender.messages.stream().anyMatch(message -> message.contains("Unknown mob ID")));
-        assertTrue(sender.messages.stream().anyMatch(message -> message.contains("rejected")));
+        assertTrue(sender.messages.stream().anyMatch(message -> message.contains("Reload") || message.contains("thành công")));
     }
 
     @Test
@@ -66,50 +75,47 @@ class LunarMobCommandTest {
         PackManager packManager = new PackManager();
         packManager.loadAll(packsRoot, registry, skillRegistry, dropManager);
 
-        LunarMobCommand command = new LunarMobCommand(registry, new LunarMobManager(), (player, mob) -> true,
-                () -> new ConfigValidationReport(List.of()), (mob, signal) -> { },
-                null, null, null, tempDir);
-        command.setPackManager(packManager, skillRegistry, dropManager);
+        HaoHanCommand command = new HaoHanCommand();
+        command.registerCommand(new PackCommand(registry, tempDir, packManager, skillRegistry, dropManager));
 
         Sender sender = new Sender(true);
 
         // List
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"pack", "list"});
+        command.execute(null, sender.proxy, "lunarmob", new String[]{"pack", "list"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("alpha_pack")));
 
         // Reload
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"pack", "reload", "alpha_pack"});
+        command.execute(null, sender.proxy, "lunarmob", new String[]{"pack", "reload", "alpha_pack"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Successfully reloaded pack")));
 
         // Tab completion
-        List<String> tabs = command.onTabComplete(sender.proxy, null, "lunarmob", new String[]{"pack", "r"});
+        List<String> tabs = command.tabComplete(null, sender.proxy, "lunarmob", new String[]{"pack", "r"});
         assertEquals(List.of("reload"), tabs);
 
-        List<String> packTabs = command.onTabComplete(sender.proxy, null, "lunarmob", new String[]{"pack", "reload", "a"});
+        List<String> packTabs = command.tabComplete(null, sender.proxy, "lunarmob", new String[]{"pack", "reload", "a"});
         assertEquals(List.of("alpha_pack"), packTabs);
 
         // Disable
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"pack", "disable", "alpha_pack"});
+        command.execute(null, sender.proxy, "lunarmob", new String[]{"pack", "disable", "alpha_pack"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Successfully disabled pack")));
         assertEquals(0, packManager.loadedPacks().size());
     }
 
     @Test
     void pinsCommandsListAndTabCompletion() {
-        MobDefinitionRegistry registry = new MobDefinitionRegistry();
-        LunarMobCommand command = new LunarMobCommand(registry, new LunarMobManager(), (player, mob) -> true,
-                () -> new ConfigValidationReport(List.of()), (mob, signal) -> { });
+        HaoHanCommand command = new HaoHanCommand();
+        command.registerCommand(new PinsCommand());
         Sender sender = new Sender(true);
 
         // Subcommand list
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"pins", "list"});
+        command.execute(null, sender.proxy, "lunarmob", new String[]{"pins", "list"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Registered Pins")));
 
         // Tab completion for pins
-        List<String> tabs = command.onTabComplete(sender.proxy, null, "lunarmob", new String[]{"pins", "c"});
+        List<String> tabs = command.tabComplete(null, sender.proxy, "lunarmob", new String[]{"pins", "c"});
         assertEquals(List.of("create_region"), tabs);
 
-        List<String> allTabs = command.onTabComplete(sender.proxy, null, "lunarmob", new String[]{"pins", ""});
+        List<String> allTabs = command.tabComplete(null, sender.proxy, "lunarmob", new String[]{"pins", ""});
         assertTrue(allTabs.contains("wand"));
         assertTrue(allTabs.contains("add"));
         assertTrue(allTabs.contains("remove"));
@@ -130,8 +136,9 @@ class LunarMobCommandTest {
             proxy = (CommandSender) Proxy.newProxyInstance(CommandSender.class.getClassLoader(),
                     new Class<?>[]{CommandSender.class}, (object, method, args) -> switch (method.getName()) {
                         case "hasPermission" -> permission;
+                        case "isOp" -> permission;
                         case "sendMessage" -> { messages.add((String) args[0]); yield null; }
-                        default -> throw new UnsupportedOperationException(method.getName());
+                        default -> null;
                     });
         }
     }

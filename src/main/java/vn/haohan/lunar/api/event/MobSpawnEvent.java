@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.IMob;
 
 import java.util.Objects;
 
@@ -16,13 +16,13 @@ public final class MobSpawnEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final Mob mob;
+    private final IMob mob;
     private final Location location;
     private final String spawnInstanceId;
     private boolean cancelled;
 
-    public MobSpawnEvent(Mob mob, Location location, String spawnInstanceId) {
-        this.mob = Objects.requireNonNull(mob, "Mob must not be null");
+    public MobSpawnEvent(IMob mob, Location location, String spawnInstanceId) {
+        this.mob = Objects.requireNonNull(mob, "IMob must not be null");
         this.location = Objects.requireNonNull(location, "Location must not be null");
         this.spawnInstanceId = spawnInstanceId;
     }
@@ -32,7 +32,7 @@ public final class MobSpawnEvent extends Event implements Cancellable {
      *
      * @return the mob instance
      */
-    public Mob mob() {
+    public IMob mob() {
         return mob;
     }
 

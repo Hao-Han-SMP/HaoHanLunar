@@ -2,7 +2,6 @@ package vn.haohan.lunar.api.presentation.volatilefx;
 
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.Material;
@@ -87,8 +86,7 @@ public final class VolatileVisualEngine {
         } catch (Throwable ignored) {}
 
         try {
-            Sound s = Sound.valueOf("BLOCK_GRAVEL_BREAK");
-            world.playSound(center, s, SoundCategory.BLOCKS, 1.5f, 0.6f);
+            world.playSound(center, "block.gravel.break", SoundCategory.BLOCKS, 1.5f, 0.6f);
         } catch (Throwable ignored) {}
     }
 
@@ -133,8 +131,7 @@ public final class VolatileVisualEngine {
 
             // 3. Heavy ground rumble sound (safe in headless tests)
             try {
-                Sound s = Sound.valueOf("ENTITY_WARDEN_SONIC_BOOM");
-                player.playSound(pLoc, s, SoundCategory.HOSTILE, 0.8f * shakePower, 0.5f);
+                player.playSound(pLoc, "entity.warden.sonic_boom", SoundCategory.HOSTILE, 0.8f * shakePower, 0.5f);
             } catch (Throwable ignored) {}
         }
     }
@@ -213,25 +210,21 @@ public final class VolatileVisualEngine {
         return players;
     }
 
+    private static boolean isSolidBlock(Block block) {
+        if (block == null) return false;
+        Material mat = block.getType();
+        try {
+            return mat.isSolid() && !mat.isAir() && mat.isOccluding();
+        } catch (Throwable ignored) {
+            return mat != Material.AIR;
+        }
+    }
+
     private static long getEstimatedCurrentTick() {
         try {
             return org.bukkit.Bukkit.getCurrentTick();
-        } catch (Throwable t) {
-            return System.currentTimeMillis() / 50L;
-        }
-    }
-    private static boolean isSolidBlock(Block block) {
-        if (block == null) return false;
-        try {
-            Material mat = block.getType();
-            if (mat == null) return false;
-            try {
-                return mat.isSolid();
-            } catch (Throwable ignored) {
-                return !mat.name().endsWith("_AIR") && mat != Material.AIR;
-            }
         } catch (Throwable ignored) {
-            return false;
+            return System.currentTimeMillis() / 50L;
         }
     }
 }

@@ -1,7 +1,7 @@
 package vn.haohan.lunar.api;
 
 import vn.haohan.lunar.api.manager.*;
-import vn.haohan.lunar.api.system.item.ItemProvider;
+import vn.haohan.lunar.api.system.item.IItemProvider;
 
 import java.util.Objects;
 
@@ -11,12 +11,12 @@ import java.util.Objects;
  */
 public final class LunarAPI {
 
-    private static MobManager mobManager;
-    private static SkillManager skillManager;
-    private static CombatManager combatManager;
-    private static LootManager lootManager;
-    private static SpawnerManager spawnerManager;
-    private static ItemProvider itemProvider;
+    private static IMobManager mobManager;
+    private static ISkillManager skillManager;
+    private static ICombatManager combatManager;
+    private static ILootManager lootManager;
+    private static ISpawnerManager spawnerManager;
+    private static IItemProvider itemProvider;
 
     private LunarAPI() {}
 
@@ -26,8 +26,8 @@ public final class LunarAPI {
      * @return the active mob manager
      * @throws NullPointerException if the mob manager has not been initialized
      */
-    public static MobManager getMobManager() {
-        return Objects.requireNonNull(mobManager, "MobManager has not been initialized yet!");
+    public static IMobManager getMobManager() {
+        return Objects.requireNonNull(mobManager, "IMobManager has not been initialized yet!");
     }
 
     /**
@@ -35,7 +35,7 @@ public final class LunarAPI {
      *
      * @param manager the mob manager to register
      */
-    public static void setMobManager(MobManager manager) {
+    public static void setMobManager(IMobManager manager) {
         mobManager = manager;
     }
 
@@ -45,8 +45,8 @@ public final class LunarAPI {
      * @return the active skill manager
      * @throws NullPointerException if the skill manager has not been initialized
      */
-    public static SkillManager getSkillManager() {
-        return Objects.requireNonNull(skillManager, "SkillManager has not been initialized yet!");
+    public static ISkillManager getSkillManager() {
+        return Objects.requireNonNull(skillManager, "ISkillManager has not been initialized yet!");
     }
 
     /**
@@ -54,7 +54,7 @@ public final class LunarAPI {
      *
      * @param manager the skill manager to register
      */
-    public static void setSkillManager(SkillManager manager) {
+    public static void setSkillManager(ISkillManager manager) {
         skillManager = manager;
     }
 
@@ -64,8 +64,8 @@ public final class LunarAPI {
      * @return the active combat manager
      * @throws NullPointerException if the combat manager has not been initialized
      */
-    public static CombatManager getCombatManager() {
-        return Objects.requireNonNull(combatManager, "CombatManager has not been initialized yet!");
+    public static ICombatManager getCombatManager() {
+        return Objects.requireNonNull(combatManager, "ICombatManager has not been initialized yet!");
     }
 
     /**
@@ -73,7 +73,7 @@ public final class LunarAPI {
      *
      * @param manager the combat manager to register
      */
-    public static void setCombatManager(CombatManager manager) {
+    public static void setCombatManager(ICombatManager manager) {
         combatManager = manager;
     }
 
@@ -83,8 +83,8 @@ public final class LunarAPI {
      * @return the active loot manager
      * @throws NullPointerException if the loot manager has not been initialized
      */
-    public static LootManager getLootManager() {
-        return Objects.requireNonNull(lootManager, "LootManager has not been initialized yet!");
+    public static ILootManager getLootManager() {
+        return Objects.requireNonNull(lootManager, "ILootManager has not been initialized yet!");
     }
 
     /**
@@ -92,7 +92,7 @@ public final class LunarAPI {
      *
      * @param manager the loot manager to register
      */
-    public static void setLootManager(LootManager manager) {
+    public static void setLootManager(ILootManager manager) {
         lootManager = manager;
     }
 
@@ -102,8 +102,8 @@ public final class LunarAPI {
      * @return the active spawner manager
      * @throws NullPointerException if the spawner manager has not been initialized
      */
-    public static SpawnerManager getSpawnerManager() {
-        return Objects.requireNonNull(spawnerManager, "SpawnerManager has not been initialized yet!");
+    public static ISpawnerManager getSpawnerManager() {
+        return Objects.requireNonNull(spawnerManager, "ISpawnerManager has not been initialized yet!");
     }
 
     /**
@@ -111,7 +111,7 @@ public final class LunarAPI {
      *
      * @param manager the spawner manager to register
      */
-    public static void setSpawnerManager(SpawnerManager manager) {
+    public static void setSpawnerManager(ISpawnerManager manager) {
         spawnerManager = manager;
     }
 
@@ -121,8 +121,8 @@ public final class LunarAPI {
      * @return the active item provider
      * @throws NullPointerException if the item provider has not been initialized
      */
-    public static ItemProvider getItemProvider() {
-        return Objects.requireNonNull(itemProvider, "ItemProvider has not been initialized yet!");
+    public static IItemProvider getItemProvider() {
+        return Objects.requireNonNull(itemProvider, "IItemProvider has not been initialized yet!");
     }
 
     /**
@@ -130,7 +130,7 @@ public final class LunarAPI {
      *
      * @param provider the item provider to register
      */
-    public static void setItemProvider(ItemProvider provider) {
+    public static void setItemProvider(IItemProvider provider) {
         itemProvider = provider;
     }
 

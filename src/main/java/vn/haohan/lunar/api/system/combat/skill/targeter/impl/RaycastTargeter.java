@@ -8,7 +8,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargetFilter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Paper 1.21.1 Native Raycast Entity Targeter.
+ * Paper 1.21.1 Native Raycast Entity ITargeter.
  * Fires a ray from the caster's eyes along sight direction, respecting solid block collisions.
  * Syntax: {@code @Raycast{distance=24;raySize=0.5;pierce=false;ignoreBlocks=false}}
  */
-public final class RaycastTargeter implements EntityTargeter {
+public final class RaycastTargeter implements IEntityTargeter {
 
     @Override
     public Collection<LivingEntity> resolve(SkillCastContext context, Map<String, Object> parameters) {

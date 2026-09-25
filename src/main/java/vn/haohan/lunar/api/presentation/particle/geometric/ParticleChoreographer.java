@@ -17,10 +17,10 @@ public final class ParticleChoreographer {
     private int maxParticlesPerTick = DEFAULT_MAX_PARTICLES_PER_TICK;
     private long lastTick = -1;
     private int spawnedThisTick = 0;
-    private ParticleSpawner particleSpawner = this::defaultSpawn;
+    private IParticleSpawner particleSpawner = this::defaultSpawn;
 
     @FunctionalInterface
-    public interface ParticleSpawner {
+    public interface IParticleSpawner {
         void spawn(Location location, Particle particle, int count, double offX, double offY, double offZ, double extra);
     }
 
@@ -30,7 +30,7 @@ public final class ParticleChoreographer {
         this.maxParticlesPerTick = Math.max(10, maxParticlesPerTick);
     }
 
-    public void setParticleSpawner(ParticleSpawner spawner) {
+    public void setParticleSpawner(IParticleSpawner spawner) {
         this.particleSpawner = spawner != null ? spawner : this::defaultSpawn;
     }
 

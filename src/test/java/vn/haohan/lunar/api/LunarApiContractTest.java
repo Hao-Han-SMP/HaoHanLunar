@@ -7,12 +7,13 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.DamageContext;
 import vn.haohan.lunar.api.system.combat.DamageResult;
 import vn.haohan.lunar.api.system.combat.DamageType;
-import vn.haohan.lunar.api.manager.CombatManager;
+import vn.haohan.lunar.api.manager.ICombatManager;
 import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.manager.MobManager;
-import vn.haohan.lunar.api.manager.SkillManager;
-import vn.haohan.lunar.api.system.combat.skill.target.Targeter;
+import vn.haohan.lunar.api.manager.IMobManager;
+import vn.haohan.lunar.api.manager.ISkillManager;
+import vn.haohan.lunar.api.system.combat.skill.target.ITargeter;
 import vn.haohan.lunar.api.system.combat.DamagePipeline;
+import vn.haohan.lunar.api.system.combat.threat.IThreatTable;
 import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
@@ -80,9 +81,9 @@ class LunarApiContractTest {
     }
 
     @Test
-    @DisplayName("MobManager API correctly queries active mobs")
+    @DisplayName("IMobManager API correctly queries active mobs")
     void testLunarMobManagerApi() {
-        MobManager manager = LunarAPI.getMobManager();
+        IMobManager manager = LunarAPI.getMobManager();
         assertEquals(0, manager.activeCount());
         assertTrue(manager.getActiveMobs().isEmpty());
 
@@ -93,14 +94,14 @@ class LunarApiContractTest {
     }
 
     @Test
-    @DisplayName("SkillManager API allows registering custom targeters and checking skills")
+    @DisplayName("ISkillManager API allows registering custom targeters and checking skills")
     void testLunarSkillManagerApi() {
-        SkillManager skillManager = LunarAPI.getSkillManager();
+        ISkillManager skillManager = LunarAPI.getSkillManager();
 
         assertFalse(skillManager.hasSkill("non_existent_skill"));
 
         // Register custom targeter through API
-        Targeter customTargeter = ctx -> List.of();
+        ITargeter customTargeter = ctx -> List.of();
         assertDoesNotThrow(() -> skillManager.registerTargeter("custom_targeter", customTargeter));
 
         // Register custom condition through API
@@ -114,7 +115,7 @@ class LunarApiContractTest {
     @DisplayName("ThreatTable API satisfies full hostility management contract")
     void testThreatTableApi() {
         UUID mobId = UUID.randomUUID();
-        vn.haohan.lunar.api.system.combat.ThreatTable threatTable = new ThreatTable(mobId);
+        IThreatTable threatTable = new ThreatTable(mobId);
 
         assertEquals(mobId, threatTable.mobId());
         assertEquals(0.0, threatTable.getThreat(UUID.randomUUID()));
@@ -143,7 +144,7 @@ class LunarApiContractTest {
     @Test
     @DisplayName("DamageContext and DamagePipeline API allow pre-checks and modifiers")
     void testCombatPipelineApi() {
-        CombatManager combatManager = LunarAPI.getCombatManager();
+        ICombatManager combatManager = LunarAPI.getCombatManager();
 
         LivingEntity dummyVictim = (LivingEntity) Proxy.newProxyInstance(
                 getClass().getClassLoader(),

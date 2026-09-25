@@ -61,7 +61,7 @@ public class MobSkillRuntime implements Listener {
     private final Map<String, ParsedSkillRef> skillRefCache = new ConcurrentHashMap<>();
 
     public MobSkillRuntime(LunarMobManager mobManager, SkillRegistry skillRegistry, MechanicRegistry mechanicRegistry, ConditionRegistry conditionRegistry, TargeterRegistry targeterRegistry, CooldownRegistry cooldownRegistry, SkillScheduler skillScheduler, DynamicThrottlingEngine throttlingEngine, Logger logger) {
-        this.mobManager = Objects.requireNonNull(mobManager, "MobManager must not be null");
+        this.mobManager = Objects.requireNonNull(mobManager, "IMobManager must not be null");
         this.skillRegistry = Objects.requireNonNull(skillRegistry, "SkillRegistry must not be null");
         this.mechanicRegistry = Objects.requireNonNull(mechanicRegistry, "MechanicRegistry must not be null");
         this.conditionRegistry = Objects.requireNonNull(conditionRegistry, "ConditionRegistry must not be null");
@@ -156,7 +156,7 @@ public class MobSkillRuntime implements Listener {
                 continue;
             }
 
-            // Condition evaluation
+            // ICondition evaluation
             ConditionContext conditionContext = new ConditionContext(caster, triggerEntity, mob.stance(), cooldownRegistry, baseVars, currentTick);
 
             if (!chain.conditions().isEmpty()) {

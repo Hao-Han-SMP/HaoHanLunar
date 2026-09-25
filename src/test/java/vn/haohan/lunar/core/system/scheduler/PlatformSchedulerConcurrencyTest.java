@@ -29,7 +29,7 @@ class PlatformSchedulerConcurrencyTest {
     @Test
     void testTaskHandleState() {
         AtomicBoolean cancelled = new AtomicBoolean(false);
-        TaskHandle handle = new TaskHandle() {
+        ITaskHandle handle = new ITaskHandle() {
             @Override
             public void cancel() {
                 cancelled.set(true);

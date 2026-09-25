@@ -3,8 +3,8 @@ package vn.haohan.lunar.api.system.combat;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import vn.haohan.lunar.api.manager.CombatManager;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.manager.ICombatManager;
+import vn.haohan.lunar.api.system.mob.IMob;
 import vn.haohan.lunar.api.spawner.cluster.PackAggroCoordinator;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
@@ -21,7 +21,7 @@ import java.util.function.Function;
  * Standardizes pre-checks, damage modifiers, immunity verification, armor mitigation,
  * safe execution with recursion guards, and post-damage event dispatching.
  */
-public final class DamagePipeline implements CombatManager {
+public final class DamagePipeline implements ICombatManager {
 
     private final List<Function<DamageContext, String>> preChecks = new CopyOnWriteArrayList<>();
     private final List<Consumer<DamageContext>> modifiers = new CopyOnWriteArrayList<>();
@@ -193,7 +193,7 @@ public final class DamagePipeline implements CombatManager {
         this.mobManager = mobManager;
     }
 
-    private static Optional<ActiveMob> asActive(Optional<? extends Mob> mobOpt) {
+    private static Optional<ActiveMob> asActive(Optional<? extends IMob> mobOpt) {
         return mobOpt.filter(ActiveMob.class::isInstance).map(ActiveMob.class::cast);
     }
 

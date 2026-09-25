@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargetFilter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
@@ -20,7 +20,7 @@ import java.util.Map;
  * Uses dot product / 3D vector angle between caster's eye direction and relative offset.
  * Syntax: {@code @Behind{r=10;angle=120}}
  */
-public final class BehindTargeter implements EntityTargeter {
+public final class BehindTargeter implements IEntityTargeter {
 
     private static double parseAngle(Map<String, Object> parameters, double def) {
         if (parameters == null) return def;

@@ -2,7 +2,7 @@ package vn.haohan.lunar.api.system.spawner.random;
 
 import org.bukkit.World;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import vn.haohan.lunar.api.system.combat.skill.condition.Condition;
+import vn.haohan.lunar.api.system.combat.skill.condition.ICondition;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,7 +22,7 @@ public record RandomSpawnRule(String id,
                               double minPlayerDistance,
                               double maxPlayerDistance,
                               boolean enabled,
-                              List<Condition> conditions,
+                              List<ICondition> conditions,
                               Set<CreatureSpawnEvent.SpawnReason> spawnReasons) {
 
     public RandomSpawnRule {
@@ -46,7 +46,7 @@ public record RandomSpawnRule(String id,
         conditions = conditions != null ? List.copyOf(conditions) : List.of();
         spawnReasons = spawnReasons != null && !spawnReasons.isEmpty()
                 ? Collections.unmodifiableSet(spawnReasons)
-                : Set.of(CreatureSpawnEvent.SpawnReason.NATURAL, CreatureSpawnEvent.SpawnReason.CHUNK_GEN);
+                : Set.of(CreatureSpawnEvent.SpawnReason.NATURAL);
     }
 
     public RandomSpawnRule(String id,
@@ -61,9 +61,9 @@ public record RandomSpawnRule(String id,
                            double minPlayerDistance,
                            double maxPlayerDistance,
                            boolean enabled,
-                           List<Condition> conditions) {
+                           List<ICondition> conditions) {
         this(id, mobId, worlds, biomes, chance, priority, action, minY, maxY, minPlayerDistance, maxPlayerDistance, enabled, conditions,
-                Set.of(CreatureSpawnEvent.SpawnReason.NATURAL, CreatureSpawnEvent.SpawnReason.CHUNK_GEN));
+                Set.of(CreatureSpawnEvent.SpawnReason.NATURAL));
     }
 
     public boolean matchesWorld(World world) {
@@ -132,7 +132,7 @@ public record RandomSpawnRule(String id,
         private double minPlayerDistance = 24.0;
         private double maxPlayerDistance = 48.0;
         private boolean enabled = false;
-        private List<Condition> conditions = List.of();
+        private List<ICondition> conditions = List.of();
         private Set<CreatureSpawnEvent.SpawnReason> spawnReasons = Set.of();
 
         private Builder(String id, String mobId) {
@@ -148,7 +148,7 @@ public record RandomSpawnRule(String id,
         public Builder elevation(double minY, double maxY) { this.minY = minY; this.maxY = maxY; return this; }
         public Builder playerDistance(double min, double max) { this.minPlayerDistance = min; this.maxPlayerDistance = max; return this; }
         public Builder enabled(boolean enabled) { this.enabled = enabled; return this; }
-        public Builder conditions(List<Condition> conditions) { this.conditions = conditions; return this; }
+        public Builder conditions(List<ICondition> conditions) { this.conditions = conditions; return this; }
         public Builder spawnReasons(Set<CreatureSpawnEvent.SpawnReason> spawnReasons) { this.spawnReasons = spawnReasons; return this; }
 
         public RandomSpawnRule build() {

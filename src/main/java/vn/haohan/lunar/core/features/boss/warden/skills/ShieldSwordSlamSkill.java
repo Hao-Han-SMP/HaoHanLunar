@@ -18,7 +18,7 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.system.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
 import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
 import vn.haohan.lunar.core.features.boss.warden.WardenState;

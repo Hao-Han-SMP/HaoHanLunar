@@ -2,29 +2,29 @@ package vn.haohan.lunar.api.system.combat.skill.targeter.impl;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
-import vn.haohan.lunar.api.integration.modelengine.BoneLocationResolver;
+import vn.haohan.lunar.api.integration.modelengine.IBoneLocationResolver;
 import vn.haohan.lunar.api.integration.modelengine.DefaultBoneLocationResolver;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.ILocationTargeter;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Targeter {@code @BoneLocation{bone=head|right_hand|mouth|chest}} for querying real-time 3D coordinates
+ * ITargeter {@code @BoneLocation{bone=head|right_hand|mouth|chest}} for querying real-time 3D coordinates
  * of specific bones on ModelEngine active models.
  * Automatically falls back to EyeLocation or Location if ModelEngine is missing or bone is not found.
  */
-public final class BoneLocationTargeter implements LocationTargeter {
+public final class BoneLocationTargeter implements ILocationTargeter {
 
-    private final BoneLocationResolver resolver;
+    private final IBoneLocationResolver resolver;
 
     public BoneLocationTargeter() {
         this(DefaultBoneLocationResolver.getInstance());
     }
 
-    public BoneLocationTargeter(BoneLocationResolver resolver) {
+    public BoneLocationTargeter(IBoneLocationResolver resolver) {
         this.resolver = resolver != null ? resolver : DefaultBoneLocationResolver.getInstance();
     }
 

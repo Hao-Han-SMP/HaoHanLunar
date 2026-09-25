@@ -76,10 +76,10 @@ public final class HotReloadEngine {
      * Executes asynchronous pre-validation, followed by synchronized atomic registry swap.
      */
     public CompletableFuture<ReloadResult> reloadAsync(
-            Supplier<Collection<MobDefinition>> mobLoader,
-            Supplier<Collection<SkillChainDefinition>> skillLoader,
-            Supplier<Collection<DropTableDefinition>> dropLoader,
-            Supplier<Collection<SpawnerDefinition>> spawnerLoader
+            ISupplier<Collection<MobDefinition>> mobLoader,
+            ISupplier<Collection<SkillChainDefinition>> skillLoader,
+            ISupplier<Collection<DropTableDefinition>> dropLoader,
+            ISupplier<Collection<SpawnerDefinition>> spawnerLoader
     ) {
         return CompletableFuture.supplyAsync(() -> {
             // Step 1: Run comprehensive linting on background thread
@@ -154,7 +154,7 @@ public final class HotReloadEngine {
     }
 
     @FunctionalInterface
-    public interface Supplier<T> {
+    public interface ISupplier<T> {
         T get() throws Exception;
     }
 }

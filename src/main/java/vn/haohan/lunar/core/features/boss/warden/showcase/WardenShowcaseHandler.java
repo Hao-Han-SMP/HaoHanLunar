@@ -11,7 +11,7 @@ import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.system.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
 import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
 import vn.haohan.lunar.core.features.boss.warden.WardenState;

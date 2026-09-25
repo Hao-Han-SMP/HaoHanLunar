@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 /** Owns ModelEngine attachment lifecycle without leaking ModelEngine calls into mob orchestration. */
 public final class ModelEngineMobAdapter {
 
-    private final ModelEngineBridge bridge;
+    private final IModelEngineBridge bridge;
     private final Consumer<String> errorLogger;
     private final Map<UUID, String> attachedModels = new ConcurrentHashMap<>();
 
@@ -23,7 +23,7 @@ public final class ModelEngineMobAdapter {
         this(new ProductionModelEngineBridge(), message -> { });
     }
 
-    public ModelEngineMobAdapter(ModelEngineBridge bridge, Consumer<String> errorLogger) {
+    public ModelEngineMobAdapter(IModelEngineBridge bridge, Consumer<String> errorLogger) {
         this.bridge = Objects.requireNonNull(bridge, "ModelEngine bridge must not be null");
         this.errorLogger = Objects.requireNonNull(errorLogger, "Error logger must not be null");
     }
@@ -69,12 +69,12 @@ public final class ModelEngineMobAdapter {
         return attachedModels.size();
     }
 
-    public interface ModelEngineBridge {
+    public interface IModelEngineBridge {
         boolean attach(LivingEntity entity, String modelId);
         void destroy(LivingEntity entity);
     }
 
-    private static final class ProductionModelEngineBridge implements ModelEngineBridge {
+    private static final class ProductionModelEngineBridge implements IModelEngineBridge {
         @Override
         public boolean attach(LivingEntity entity, String modelId) {
             if (ModelEngineAPI.getAPI() == null || ModelEngineAPI.getBlueprint(modelId) == null) return false;

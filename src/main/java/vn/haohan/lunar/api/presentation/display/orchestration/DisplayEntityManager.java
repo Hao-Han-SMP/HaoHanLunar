@@ -22,15 +22,15 @@ public final class DisplayEntityManager {
 
     private final Map<UUID, ActiveDisplaySession> activeSessions = new ConcurrentHashMap<>();
     private final Map<UUID, Set<UUID>> casterSessions = new ConcurrentHashMap<>();
-    private DisplayEntityHandler entityHandler = new DefaultDisplayEntityHandler();
+    private IDisplayEntityHandler entityHandler = new DefaultDisplayEntityHandler();
 
-    public interface DisplayEntityHandler {
+    public interface IDisplayEntityHandler {
         Display spawn(Location location, DisplaySpawnOptions options);
         void transform(Display display, DisplayTransformOptions options);
         void remove(Display display);
     }
 
-    public void setEntityHandler(DisplayEntityHandler handler) {
+    public void setEntityHandler(IDisplayEntityHandler handler) {
         this.entityHandler = handler != null ? handler : new DefaultDisplayEntityHandler();
     }
 
@@ -137,7 +137,7 @@ public final class DisplayEntityManager {
         return activeSessions.size();
     }
 
-    private static class DefaultDisplayEntityHandler implements DisplayEntityHandler {
+    private static class DefaultDisplayEntityHandler implements IDisplayEntityHandler {
         @Override
         public Display spawn(Location location, DisplaySpawnOptions options) {
             World world = location.getWorld();

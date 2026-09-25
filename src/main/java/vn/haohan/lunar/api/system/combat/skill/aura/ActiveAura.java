@@ -13,14 +13,14 @@ public final class ActiveAura {
 
     private final UUID instanceId;
     private final AuraDefinition definition;
-    private final AuraAttachment attachment;
+    private final IAuraAttachment attachment;
     private final UUID ownerId;
     private final long startTick;
     private long endTick;
     private int currentStacks;
     private volatile boolean expired;
 
-    public ActiveAura(AuraDefinition definition, AuraAttachment attachment, UUID ownerId, long currentTick) {
+    public ActiveAura(AuraDefinition definition, IAuraAttachment attachment, UUID ownerId, long currentTick) {
         this.instanceId = UUID.randomUUID();
         this.definition = Objects.requireNonNull(definition, "Aura definition must not be null");
         this.attachment = Objects.requireNonNull(attachment, "Attachment must not be null");
@@ -43,7 +43,7 @@ public final class ActiveAura {
         return definition.id();
     }
 
-    public AuraAttachment attachment() {
+    public IAuraAttachment attachment() {
         return attachment;
     }
 
@@ -79,7 +79,7 @@ public final class ActiveAura {
     }
 
     public void start() {
-        for (AuraComponent component : definition.components()) {
+        for (IAuraComponent component : definition.components()) {
             try {
                 component.onStart(this);
             } catch (Exception ignored) {}
@@ -94,7 +94,7 @@ public final class ActiveAura {
         }
         long elapsed = currentTick - startTick;
         if (elapsed % definition.intervalTicks() == 0) {
-            for (AuraComponent component : definition.components()) {
+            for (IAuraComponent component : definition.components()) {
                 try {
                     component.onTick(this, currentTick);
                 } catch (Exception ignored) {}
@@ -104,7 +104,7 @@ public final class ActiveAura {
 
     public void onHit(LivingEntity target, double damage) {
         if (expired) return;
-        for (AuraComponent component : definition.components()) {
+        for (IAuraComponent component : definition.components()) {
             try {
                 component.onHit(this, target, damage);
             } catch (Exception ignored) {}
@@ -113,7 +113,7 @@ public final class ActiveAura {
 
     public void onDamaged(Entity attacker, double damage) {
         if (expired) return;
-        for (AuraComponent component : definition.components()) {
+        for (IAuraComponent component : definition.components()) {
             try {
                 component.onDamaged(this, attacker, damage);
             } catch (Exception ignored) {}
@@ -123,7 +123,7 @@ public final class ActiveAura {
     public void expire() {
         if (expired) return;
         expired = true;
-        for (AuraComponent component : definition.components()) {
+        for (IAuraComponent component : definition.components()) {
             try {
                 component.onExpire(this);
             } catch (Exception ignored) {}

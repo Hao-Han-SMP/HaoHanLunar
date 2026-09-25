@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargetFilter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
@@ -19,7 +19,7 @@ import java.util.Map;
  * Sweeps a conical 3D vision cone in front of the caster.
  * Syntax: {@code @Cone{angle=90;radius=12}}
  */
-public final class ConeTargeter implements EntityTargeter {
+public final class ConeTargeter implements IEntityTargeter {
 
     @Override
     public Collection<LivingEntity> resolve(SkillCastContext context, Map<String, Object> parameters) {

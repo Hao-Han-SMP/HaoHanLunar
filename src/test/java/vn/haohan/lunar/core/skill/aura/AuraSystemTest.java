@@ -40,13 +40,13 @@ class AuraSystemTest {
         AuraScheduler scheduler = new AuraScheduler();
         UUID entityUuid = UUID.randomUUID();
         LivingEntity mockEntity = createMockEntity(entityUuid);
-        AuraAttachment attachment = AuraAttachment.ofEntity(mockEntity);
+        IAuraAttachment attachment = IAuraAttachment.ofEntity(mockEntity);
 
         AtomicBoolean started = new AtomicBoolean(false);
         AtomicInteger tickCount = new AtomicInteger(0);
         AtomicBoolean expired = new AtomicBoolean(false);
 
-        AuraComponent testComponent = new AuraComponent() {
+        IAuraComponent testComponent = new IAuraComponent() {
             @Override
             public void onStart(ActiveAura aura) {
                 started.set(true);
@@ -131,7 +131,7 @@ class AuraSystemTest {
                 .component(new OnDamagedAuraComponent((aura, source, dmg) -> damageTriggers.incrementAndGet()))
                 .build();
 
-        scheduler.applyAura(attackAura, AuraAttachment.ofEntity(attackerEntity), attackerUuid, 100);
+        scheduler.applyAura(attackAura, IAuraAttachment.ofEntity(attackerEntity), attackerUuid, 100);
 
         scheduler.dispatchAttack(attackerEntity, victimEntity, 25.0);
         assertEquals(1, attackTriggers.get());

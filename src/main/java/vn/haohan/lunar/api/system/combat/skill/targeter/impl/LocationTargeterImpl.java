@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.ILocationTargeter;
 
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * Targets a specific location, supporting absolute and relative (~offset) coordinates.
  */
-public final class LocationTargeterImpl implements LocationTargeter {
+public final class LocationTargeterImpl implements ILocationTargeter {
 
     @Override
     public String name() {

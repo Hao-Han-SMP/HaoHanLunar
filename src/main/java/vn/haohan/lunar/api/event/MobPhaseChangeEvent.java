@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.event;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.IMob;
 
 import java.util.Objects;
 
@@ -15,13 +15,13 @@ public final class MobPhaseChangeEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
 
-    private final Mob mob;
+    private final IMob mob;
     private final int previousPhase;
     private final int newPhase;
     private boolean cancelled;
 
-    public MobPhaseChangeEvent(Mob mob, int previousPhase, int newPhase) {
-        this.mob = Objects.requireNonNull(mob, "Mob must not be null");
+    public MobPhaseChangeEvent(IMob mob, int previousPhase, int newPhase) {
+        this.mob = Objects.requireNonNull(mob, "IMob must not be null");
         this.previousPhase = previousPhase;
         this.newPhase = newPhase;
     }
@@ -31,7 +31,7 @@ public final class MobPhaseChangeEvent extends Event implements Cancellable {
      *
      * @return the mob instance
      */
-    public Mob mob() {
+    public IMob mob() {
         return mob;
     }
 

@@ -3,7 +3,10 @@ package vn.haohan.lunar.core.system.debug;
 import org.bukkit.command.CommandSender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import vn.haohan.lunar.api.system.command.LunarMobCommand;
+import vn.haohan.lunar.core.command.HaoHanCommand;
+import vn.haohan.lunar.core.command.commands.MetricsCommand;
+import vn.haohan.lunar.core.command.commands.TraceCommand;
+import vn.haohan.lunar.core.command.commands.ValidateCommand;
 import vn.haohan.lunar.api.system.config.ConfigValidationReport;
 import vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics;
 import vn.haohan.lunar.core.system.debug.trace.SkillTracer;
@@ -53,9 +56,9 @@ class DebugToolingAndMetricsTest {
 
         String summary = result.formatSummary("mobs");
         assertTrue(summary.contains("=== Lunar Validation Report: MOBS ==="));
-        assertTrue(summary.contains("Total files scanned: \u00a7f3"));
-        assertTrue(summary.contains("Valid files: \u00a7f1"));
-        assertTrue(summary.contains("Errors: \u00a7f2"));
+        assertTrue(summary.contains("Total files scanned: §f3"));
+        assertTrue(summary.contains("Valid files: §f1"));
+        assertTrue(summary.contains("Errors: §f2"));
     }
 
     @Test
@@ -117,11 +120,11 @@ class DebugToolingAndMetricsTest {
 
         String report = metrics.formatReport("SkillScheduler");
         assertTrue(report.contains("SkillScheduler"));
-        assertTrue(report.contains("P95: \u00a7e95.00ms"));
+        assertTrue(report.contains("P95: §e95.00ms"));
     }
 
     @Test
-    void testLunarMobCommandDebugSubcommands() throws IOException {
+    void testMobCommandDebugSubcommands() throws IOException {
         Path mobsDir = tempConfigDir.resolve("mobs");
         Files.createDirectories(mobsDir);
         Files.writeString(mobsDir.resolve("warden.yml"), "id: warden\ntype: IRON_GOLEM\n");
@@ -131,30 +134,30 @@ class DebugToolingAndMetricsTest {
         PerformanceMetrics metrics = new PerformanceMetrics();
         metrics.record("SkillScheduler", 5_000_000L);
 
-        MobDefinitionRegistry registry = new MobDefinitionRegistry();
-        LunarMobCommand command = new LunarMobCommand(registry, new LunarMobManager(),
-                (player, mob) -> true, () -> new ConfigValidationReport(List.of()),
-                (mob, signal) -> {}, validator, tracer, metrics, tempConfigDir);
+        HaoHanCommand command = new HaoHanCommand();
+        command.registerCommand(new ValidateCommand(validator, tempConfigDir));
+        command.registerCommand(new TraceCommand(new LunarMobManager(), tracer));
+        command.registerCommand(new MetricsCommand(metrics));
 
         Sender sender = new Sender(true);
 
-        // 1. /lunarmob validate mobs
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"validate", "mobs"});
+        // 1. /hhl validate mobs
+        command.execute(null, sender.proxy, "hhl", new String[]{"validate", "mobs"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Lunar Validation Report")));
 
-        // 2. /lunarmob trace <uuid> on
+        // 2. /hhl trace <uuid> on
         UUID testMobId = UUID.randomUUID();
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"trace", testMobId.toString(), "on"});
+        command.execute(null, sender.proxy, "hhl", new String[]{"trace", testMobId.toString(), "on"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("ENABLED")));
         assertTrue(tracer.isTracing(testMobId));
 
-        // 3. /lunarmob trace <uuid> off
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"trace", testMobId.toString(), "off"});
+        // 3. /hhl trace <uuid> off
+        command.execute(null, sender.proxy, "hhl", new String[]{"trace", testMobId.toString(), "off"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("DISABLED")));
         assertFalse(tracer.isTracing(testMobId));
 
-        // 4. /lunarmob metrics
-        command.onCommand(sender.proxy, null, "lunarmob", new String[]{"metrics"});
+        // 4. /hhl metrics
+        command.execute(null, sender.proxy, "hhl", new String[]{"metrics"});
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Performance Metrics")));
     }
 

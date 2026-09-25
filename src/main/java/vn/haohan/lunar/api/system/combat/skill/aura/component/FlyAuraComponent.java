@@ -6,12 +6,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.aura.ActiveAura;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraComponent;
+import vn.haohan.lunar.api.system.combat.skill.aura.IAuraComponent;
 
 /**
  * Grants temporary levitation or flight suspension to the aura host entity.
  */
-public final class FlyAuraComponent implements AuraComponent {
+public final class FlyAuraComponent implements IAuraComponent {
 
     private final double upwardForce;
     private final boolean applyLevitation;

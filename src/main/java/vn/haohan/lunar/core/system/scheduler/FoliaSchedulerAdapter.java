@@ -17,10 +17,10 @@ import java.util.function.Consumer;
  * Folia regionized multi-threaded scheduler adapter.
  * Dispatches entity tasks to entity schedulers and location tasks to region schedulers.
  */
-public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
+public final class FoliaSchedulerAdapter implements ILunarPlatformScheduler {
 
     private final Plugin plugin;
-    private final Set<TaskHandle> activeHandles = ConcurrentHashMap.newKeySet();
+    private final Set<ITaskHandle> activeHandles = ConcurrentHashMap.newKeySet();
 
     public FoliaSchedulerAdapter(Plugin plugin) {
         this.plugin = Objects.requireNonNull(plugin, "Plugin must not be null");
@@ -32,7 +32,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runAtEntity(Entity entity, Consumer<TaskHandle> task) {
+    public ITaskHandle runAtEntity(Entity entity, Consumer<ITaskHandle> task) {
         Objects.requireNonNull(entity, "Entity must not be null");
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
@@ -61,7 +61,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runAtLocation(Location location, Consumer<TaskHandle> task) {
+    public ITaskHandle runAtLocation(Location location, Consumer<ITaskHandle> task) {
         Objects.requireNonNull(location, "Location must not be null");
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
@@ -88,7 +88,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runTimerAtEntity(Entity entity, Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerAtEntity(Entity entity, Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         Objects.requireNonNull(entity, "Entity must not be null");
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
@@ -117,7 +117,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runTimerAtLocation(Location location, Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerAtLocation(Location location, Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         Objects.requireNonNull(location, "Location must not be null");
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
@@ -146,7 +146,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runSync(Consumer<TaskHandle> task) {
+    public ITaskHandle runSync(Consumer<ITaskHandle> task) {
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
         try {
@@ -171,7 +171,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runTimerSync(Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerSync(Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
         try {
@@ -198,7 +198,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runAsync(Consumer<TaskHandle> task) {
+    public ITaskHandle runAsync(Consumer<ITaskHandle> task) {
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
         try {
@@ -224,7 +224,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runTimerAsync(Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerAsync(Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         Objects.requireNonNull(task, "Task must not be null");
         FoliaTaskHandle handle = new FoliaTaskHandle();
         try {
@@ -254,13 +254,13 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
 
     @Override
     public void cancelAll() {
-        for (TaskHandle handle : activeHandles) {
+        for (ITaskHandle handle : activeHandles) {
             handle.cancel();
         }
         activeHandles.clear();
     }
 
-    private TaskHandle fallbackSync(Consumer<TaskHandle> task, FoliaTaskHandle handle) {
+    private ITaskHandle fallbackSync(Consumer<ITaskHandle> task, FoliaTaskHandle handle) {
         try {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!handle.isCancelled()) {
@@ -273,7 +273,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
         return handle;
     }
 
-    private TaskHandle fallbackSyncTimer(Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks, FoliaTaskHandle handle) {
+    private ITaskHandle fallbackSyncTimer(Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks, FoliaTaskHandle handle) {
         try {
             Bukkit.getScheduler().runTaskTimer(plugin, () -> {
                 if (!handle.isCancelled()) {
@@ -286,7 +286,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
         return handle;
     }
 
-    private TaskHandle fallbackAsync(Consumer<TaskHandle> task, FoliaTaskHandle handle) {
+    private ITaskHandle fallbackAsync(Consumer<ITaskHandle> task, FoliaTaskHandle handle) {
         try {
             Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
                 if (!handle.isCancelled()) {
@@ -299,7 +299,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
         return handle;
     }
 
-    private TaskHandle fallbackAsyncTimer(Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks, FoliaTaskHandle handle) {
+    private ITaskHandle fallbackAsyncTimer(Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks, FoliaTaskHandle handle) {
         try {
             Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
                 if (!handle.isCancelled()) {
@@ -312,7 +312,7 @@ public final class FoliaSchedulerAdapter implements LunarPlatformScheduler {
         return handle;
     }
 
-    private static final class FoliaTaskHandle implements TaskHandle {
+    private static final class FoliaTaskHandle implements ITaskHandle {
         private final AtomicBoolean cancelled = new AtomicBoolean(false);
         private volatile Object scheduledTask;
 

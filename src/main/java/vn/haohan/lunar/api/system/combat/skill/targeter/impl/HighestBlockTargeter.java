@@ -4,7 +4,7 @@ import org.bukkit.HeightMap;
 import org.bukkit.Location;
 import org.bukkit.World;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.ILocationTargeter;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.Map;
  * Ideal for meteor strikes, lightning bolts, and ground fissure mechanics.
  * Syntax: {@code @HighestBlock} or {@code @HighestBlock{y_offset=1}}
  */
-public final class HighestBlockTargeter implements LocationTargeter {
+public final class HighestBlockTargeter implements ILocationTargeter {
 
     private static double parseYOffset(Map<String, Object> parameters) {
         if (parameters == null) return 0.0;

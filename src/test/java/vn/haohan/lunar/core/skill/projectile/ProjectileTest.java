@@ -43,7 +43,7 @@ class ProjectileTest {
         Vector dir = new Vector(1, 0, 0);
 
         AtomicInteger ticks = new AtomicInteger();
-        ProjectileCallback callback = new ProjectileCallback() {
+        IProjectileCallback callback = new IProjectileCallback() {
             @Override
             public void onTick(ActiveProjectile projectile) {
                 ticks.incrementAndGet();
@@ -107,7 +107,7 @@ class ProjectileTest {
         ProjectileDefinition def = ProjectileDefinition.builder("short_lived")
                 .velocity(1.0)
                 .maxTicks(3)
-                .callback(new ProjectileCallback() {
+                .callback(new IProjectileCallback() {
                     @Override
                     public void onEnd(ActiveProjectile projectile) {
                         ended.set(true);

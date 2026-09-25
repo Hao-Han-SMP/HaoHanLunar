@@ -5,7 +5,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.aura.ActiveAura;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraComponent;
+import vn.haohan.lunar.api.system.combat.skill.aura.IAuraComponent;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -13,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Periodically induces panic/fear in nearby living entities, disorienting their movement.
  */
-public final class FearAuraComponent implements AuraComponent {
+public final class FearAuraComponent implements IAuraComponent {
 
     private final double radius;
     private final double strength;

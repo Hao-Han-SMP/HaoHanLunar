@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.system.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
 import vn.haohan.lunar.core.features.boss.warden.WardenState;
 import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
@@ -43,7 +43,7 @@ public class PursuitTask extends BukkitRunnable {
         state.zigZagPursuitCooldown = MathUtil.secondsToTicks(6.0 + random.nextDouble() * 3.0);
 
         double initialDist = golem.getLocation().distance(target.getLocation());
-        int calculatedSteps = MathUtil.clamp((int)Math.ceil(initialDist / 3.0), 4, 10);
+        int calculatedSteps = Math.clamp((int)Math.ceil(initialDist / 3.0), 4, 10);
 
         golem.getWorld().playSound(golem.getLocation(), Sound.ENTITY_WARDEN_SONIC_CHARGE, 1.8f, 1.6f);
         golem.getWorld().playSound(golem.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.6f, 1.8f);

@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.system.combat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.IMob;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -15,9 +15,9 @@ import java.util.Optional;
 public final class DamageContext {
 
     private final Entity attacker;
-    private final Mob attackerMob;
+    private final IMob attackerMob;
     private final LivingEntity victim;
-    private final Mob victimMob;
+    private final IMob victimMob;
     private final EntityDamageEvent.DamageCause cause;
     private final DamageType damageType;
     private final double baseDamage;
@@ -58,7 +58,7 @@ public final class DamageContext {
         return attacker;
     }
 
-    public Optional<Mob> attackerMob() {
+    public Optional<IMob> attackerMob() {
         return Optional.ofNullable(attackerMob);
     }
 
@@ -66,7 +66,7 @@ public final class DamageContext {
         return victim;
     }
 
-    public Optional<Mob> victimMob() {
+    public Optional<IMob> victimMob() {
         return Optional.ofNullable(victimMob);
     }
 
@@ -148,9 +148,9 @@ public final class DamageContext {
 
     public static final class Builder {
         private Entity attacker;
-        private Mob attackerMob;
+        private IMob attackerMob;
         private LivingEntity victim;
-        private Mob victimMob;
+        private IMob victimMob;
         private EntityDamageEvent.DamageCause cause = EntityDamageEvent.DamageCause.CUSTOM;
         private DamageType damageType = DamageType.PHYSICAL;
         private double baseDamage;
@@ -167,7 +167,7 @@ public final class DamageContext {
             return this;
         }
 
-        public Builder attackerMob(Mob attackerMob) {
+        public Builder attackerMob(IMob attackerMob) {
             this.attackerMob = attackerMob;
             if (attackerMob != null && this.attacker == null) {
                 this.attacker = attackerMob.entity();
@@ -180,7 +180,7 @@ public final class DamageContext {
             return this;
         }
 
-        public Builder victimMob(Mob victimMob) {
+        public Builder victimMob(IMob victimMob) {
             this.victimMob = victimMob;
             if (victimMob != null && this.victim == null) {
                 this.victim = victimMob.entity();

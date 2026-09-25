@@ -41,6 +41,21 @@ public final class WardenBGMManager implements Listener {
         this.mechanic = mechanic;
     }
 
+    public static String[] getCandidateBgmKeys() {
+        return CANDIDATE_BGM_KEYS.clone();
+    }
+
+    public static boolean playCustomBGM(Player player, String soundKey) {
+        if (player == null || !player.isValid()) return false;
+        stopAllBGM(player);
+        try {
+            player.playSound(player.getLocation(), soundKey, SoundCategory.RECORDS, 1.0f, 1.0f);
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
     public static void updatePlayerBGM(IronGolem golem, WardenState state, Player player) {
         if (player == null || !player.isValid() || player.isDead()) {
             if (player != null) {

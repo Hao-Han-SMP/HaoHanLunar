@@ -207,10 +207,10 @@ class Phase12SignalAndPackCoordinationTest {
                 mob.entity(), null, "default", new CooldownRegistry(), Map.of("signal", "SHIELD_WALL"), 0L);
 
         ConditionResult match = conditionRegistry.evaluate("signal", ctx, Map.of("signal", "SHIELD_WALL"));
-        assertTrue(match.valid() && match.matched(), "Condition should match SHIELD_WALL");
+        assertTrue(match.valid() && match.matched(), "ICondition should match SHIELD_WALL");
 
         ConditionResult mismatch = conditionRegistry.evaluate("signal", ctx, Map.of("signal", "ATTACK_NOW"));
-        assertTrue(mismatch.valid() && !mismatch.matched(), "Condition should not match ATTACK_NOW");
+        assertTrue(mismatch.valid() && !mismatch.matched(), "ICondition should not match ATTACK_NOW");
     }
 
     // --- Helpers and Dynamic Mocks ---

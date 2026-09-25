@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +19,7 @@ import java.util.Map;
  * Spectators can optionally be included or excluded via {@code includeSpectator=false}.
  * Syntax: {@code @Audience{r=32}} or {@code @SkillAudience{r=48}}
  */
-public final class AudienceTargeter implements EntityTargeter {
+public final class AudienceTargeter implements IEntityTargeter {
 
     private static final double DEFAULT_AUDIENCE_RADIUS = 32.0;
 

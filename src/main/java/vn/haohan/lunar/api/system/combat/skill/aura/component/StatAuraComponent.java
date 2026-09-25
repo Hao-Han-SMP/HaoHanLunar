@@ -6,14 +6,14 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import vn.haohan.lunar.api.system.combat.skill.aura.ActiveAura;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraComponent;
+import vn.haohan.lunar.api.system.combat.skill.aura.IAuraComponent;
 
 import java.util.*;
 
 /**
  * Periodically applies and refreshes potion buffs/debuffs to living entities standing within the aura radius.
  */
-public final class StatAuraComponent implements AuraComponent {
+public final class StatAuraComponent implements IAuraComponent {
 
     private final double radius;
     private final PotionEffectType effectType;

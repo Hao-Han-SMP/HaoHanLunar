@@ -3,7 +3,7 @@ package vn.haohan.lunar.core.subsystem.mob;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.system.mob.Mob;
+import vn.haohan.lunar.api.system.mob.IMob;
 import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Actively managed in-game instance of a custom Lunar mob.
  */
-public class ActiveMob implements Mob {
+public class ActiveMob implements IMob {
 
     private final UUID entityId;
     private final MobDefinitionId definitionId;

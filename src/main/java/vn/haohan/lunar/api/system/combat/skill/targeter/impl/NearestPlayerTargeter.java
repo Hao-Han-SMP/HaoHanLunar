@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
 import java.util.Collection;
@@ -17,7 +17,7 @@ import java.util.Map;
  * Selects the single nearest valid player to the caster or origin location.
  * Syntax: {@code @NearestPlayer{r=25}} or {@code @PIRNearest{r=25}}
  */
-public final class NearestPlayerTargeter implements EntityTargeter {
+public final class NearestPlayerTargeter implements IEntityTargeter {
 
     @Override
     public Collection<LivingEntity> resolve(SkillCastContext context, Map<String, Object> parameters) {

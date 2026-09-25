@@ -15,7 +15,7 @@ public record AuraDefinition(
         double radius,
         int maxStacks,
         StackMode stackMode,
-        List<AuraComponent> components
+        List<IAuraComponent> components
 ) {
     public AuraDefinition {
         Objects.requireNonNull(id, "Aura ID must not be null");
@@ -40,7 +40,7 @@ public record AuraDefinition(
         private double radius = 5.0;
         private int maxStacks = 1;
         private StackMode stackMode = StackMode.REFRESH;
-        private final List<AuraComponent> components = new ArrayList<>();
+        private final List<IAuraComponent> components = new ArrayList<>();
 
         private Builder(String id) {
             this.id = id;
@@ -71,7 +71,7 @@ public record AuraDefinition(
             return this;
         }
 
-        public Builder component(AuraComponent component) {
+        public Builder component(IAuraComponent component) {
             if (component != null) this.components.add(component);
             return this;
         }

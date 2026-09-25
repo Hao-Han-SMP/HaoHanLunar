@@ -243,9 +243,9 @@ public final class ContentLintTool {
                 for (int i = 0; i < list.size(); i++) {
                     Object item = list.get(i);
                     if (!(item instanceof Map<?, ?> mechMap)) {
-                        issues.add(new LintIssue(file, "mechanics[" + i + "]", "Mechanic entry must be a map", true));
+                        issues.add(new LintIssue(file, "mechanics[" + i + "]", "IMechanic entry must be a map", true));
                     } else if (!mechMap.containsKey("type") && !mechMap.containsKey("mechanic")) {
-                        issues.add(new LintIssue(file, "mechanics[" + i + "]", "Mechanic entry missing required 'type'", true));
+                        issues.add(new LintIssue(file, "mechanics[" + i + "]", "IMechanic entry missing required 'type'", true));
                     } else {
                         Object type = mechMap.containsKey("type") ? mechMap.get("type") : mechMap.get("mechanic");
                         if (type != null && "skill".equalsIgnoreCase(type.toString())) {

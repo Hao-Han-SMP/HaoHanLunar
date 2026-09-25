@@ -9,11 +9,11 @@ import java.util.Objects;
 /**
  * Executes a fallback child node conditionally if the preceding skill action failed.
  */
-public final class OnFailNode implements CompositeSkillNode {
+public final class OnFailNode implements ICompositeSkillNode {
 
-    private final CompositeSkillNode fallbackChild;
+    private final ICompositeSkillNode fallbackChild;
 
-    public OnFailNode(CompositeSkillNode fallbackChild) {
+    public OnFailNode(ICompositeSkillNode fallbackChild) {
         this.fallbackChild = Objects.requireNonNull(fallbackChild, "Fallback child node must not be null");
     }
 

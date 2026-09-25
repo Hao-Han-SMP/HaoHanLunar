@@ -10,7 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Flatfile fallback storage for Pity counters when SQLite is unavailable.
  */
-public final class FlatfilePityStorage implements PityStorage {
+public final class FlatfilePityStorage implements IPityStorage {
 
     private final File file;
     // (playerUuid:poolId) -> PityRecord

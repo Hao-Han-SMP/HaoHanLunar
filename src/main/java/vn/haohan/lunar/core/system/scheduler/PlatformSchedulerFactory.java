@@ -27,7 +27,7 @@ public final class PlatformSchedulerFactory {
     /**
      * Creates an appropriate platform scheduler instance.
      */
-    public static LunarPlatformScheduler create(Plugin plugin) {
+    public static ILunarPlatformScheduler create(Plugin plugin) {
         Objects.requireNonNull(plugin, "Plugin must not be null");
         if (isFoliaServer()) {
             return new FoliaSchedulerAdapter(plugin);

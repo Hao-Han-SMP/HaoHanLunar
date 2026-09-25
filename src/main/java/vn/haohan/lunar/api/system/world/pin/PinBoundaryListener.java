@@ -20,18 +20,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public final class PinBoundaryListener implements Listener {
 
     @FunctionalInterface
-    public interface BoundaryEnterCallback {
+    public interface IBoundaryEnterCallback {
         void onEnter(Player player, PinRegion region);
     }
 
     @FunctionalInterface
-    public interface BoundaryExitCallback {
+    public interface IBoundaryExitCallback {
         void onExit(Player player, PinRegion region);
     }
 
     private final PinManager pinManager;
-    private final List<BoundaryEnterCallback> enterCallbacks = new CopyOnWriteArrayList<>();
-    private final List<BoundaryExitCallback> exitCallbacks = new CopyOnWriteArrayList<>();
+    private final List<IBoundaryEnterCallback> enterCallbacks = new CopyOnWriteArrayList<>();
+    private final List<IBoundaryExitCallback> exitCallbacks = new CopyOnWriteArrayList<>();
 
     public PinBoundaryListener() {
         this(PinManager.get());
@@ -41,11 +41,11 @@ public final class PinBoundaryListener implements Listener {
         this.pinManager = Objects.requireNonNull(pinManager, "PinManager must not be null");
     }
 
-    public void addEnterCallback(BoundaryEnterCallback callback) {
+    public void addEnterCallback(IBoundaryEnterCallback callback) {
         if (callback != null) enterCallbacks.add(callback);
     }
 
-    public void addExitCallback(BoundaryExitCallback callback) {
+    public void addExitCallback(IBoundaryExitCallback callback) {
         if (callback != null) exitCallbacks.add(callback);
     }
 
@@ -84,7 +84,7 @@ public final class PinBoundaryListener implements Listener {
         // Check for enter: in `to` but not in `from`
         for (PinRegion r : toRegions) {
             if (!fromNames.contains(r.name().toLowerCase(java.util.Locale.ROOT))) {
-                for (BoundaryEnterCallback callback : enterCallbacks) {
+                for (IBoundaryEnterCallback callback : enterCallbacks) {
                     try {
                         callback.onEnter(player, r);
                     } catch (Throwable ignored) {}
@@ -95,7 +95,7 @@ public final class PinBoundaryListener implements Listener {
         // Check for exit: in `from` but not in `to`
         for (PinRegion r : fromRegions) {
             if (!toNames.contains(r.name().toLowerCase(java.util.Locale.ROOT))) {
-                for (BoundaryExitCallback callback : exitCallbacks) {
+                for (IBoundaryExitCallback callback : exitCallbacks) {
                     try {
                         callback.onExit(player, r);
                     } catch (Throwable ignored) {}

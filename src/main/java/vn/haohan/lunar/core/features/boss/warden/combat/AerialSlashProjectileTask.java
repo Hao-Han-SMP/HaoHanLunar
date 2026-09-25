@@ -16,7 +16,7 @@ import org.joml.Matrix3f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import vn.haohan.itemcore.api.HaoHanItemCore;
-import vn.haohan.lunar.api.system.util.MathUtil;
+import vn.haohan.lunar.core.system.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 

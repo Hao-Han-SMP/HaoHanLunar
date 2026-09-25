@@ -5,7 +5,7 @@ import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.mob.phase.MobPhase;
 import vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine;
-import vn.haohan.lunar.api.system.mob.phase.PhaseCondition;
+import vn.haohan.lunar.api.system.mob.phase.IPhaseCondition;
 import vn.haohan.lunar.api.system.mob.phase.PhaseContext;
 import vn.haohan.lunar.core.mob.ActiveLunarMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
@@ -87,8 +87,8 @@ class MobPhaseMachineTest {
     void compositeConditionsEvaluation() {
         MobPhase berserkPhase = MobPhase.builder("berserk")
                 .priority(20)
-                .condition(PhaseCondition.aliveTimeGreaterThanOrEqual(100L))
-                .condition(PhaseCondition.targetCountGreaterThanOrEqual(3))
+                .condition(IPhaseCondition.aliveTimeGreaterThanOrEqual(100L))
+                .condition(IPhaseCondition.targetCountGreaterThanOrEqual(3))
                 .onEnterSkill("enter_berserk")
                 .build();
 
@@ -101,12 +101,12 @@ class MobPhaseMachineTest {
                 new CooldownRegistry(), ignored -> {});
         ActiveLunarMob mob = mob();
 
-        // Condition not satisfied: aliveTicks < 100
+        // ICondition not satisfied: aliveTicks < 100
         PhaseContext ctx1 = new PhaseContext(mob, 100, 100, 10, 50, 4, Map.of(), null);
         machine.update(ctx1);
         assertEquals("normal", machine.state(mob.entityId()).orElseThrow().phaseId());
 
-        // Condition not satisfied: targetCount < 3
+        // ICondition not satisfied: targetCount < 3
         PhaseContext ctx2 = new PhaseContext(mob, 100, 100, 20, 120, 2, Map.of(), null);
         machine.update(ctx2);
         assertEquals("normal", machine.state(mob.entityId()).orElseThrow().phaseId());

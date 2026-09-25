@@ -17,14 +17,14 @@ import vn.haohan.lunar.core.features.boss.warden.ui.WardenBGMManager;
 import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class LunarWardenMechanic implements Listener, LunarSubSystem {
+public class LunarWardenMechanic implements Listener, ILunarSubSystem {
 
     private final HaoHanLunarPlugin plugin;
     private final Map<UUID, WardenState> bossStates = new ConcurrentHashMap<>();

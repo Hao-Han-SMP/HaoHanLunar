@@ -19,15 +19,13 @@ import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
 import vn.haohan.lunar.api.system.config.ConfigValidationReport;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
-import vn.haohan.lunar.core.command.LunarCommands;
-import vn.haohan.lunar.core.command.MobCommand;
-import vn.haohan.lunar.core.command.commands.LunarMobSubsystemCommand;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 import vn.haohan.lunar.core.subsystem.mob.MobSkillRuntime;
 import vn.haohan.lunar.core.system.throttle.DynamicThrottlingEngine;
 import vn.haohan.lunar.core.system.variable.VariableManager;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +34,7 @@ import java.util.UUID;
  * Subsystem initializing the mob runtime, skill engine, combat pipeline,
  * auras, projectiles, and variables, then binding them to the public {@link LunarAPI} service locator.
  */
-public final class MobCoreSubSystem implements LunarSubSystem {
+public final class MobCoreSubSystem implements ILunarSubSystem {
 
     private LunarMobManager mobManager;
     private MobDefinitionRegistry mobRegistry;
@@ -48,7 +46,7 @@ public final class MobCoreSubSystem implements LunarSubSystem {
     private DropManager dropManager;
     private FixedSpawnerManager fixedSpawnerManager;
     private ItemProviderRegistry itemProviderRegistry;
-    private MobCommand mobCommand;
+    private Path configRoot;
     private final vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics performanceMetrics = new vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics();
     private vn.haohan.lunar.core.system.config.reload.HotReloadEngine hotReloadEngine;
 
@@ -158,25 +156,8 @@ public final class MobCoreSubSystem implements LunarSubSystem {
         LunarAPI.setSpawnerManager(fixedSpawnerManager);
         LunarAPI.setItemProvider(itemProviderRegistry);
 
-        java.nio.file.Path configRoot = plugin != null ? plugin.getDataFolder().toPath() : java.nio.file.Path.of("src/main/resources");
+        this.configRoot = plugin != null ? plugin.getDataFolder().toPath() : Path.of("src/main/resources");
         hotReloadEngine = new vn.haohan.lunar.core.system.config.reload.HotReloadEngine(configRoot, mobRegistry, skillRegistry, dropManager, fixedSpawnerManager, mobManager, java.util.concurrent.ForkJoinPool.commonPool());
-
-        // Command facade
-        mobCommand = new MobCommand(
-                mobRegistry,
-                mobManager,
-                (player, def) -> true, () -> {
-            var lint = vn.haohan.lunar.core.system.validator.ContentLintTool.lintDirectory(configRoot);
-            if (lint.hasErrors()) {
-                var issues = lint.issues().stream().map(i -> new ConfigValidationReport.Issue(i.file(), i.field(), i.message(), 0, 0)).toList();
-                return new ConfigValidationReport(issues);
-            }
-            hotReloadEngine.applyReload(mobRegistry.snapshot().values(), skillRegistry.snapshot().values(), dropManager.snapshot().values(), Collections.emptyList(), lint.issues());
-            return new ConfigValidationReport(Collections.emptyList());
-        }, (mob, sig) -> {
-        }, new vn.haohan.lunar.core.system.debug.validator.ConfigValidationService(), new vn.haohan.lunar.core.system.debug.trace.SkillTracer(), performanceMetrics, configRoot
-        );
-        LunarCommands.register(new LunarMobSubsystemCommand(mobCommand));
 
         // Register event listeners
         if (plugin != null && plugin.getServer() != null) {
@@ -186,6 +167,19 @@ public final class MobCoreSubSystem implements LunarSubSystem {
             pm.registerEvents(dropManager, plugin);
             pm.registerEvents(mobSkillRuntime, plugin);
         }
+    }
+
+    public ConfigValidationReport reload() {
+        Path root = configRoot != null ? configRoot : Path.of("src/main/resources");
+        var lint = vn.haohan.lunar.core.system.validator.ContentLintTool.lintDirectory(root);
+        if (lint.hasErrors()) {
+            var issues = lint.issues().stream().map(i -> new ConfigValidationReport.Issue(i.file(), i.field(), i.message(), 0, 0)).toList();
+            return new ConfigValidationReport(issues);
+        }
+        if (hotReloadEngine != null) {
+            hotReloadEngine.applyReload(mobRegistry.snapshot().values(), skillRegistry.snapshot().values(), dropManager.snapshot().values(), Collections.emptyList(), lint.issues());
+        }
+        return new ConfigValidationReport(Collections.emptyList());
     }
 
     @Override
@@ -271,11 +265,11 @@ public final class MobCoreSubSystem implements LunarSubSystem {
         if (skillScheduler != null) {
             skillScheduler.stop();
         }
-        if (projectileTracker != null) {
-            projectileTracker.clear();
-        }
         if (auraScheduler != null) {
             auraScheduler.clear();
+        }
+        if (projectileTracker != null) {
+            projectileTracker.clear();
         }
         if (mobManager != null) {
             mobManager.cleanupAll();
@@ -367,14 +361,6 @@ public final class MobCoreSubSystem implements LunarSubSystem {
 
     public ItemProviderRegistry getItemProviderRegistry() {
         return itemProviderRegistry;
-    }
-
-    public MobCommand mobCommand() {
-        return mobCommand;
-    }
-
-    public MobCommand getMobCommand() {
-        return mobCommand;
     }
 
     public AuraRegistry auraRegistry() {

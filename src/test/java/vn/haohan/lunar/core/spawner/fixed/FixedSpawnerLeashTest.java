@@ -40,7 +40,7 @@ class FixedSpawnerLeashTest {
                 .resetThreatOnLeash(true)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(spawnerDef);
+        FixedSpawner spawner = new FixedSpawner(spawnerDef);
 
         // Create mob initially pulled far away (e.g. 50 blocks away at x=50, z=0)
         AtomicReference<Location> currentLoc = new AtomicReference<>(new Location(mockWorld, 50.0, 64.0, 0.0));
@@ -90,7 +90,7 @@ class FixedSpawnerLeashTest {
                 .hardLeashRadius(50.0)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(spawnerDef);
+        FixedSpawner spawner = new FixedSpawner(spawnerDef);
 
         // Place mob at 35 blocks away (exceeds soft 20, but within hard 50)
         AtomicReference<Location> currentLoc = new AtomicReference<>(new Location(mockWorld, 35.0, 64.0, 0.0));
@@ -136,11 +136,11 @@ class FixedSpawnerLeashTest {
                 .warmupSeconds(0)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(spawnerDef);
+        FixedSpawner spawner = new FixedSpawner(spawnerDef);
         spawner.setCooldownTicks(0);
 
         List<String> spawned = new ArrayList<>();
-        LunarFixedSpawner.SpawnerCallback callback = (mobId, loc, spawnerId) -> {
+        FixedSpawner.ISpawnerCallback callback = (mobId, loc, spawnerId) -> {
             spawned.add(mobId);
             return Optional.of(UUID.randomUUID());
         };
@@ -187,7 +187,7 @@ class FixedSpawnerLeashTest {
                 .conditions(List.of("lunarphase FULL_MOON"))
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(spawnerDef);
+        FixedSpawner spawner = new FixedSpawner(spawnerDef);
         AtomicBoolean conditionMet = new AtomicBoolean(false);
         spawner.setConditionEvaluator(def -> conditionMet.get());
 
@@ -214,7 +214,7 @@ class FixedSpawnerLeashTest {
                 .resetThreatOnLeash(true)
                 .build();
 
-        LunarFixedSpawner spawner = new LunarFixedSpawner(spawnerDef);
+        FixedSpawner spawner = new FixedSpawner(spawnerDef);
 
         // Mob is only 10 blocks away (within leash range)
         AtomicReference<Location> currentLoc = new AtomicReference<>(new Location(mockWorld, 10.0, 64.0, 0.0));

@@ -65,7 +65,7 @@ class ModelEngineMobAdapterTest {
                 });
     }
 
-    private static class FakeBridge implements ModelEngineMobAdapter.ModelEngineBridge {
+    private static class FakeBridge implements ModelEngineMobAdapter.IModelEngineBridge {
         private final AtomicInteger destroyCalls = new AtomicInteger();
         @Override public boolean attach(LivingEntity entity, String modelId) { return true; }
         @Override public void destroy(LivingEntity entity) { destroyCalls.incrementAndGet(); }

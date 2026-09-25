@@ -36,15 +36,15 @@ class CompositeSkillTest {
     @Test
     void sequenceExecutesChildrenInOrderAndStopsOnFailure() {
         List<String> log = new ArrayList<>();
-        CompositeSkillNode node1 = (ctx, targets) -> {
+        ICompositeSkillNode node1 = (ctx, targets) -> {
             log.add("step1");
             return CompositeResult.success();
         };
-        CompositeSkillNode node2 = (ctx, targets) -> {
+        ICompositeSkillNode node2 = (ctx, targets) -> {
             log.add("step2");
             return CompositeResult.failure("failed at 2");
         };
-        CompositeSkillNode node3 = (ctx, targets) -> {
+        ICompositeSkillNode node3 = (ctx, targets) -> {
             log.add("step3");
             return CompositeResult.success();
         };
@@ -63,12 +63,12 @@ class CompositeSkillTest {
         List<String> log = new ArrayList<>();
         SkillCastContext context = sampleContext();
 
-        CompositeSkillNode step1 = (ctx, targets) -> {
+        ICompositeSkillNode step1 = (ctx, targets) -> {
             log.add("step1");
             return CompositeResult.success();
         };
-        CompositeSkillNode cancelStep = new CancelNode();
-        CompositeSkillNode step3 = (ctx, targets) -> {
+        ICompositeSkillNode cancelStep = new CancelNode();
+        ICompositeSkillNode step3 = (ctx, targets) -> {
             log.add("step3");
             return CompositeResult.success();
         };
@@ -89,12 +89,12 @@ class CompositeSkillTest {
         AtomicInteger counter = new AtomicInteger();
         List<Integer> depths = new ArrayList<>();
 
-        CompositeSkillNode branch1 = (ctx, targets) -> {
+        ICompositeSkillNode branch1 = (ctx, targets) -> {
             counter.incrementAndGet();
             depths.add(ctx.depth());
             return CompositeResult.success();
         };
-        CompositeSkillNode branch2 = (ctx, targets) -> {
+        ICompositeSkillNode branch2 = (ctx, targets) -> {
             counter.incrementAndGet();
             depths.add(ctx.depth());
             return CompositeResult.success();
@@ -112,7 +112,7 @@ class CompositeSkillTest {
     @Test
     void chanceNodeExecutesOnlyWhenRollPasses() {
         AtomicInteger ranCount = new AtomicInteger();
-        CompositeSkillNode action = (ctx, targets) -> {
+        ICompositeSkillNode action = (ctx, targets) -> {
             ranCount.incrementAndGet();
             return CompositeResult.success();
         };
@@ -131,7 +131,7 @@ class CompositeSkillTest {
     @Test
     void repeatUntilLoopsUntilConditionOrSafetyBound() {
         AtomicInteger iterations = new AtomicInteger();
-        CompositeSkillNode action = (ctx, targets) -> {
+        ICompositeSkillNode action = (ctx, targets) -> {
             iterations.incrementAndGet();
             ctx.put("counter", iterations.get());
             return CompositeResult.success();

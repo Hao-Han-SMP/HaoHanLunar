@@ -143,7 +143,7 @@ class VariableAndPlaceholderTest {
 
         // PlayerQuitEvent
         Player mockPlayer = mockPlayer(playerUuid, "TestPlayer");
-        PlayerQuitEvent quitEvent = new PlayerQuitEvent(mockPlayer, (net.kyori.adventure.text.Component) null);
+        PlayerQuitEvent quitEvent = new PlayerQuitEvent(mockPlayer, (net.kyori.adventure.text.Component) null, PlayerQuitEvent.QuitReason.DISCONNECTED);
         variableManager.onPlayerQuit(quitEvent);
 
         assertEquals(0, variableManager.getPlayer(playerUuid).size(), "Player variables should be empty after quit");

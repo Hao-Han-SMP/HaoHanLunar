@@ -10,7 +10,7 @@ public record MobPhase(
         String id,
         int priority,
         double minimumHealthRatio,
-        List<PhaseCondition> conditions,
+        List<IPhaseCondition> conditions,
         List<String> onEnterSkills,
         List<String> onExitSkills,
         boolean resetCooldowns,
@@ -35,7 +35,7 @@ public record MobPhase(
     public MobPhase(String id, double minimumHealthRatio, String enterSkill,
                     String exitSkill, boolean resetCooldowns) {
         this(id, 0, minimumHealthRatio,
-                List.of(PhaseCondition.healthLessThanOrEqual(minimumHealthRatio)),
+                List.of(IPhaseCondition.healthLessThanOrEqual(minimumHealthRatio)),
                 enterSkill != null && !enterSkill.isBlank() ? List.of(enterSkill.trim().toLowerCase(Locale.ROOT)) : List.of(),
                 exitSkill != null && !exitSkill.isBlank() ? List.of(exitSkill.trim().toLowerCase(Locale.ROOT)) : List.of(),
                 resetCooldowns, false, 0L);
@@ -53,7 +53,7 @@ public record MobPhase(
         if (conditions.isEmpty()) {
             return context.healthRatio() <= minimumHealthRatio;
         }
-        for (PhaseCondition condition : conditions) {
+        for (IPhaseCondition condition : conditions) {
             if (!condition.matches(context)) {
                 return false;
             }
@@ -141,7 +141,7 @@ public record MobPhase(
         if (rawConds instanceof Collection<?> condCol) {
             for (Object c : condCol) {
                 if (c != null) {
-                    PhaseCondition parsed = parseConditionString(c.toString());
+                    IPhaseCondition parsed = parseConditionString(c.toString());
                     if (parsed != null) builder.condition(parsed);
                 }
             }
@@ -158,7 +158,7 @@ public record MobPhase(
         }
     }
 
-    public static PhaseCondition parseConditionString(String condStr) {
+    public static IPhaseCondition parseConditionString(String condStr) {
         if (condStr == null || condStr.isBlank()) return null;
         String trimmed = condStr.trim();
         String lower = trimmed.toLowerCase(Locale.ROOT);
@@ -167,26 +167,26 @@ public record MobPhase(
             if (!numPart.isEmpty()) {
                 double val = Double.parseDouble(numPart);
                 if (trimmed.contains("%") || val > 1.0) val = val / 100.0;
-                return PhaseCondition.healthLessThanOrEqual(Math.max(0.0, Math.min(1.0, val)));
+                return IPhaseCondition.healthLessThanOrEqual(Math.max(0.0, Math.min(1.0, val)));
             }
         } else if (lower.startsWith("alive") || lower.startsWith("alivetime")) {
             String numPart = lower.replaceAll("[^0-9]", "");
-            if (!numPart.isEmpty()) return PhaseCondition.aliveTimeGreaterThanOrEqual(Long.parseLong(numPart));
+            if (!numPart.isEmpty()) return IPhaseCondition.aliveTimeGreaterThanOrEqual(Long.parseLong(numPart));
         } else if (lower.startsWith("target") || lower.startsWith("targets") || lower.startsWith("targetcount")) {
             String numPart = lower.replaceAll("[^0-9]", "");
-            if (!numPart.isEmpty()) return PhaseCondition.targetCountGreaterThanOrEqual(Integer.parseInt(numPart));
+            if (!numPart.isEmpty()) return IPhaseCondition.targetCountGreaterThanOrEqual(Integer.parseInt(numPart));
         } else if (lower.contains("signal") || lower.startsWith("~onsignal")) {
             int idx = trimmed.indexOf(':');
             if (idx == -1) idx = trimmed.indexOf("==");
             if (idx != -1) {
                 String sig = trimmed.substring(idx + (trimmed.charAt(idx) == ':' ? 1 : 2)).trim();
-                return PhaseCondition.signalEquals(sig);
+                return IPhaseCondition.signalEquals(sig);
             }
         } else if (trimmed.contains("==")) {
             String[] parts = trimmed.split("==", 2);
             String key = parts[0].trim().replace("<caster.var.", "").replace(">", "").replace("var.", "");
             String expected = parts[1].trim();
-            return PhaseCondition.variableEquals(key, expected);
+            return IPhaseCondition.variableEquals(key, expected);
         }
         return null;
     }
@@ -199,7 +199,7 @@ public record MobPhase(
         private final String id;
         private int priority = 0;
         private double minimumHealthRatio = 1.0;
-        private final List<PhaseCondition> conditions = new ArrayList<>();
+        private final List<IPhaseCondition> conditions = new ArrayList<>();
         private final List<String> onEnterSkills = new ArrayList<>();
         private final List<String> onExitSkills = new ArrayList<>();
         private boolean resetCooldowns = false;
@@ -217,11 +217,11 @@ public record MobPhase(
 
         public Builder minimumHealthRatio(double ratio) {
             this.minimumHealthRatio = ratio;
-            this.conditions.add(PhaseCondition.healthLessThanOrEqual(ratio));
+            this.conditions.add(IPhaseCondition.healthLessThanOrEqual(ratio));
             return this;
         }
 
-        public Builder condition(PhaseCondition condition) {
+        public Builder condition(IPhaseCondition condition) {
             if (condition != null) this.conditions.add(condition);
             return this;
         }

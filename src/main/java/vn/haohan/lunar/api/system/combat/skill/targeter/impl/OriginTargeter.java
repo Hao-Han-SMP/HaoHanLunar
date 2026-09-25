@@ -2,7 +2,7 @@ package vn.haohan.lunar.api.system.combat.skill.targeter.impl;
 
 import org.bukkit.Location;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.ILocationTargeter;
 
 import java.util.Collection;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * Targets the origin location of the cast context.
  */
-public final class OriginTargeter implements LocationTargeter {
+public final class OriginTargeter implements ILocationTargeter {
 
     @Override
     public String name() {

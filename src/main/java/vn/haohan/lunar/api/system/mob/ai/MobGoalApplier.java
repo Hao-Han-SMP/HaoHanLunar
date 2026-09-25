@@ -12,7 +12,7 @@ import org.bukkit.entity.Mob;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
-import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
+import vn.haohan.lunar.api.system.combat.threat.IThreatTable;
 import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
 
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
  */
 public final class MobGoalApplier {
 
-    public interface GoalExecutor {
+    public interface IGoalExecutor {
         void clearGoals(Mob mob);
         void clearTargets(Mob mob);
         void addGoal(Mob mob, int priority, AIGoalEntry entry);
@@ -32,31 +32,31 @@ public final class MobGoalApplier {
             addGoal(mob, priority, entry);
         }
         void addTarget(Mob mob, int priority, AIGoalEntry entry);
-        default void addTarget(Mob mob, int priority, AIGoalEntry entry, ThreatTable threatTable) {
+        default void addTarget(Mob mob, int priority, AIGoalEntry entry, IThreatTable threatTable) {
             addTarget(mob, priority, entry);
         }
-        default void addTarget(Mob mob, int priority, AIGoalEntry entry, ThreatTable threatTable, Supplier<LunarMobManager> mobManagerSupplier) {
+        default void addTarget(Mob mob, int priority, AIGoalEntry entry, IThreatTable threatTable, Supplier<LunarMobManager> mobManagerSupplier) {
             addTarget(mob, priority, entry, threatTable);
         }
     }
 
-    private GoalExecutor executor;
+    private IGoalExecutor executor;
 
     public MobGoalApplier() {
         this(new PaperGoalExecutor());
     }
 
-    public MobGoalApplier(GoalExecutor executor) {
+    public MobGoalApplier(IGoalExecutor executor) {
         this.executor = Objects.requireNonNull(executor, "executor must not be null");
     }
 
-    public void setExecutor(GoalExecutor executor) {
+    public void setExecutor(IGoalExecutor executor) {
         if (executor != null) {
             this.executor = executor;
         }
     }
 
-    public GoalExecutor getExecutor() {
+    public IGoalExecutor getExecutor() {
         return executor;
     }
 
@@ -67,11 +67,11 @@ public final class MobGoalApplier {
         apply(mob, goalSelectors, targetSelectors, null, null);
     }
 
-    public void apply(Mob mob, List<String> goalSelectors, List<String> targetSelectors, ThreatTable threatTable) {
+    public void apply(Mob mob, List<String> goalSelectors, List<String> targetSelectors, IThreatTable threatTable) {
         apply(mob, goalSelectors, targetSelectors, threatTable, null);
     }
 
-    public void apply(Mob mob, List<String> goalSelectors, List<String> targetSelectors, ThreatTable threatTable, Supplier<LunarMobManager> mobManagerSupplier) {
+    public void apply(Mob mob, List<String> goalSelectors, List<String> targetSelectors, IThreatTable threatTable, Supplier<LunarMobManager> mobManagerSupplier) {
         if (mob == null) return;
 
         if (goalSelectors != null && !goalSelectors.isEmpty()) {
@@ -104,7 +104,7 @@ public final class MobGoalApplier {
     /**
      * Production implementation utilizing Paper's MobGoals API.
      */
-    public static final class PaperGoalExecutor implements GoalExecutor {
+    public static final class PaperGoalExecutor implements IGoalExecutor {
 
         @Override
         public void clearGoals(Mob mob) {
@@ -258,12 +258,12 @@ public final class MobGoalApplier {
         }
 
         @Override
-        public void addTarget(Mob mob, int priority, AIGoalEntry entry, ThreatTable threatTable) {
+        public void addTarget(Mob mob, int priority, AIGoalEntry entry, IThreatTable threatTable) {
             addTarget(mob, priority, entry, threatTable, null);
         }
 
         @Override
-        public void addTarget(Mob mob, int priority, AIGoalEntry entry, ThreatTable threatTable, Supplier<LunarMobManager> mobManagerSupplier) {
+        public void addTarget(Mob mob, int priority, AIGoalEntry entry, IThreatTable threatTable, Supplier<LunarMobManager> mobManagerSupplier) {
             try {
                 MobGoals mobGoals = Bukkit.getMobGoals();
                 if (mobGoals == null) return;

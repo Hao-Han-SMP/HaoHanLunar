@@ -1,11 +1,11 @@
 package vn.haohan.lunar.api.system.combat.skill;
 
-import vn.haohan.lunar.api.manager.SkillManager;
-import vn.haohan.lunar.api.system.combat.skill.condition.Condition;
+import vn.haohan.lunar.api.manager.ISkillManager;
+import vn.haohan.lunar.api.system.combat.skill.condition.ICondition;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.api.system.combat.skill.mechanic.Mechanic;
+import vn.haohan.lunar.api.system.combat.skill.mechanic.IMechanic;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
-import vn.haohan.lunar.api.system.combat.skill.target.Targeter;
+import vn.haohan.lunar.api.system.combat.skill.target.ITargeter;
 import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
 
 import java.util.*;
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Thread-safe registry for loaded skill definitions.
  */
-public final class SkillRegistry implements SkillManager {
+public final class SkillRegistry implements ISkillManager {
 
     private final Map<String, SkillChainDefinition> skills = new ConcurrentHashMap<>();
 
@@ -61,7 +61,7 @@ public final class SkillRegistry implements SkillManager {
         return id.trim().toLowerCase(Locale.ROOT);
     }
 
-    // --- SkillManager API Implementation ---
+    // --- ISkillManager API Implementation ---
     private MechanicRegistry mechanicRegistry;
     private ConditionRegistry conditionRegistry;
     private TargeterRegistry targeterRegistry;
@@ -75,17 +75,17 @@ public final class SkillRegistry implements SkillManager {
     }
 
     @Override
-    public void registerMechanic(String name, Mechanic mechanic) {
+    public void registerMechanic(String name, IMechanic mechanic) {
         if (mechanicRegistry != null) mechanicRegistry.register(name, mechanic);
     }
 
     @Override
-    public void registerCondition(String name, Condition condition) {
+    public void registerCondition(String name, ICondition condition) {
         if (conditionRegistry != null) conditionRegistry.register(name, condition);
     }
 
     @Override
-    public void registerTargeter(String name, Targeter targeter) {
+    public void registerTargeter(String name, ITargeter targeter) {
         if (targeterRegistry != null) targeterRegistry.register(name, targeter);
     }
 

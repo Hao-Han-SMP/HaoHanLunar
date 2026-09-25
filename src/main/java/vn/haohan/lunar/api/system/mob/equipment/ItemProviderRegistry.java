@@ -2,7 +2,7 @@ package vn.haohan.lunar.api.system.mob.equipment;
 
 import org.bukkit.inventory.ItemStack;
 import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.system.item.ItemProvider;
+import vn.haohan.lunar.api.system.item.IItemProvider;
 
 import java.util.Locale;
 import java.util.Map;
@@ -15,7 +15,7 @@ import java.util.function.Function;
  * Registry and resolver for item generation across custom mob equipment and drops.
  * Delegates to HaoHanItemBridge and allows additional prefix hooks.
  */
-public final class ItemProviderRegistry implements ItemProvider {
+public final class ItemProviderRegistry implements IItemProvider {
 
     private final Map<String, Function<String, ItemStack>> customResolvers = new ConcurrentHashMap<>();
 

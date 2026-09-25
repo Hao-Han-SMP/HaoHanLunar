@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
-import vn.haohan.lunar.api.system.combat.skill.aura.AuraAttachment;
+import vn.haohan.lunar.api.system.combat.skill.aura.IAuraAttachment;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraDefinition;
 import vn.haohan.lunar.api.system.combat.skill.aura.AuraScheduler;
 
@@ -127,7 +127,7 @@ class ConditionRegistryTest {
         // hasaura condition
         assertFalse(registry.evaluate("hasaura", context, Map.of("aura", "shield")).matched());
         AuraDefinition auraDef = AuraDefinition.builder("shield").durationTicks(200L).build();
-        auraScheduler.applyAura(auraDef, AuraAttachment.ofEntity(target), caster.getUniqueId(), 0L);
+        auraScheduler.applyAura(auraDef, IAuraAttachment.ofEntity(target), caster.getUniqueId(), 0L);
         assertTrue(registry.evaluate("hasaura", context, Map.of("aura", "shield")).matched());
     }
 

@@ -15,10 +15,10 @@ import java.util.function.Consumer;
 /**
  * Paper/Spigot single-thread scheduler adapter using standard BukkitScheduler.
  */
-public final class PaperSchedulerAdapter implements LunarPlatformScheduler {
+public final class PaperSchedulerAdapter implements ILunarPlatformScheduler {
 
     private final Plugin plugin;
-    private final Set<TaskHandle> activeHandles = ConcurrentHashMap.newKeySet();
+    private final Set<ITaskHandle> activeHandles = ConcurrentHashMap.newKeySet();
 
     public PaperSchedulerAdapter(Plugin plugin) {
         this.plugin = Objects.requireNonNull(plugin, "Plugin must not be null");
@@ -30,27 +30,27 @@ public final class PaperSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runAtEntity(Entity entity, Consumer<TaskHandle> task) {
+    public ITaskHandle runAtEntity(Entity entity, Consumer<ITaskHandle> task) {
         return runSync(task);
     }
 
     @Override
-    public TaskHandle runAtLocation(Location location, Consumer<TaskHandle> task) {
+    public ITaskHandle runAtLocation(Location location, Consumer<ITaskHandle> task) {
         return runSync(task);
     }
 
     @Override
-    public TaskHandle runTimerAtEntity(Entity entity, Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerAtEntity(Entity entity, Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         return runTimerSync(task, initialDelayTicks, periodTicks);
     }
 
     @Override
-    public TaskHandle runTimerAtLocation(Location location, Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerAtLocation(Location location, Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         return runTimerSync(task, initialDelayTicks, periodTicks);
     }
 
     @Override
-    public TaskHandle runSync(Consumer<TaskHandle> task) {
+    public ITaskHandle runSync(Consumer<ITaskHandle> task) {
         Objects.requireNonNull(task, "Task must not be null");
         BukkitTaskHandle handle = new BukkitTaskHandle();
         BukkitTask bukkitTask = Bukkit.getScheduler().runTask(plugin, () -> {
@@ -65,7 +65,7 @@ public final class PaperSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runTimerSync(Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerSync(Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         Objects.requireNonNull(task, "Task must not be null");
         BukkitTaskHandle handle = new BukkitTaskHandle();
         BukkitTask bukkitTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
@@ -79,7 +79,7 @@ public final class PaperSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runAsync(Consumer<TaskHandle> task) {
+    public ITaskHandle runAsync(Consumer<ITaskHandle> task) {
         Objects.requireNonNull(task, "Task must not be null");
         BukkitTaskHandle handle = new BukkitTaskHandle();
         BukkitTask bukkitTask = Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
@@ -94,7 +94,7 @@ public final class PaperSchedulerAdapter implements LunarPlatformScheduler {
     }
 
     @Override
-    public TaskHandle runTimerAsync(Consumer<TaskHandle> task, long initialDelayTicks, long periodTicks) {
+    public ITaskHandle runTimerAsync(Consumer<ITaskHandle> task, long initialDelayTicks, long periodTicks) {
         Objects.requireNonNull(task, "Task must not be null");
         BukkitTaskHandle handle = new BukkitTaskHandle();
         BukkitTask bukkitTask = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, () -> {
@@ -109,13 +109,13 @@ public final class PaperSchedulerAdapter implements LunarPlatformScheduler {
 
     @Override
     public void cancelAll() {
-        for (TaskHandle handle : activeHandles) {
+        for (ITaskHandle handle : activeHandles) {
             handle.cancel();
         }
         activeHandles.clear();
     }
 
-    private static final class BukkitTaskHandle implements TaskHandle {
+    private static final class BukkitTaskHandle implements ITaskHandle {
         private final AtomicBoolean cancelled = new AtomicBoolean(false);
         private volatile BukkitTask task;
 

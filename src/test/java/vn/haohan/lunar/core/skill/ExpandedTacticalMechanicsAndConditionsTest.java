@@ -169,18 +169,18 @@ class ExpandedTacticalMechanicsAndConditionsTest {
         assertTrue(pinManager.getPin("altar_core").isPresent());
         assertEquals(100, pinManager.getPin("altar_core").get().x());
 
-        // Targeter @pin{name=altar_core}
+        // ITargeter @pin{name=altar_core}
         SkillCastContext castCtx = ctx.cast();
         Collection<Location> locations = targeterRegistry.resolveLocations("@pin{name=altar_core}", castCtx);
         assertFalse(locations.isEmpty());
         assertEquals(100, locations.iterator().next().getX());
 
-        // Condition haspin
+        // ICondition haspin
         ConditionContext condCtx = new ConditionContext(casterEntity, null, "default", new CooldownRegistry(), Map.of(), 0L);
         assertTrue(conditionRegistry.evaluate("haspin", condCtx, Map.of("name", "altar_core")).matched());
         assertFalse(conditionRegistry.evaluate("haspin", condCtx, Map.of("name", "non_existing")).matched());
 
-        // Condition pindistance
+        // ICondition pindistance
         assertTrue(conditionRegistry.evaluate("pindistance", condCtx, Map.of("pin", "altar_core", "distance", "<=5")).matched());
         assertFalse(conditionRegistry.evaluate("pindistance", condCtx, Map.of("pin", "altar_core", "distance", ">10")).matched());
 

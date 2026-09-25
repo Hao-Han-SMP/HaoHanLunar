@@ -6,7 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Thread-safe threat table for tracking hostility values and managing stable target selection.
  */
-public final class ThreatTable implements vn.haohan.lunar.api.system.combat.ThreatTable {
+public final class ThreatTable implements IThreatTable {
 
     private final UUID mobId;
     private final Map<UUID, Double> threatScores = new ConcurrentHashMap<>();

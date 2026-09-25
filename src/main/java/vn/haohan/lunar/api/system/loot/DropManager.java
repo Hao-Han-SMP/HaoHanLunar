@@ -19,7 +19,7 @@ import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.event.LootGenerateEvent;
 import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
-import vn.haohan.lunar.api.manager.LootManager;
+import vn.haohan.lunar.api.manager.ILootManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.system.mob.equipment.EquipmentApplier;
@@ -39,7 +39,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Supports Per-Player Instanced Drops, Lootsplosion, Item Glowing, Particle Beams,
  * Experience Orbs, Recursive Sub-Tables, and firing LootGenerateEvent for external interception/customization.
  */
-public final class DropManager implements LootManager, Listener {
+public final class DropManager implements ILootManager, Listener {
 
     private final MobDefinitionRegistry mobDefinitions;
     private final LunarMobManager mobManager;
@@ -332,7 +332,7 @@ public final class DropManager implements LootManager, Listener {
         return id.trim().toLowerCase(Locale.ROOT);
     }
 
-    // --- LootManager API Implementation ---
+    // --- ILootManager API Implementation ---
     @Override
     public boolean hasDropTable(String dropTableId) {
         return hasTable(dropTableId);

@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Explicitly trips the cancellation token of the current skill cast context.
  */
-public final class CancelNode implements CompositeSkillNode {
+public final class CancelNode implements ICompositeSkillNode {
 
     @Override
     public CompositeResult execute(SkillCastContext context, List<TargetRef> targets) {

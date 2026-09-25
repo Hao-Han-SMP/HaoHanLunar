@@ -57,7 +57,7 @@ public final class MechanicRegistry {
 
     private static final double MAX_AMOUNT = 1000.0;
     private static final int MAX_COUNT = 500;
-    private final Map<String, Mechanic> mechanics = new LinkedHashMap<>();
+    private final Map<String, IMechanic> mechanics = new LinkedHashMap<>();
 
     private AuraScheduler auraScheduler;
     private AuraRegistry auraRegistry;
@@ -129,28 +129,28 @@ public final class MechanicRegistry {
         return audioEngine;
     }
 
-    public synchronized void register(String id, Mechanic mechanic) {
+    public synchronized void register(String id, IMechanic mechanic) {
         String normalized = normalize(id);
-        Objects.requireNonNull(mechanic, "Mechanic must not be null");
+        Objects.requireNonNull(mechanic, "IMechanic must not be null");
         mechanics.put(normalized, mechanic);
     }
 
-    public Optional<Mechanic> get(String id) {
+    public Optional<IMechanic> get(String id) {
         if (id == null) {
             return Optional.empty();
         }
         return Optional.ofNullable(mechanics.get(id.trim().toLowerCase(Locale.ROOT)));
     }
 
-    public Map<String, Mechanic> snapshot() {
+    public Map<String, IMechanic> snapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(mechanics));
     }
 
     public MechanicResult execute(String id, MechanicContext context, Map<String, ?> parameters) {
         if (context == null || parameters == null) {
-            return MechanicResult.invalid("Mechanic context and parameters are required");
+            return MechanicResult.invalid("IMechanic context and parameters are required");
         }
-        Mechanic mechanic;
+        IMechanic mechanic;
         try {
             mechanic = mechanics.get(normalize(id));
         } catch (RuntimeException exception) {
@@ -165,7 +165,7 @@ public final class MechanicRegistry {
             mechanic.execute(context, castParams);
             return MechanicResult.success();
         } catch (RuntimeException exception) {
-            return MechanicResult.invalid("Mechanic '" + id + "' failed: " + exception.getMessage());
+            return MechanicResult.invalid("IMechanic '" + id + "' failed: " + exception.getMessage());
         }
     }
 
@@ -360,9 +360,8 @@ public final class MechanicRegistry {
             }
         });
         register("sound", (context, params) -> {
-            Sound sound;
-            try { sound = Sound.valueOf(text(params, "sound").toUpperCase(Locale.ROOT)); }
-            catch (IllegalArgumentException exception) { throw new IllegalArgumentException("Unknown sound"); }
+            Sound sound = SpatialAudioEngine.resolveSound(text(params, "sound"));
+            if (sound == null) throw new IllegalArgumentException("Unknown sound");
             float volume = (float) optionalNumber(params, "volume", 1.0);
             float pitch = (float) optionalNumber(params, "pitch", 1.0);
             for (Location loc : locations(context.targets())) {
@@ -634,7 +633,7 @@ public final class MechanicRegistry {
         });
 
 
-        // Aura Mechanic
+        // Aura IMechanic
         register("aura", (context, params) -> {
             if (auraScheduler == null || auraRegistry == null) return;
             String auraId = text(params, "aura");
@@ -655,12 +654,12 @@ public final class MechanicRegistry {
 
             for (TargetRef targetRef : context.targets()) {
                 if (targetRef.entity() instanceof LivingEntity living) {
-                    auraScheduler.applyAura(def, AuraAttachment.ofEntity(living), ownerId, context.cast().startedAtTick());
+                    auraScheduler.applyAura(def, IAuraAttachment.ofEntity(living), ownerId, context.cast().startedAtTick());
                 }
             }
         });
 
-        // Projectile Mechanic
+        // Projectile IMechanic
         register("projectile", (context, params) -> {
             if (projectileTracker == null) return;
             double velocity = params.containsKey("velocity") ? Double.parseDouble(params.get("velocity").toString()) : 1.5;
@@ -1123,7 +1122,7 @@ public final class MechanicRegistry {
             caster.bossBars().remove(barId);
         });
 
-        Mechanic speakMechanic = (context, params) -> {
+        IMechanic speakMechanic = (context, params) -> {
             ActiveMob caster = context.cast().caster();
             if (caster == null) return;
             String rawText = text(params, "text");
@@ -1178,7 +1177,7 @@ public final class MechanicRegistry {
         register("speak", speakMechanic);
         register("dialogue", speakMechanic);
 
-        Mechanic promptMechanic = (context, params) -> {
+        IMechanic promptMechanic = (context, params) -> {
             ActiveMob caster = context.cast().caster();
             String message = text(params, "message");
             if (message.isBlank()) message = text(params, "text");
@@ -1450,7 +1449,7 @@ public final class MechanicRegistry {
         });
 
         // Geometric Particle Choreography (P17-2)
-        var helixHandler = (Mechanic) (context, params) -> {
+        var helixHandler = (IMechanic) (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null) return;
@@ -1467,7 +1466,7 @@ public final class MechanicRegistry {
         register("effect:helix", helixHandler);
         register("helix", helixHandler);
 
-        var ringHandler = (Mechanic) (context, params) -> {
+        var ringHandler = (IMechanic) (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null) return;
@@ -1482,7 +1481,7 @@ public final class MechanicRegistry {
         register("effect:ring", ringHandler);
         register("ring", ringHandler);
 
-        var polygonHandler = (Mechanic) (context, params) -> {
+        var polygonHandler = (IMechanic) (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null) return;
@@ -1498,7 +1497,7 @@ public final class MechanicRegistry {
         register("effect:polygon", polygonHandler);
         register("polygon", polygonHandler);
 
-        var lineHandler = (Mechanic) (context, params) -> {
+        var lineHandler = (IMechanic) (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null) return;
@@ -1514,7 +1513,7 @@ public final class MechanicRegistry {
         register("effect:line", lineHandler);
         register("line", lineHandler);
 
-        var arcHandler = (Mechanic) (context, params) -> {
+        var arcHandler = (IMechanic) (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null) return;
@@ -1566,7 +1565,7 @@ public final class MechanicRegistry {
             }
         });
 
-        var throwHandler = (Mechanic) (context, params) -> {
+        var throwHandler = (IMechanic) (context, params) -> {
             double velocity = optionalNumber(context, null, params, "velocity", 1.0);
             if (params.containsKey("v")) velocity = optionalNumber(context, null, params, "v", velocity);
             double upward = optionalNumber(context, null, params, "upward", 0.5);
@@ -1726,7 +1725,7 @@ public final class MechanicRegistry {
         });
 
         // Volatile Visual FX Parity (Fake Block Cracks & Camera Shake)
-        Mechanic fakeCrackMechanic = (context, params) -> {
+        IMechanic fakeCrackMechanic = (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null || origin.getWorld() == null) return;
@@ -1738,7 +1737,7 @@ public final class MechanicRegistry {
         register("fake_block_crack", fakeCrackMechanic);
         register("ground_crack", fakeCrackMechanic);
 
-        Mechanic cameraShakeMechanic = (context, params) -> {
+        IMechanic cameraShakeMechanic = (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null || origin.getWorld() == null) return;
@@ -1749,7 +1748,7 @@ public final class MechanicRegistry {
         register("camera_shake", cameraShakeMechanic);
         register("screen_shake", cameraShakeMechanic);
 
-        Mechanic groundSlamMechanic = (context, params) -> {
+        IMechanic groundSlamMechanic = (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             Location origin = resolveOriginLocation(context, caster);
             if (origin == null || origin.getWorld() == null) return;
@@ -1761,7 +1760,7 @@ public final class MechanicRegistry {
         register("ground_slam_fx", groundSlamMechanic);
         register("volatile_slam", groundSlamMechanic);
 
-        Mechanic clearTargetMechanic = (context, params) -> {
+        IMechanic clearTargetMechanic = (context, params) -> {
             boolean clearThreat = params.containsKey("threat") && Boolean.parseBoolean(params.get("threat").toString());
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             if (caster != null) {
@@ -1789,7 +1788,7 @@ public final class MechanicRegistry {
         register("cleartarget", clearTargetMechanic);
         register("clear_target", clearTargetMechanic);
 
-        Mechanic modifyThreatMechanic = (context, params) -> {
+        IMechanic modifyThreatMechanic = (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             if (caster == null || caster.threatTable() == null) return;
             double amount = params.containsKey("amount") ? ((Number) params.get("amount")).doubleValue()
@@ -1816,7 +1815,7 @@ public final class MechanicRegistry {
         };
         register("modifythreat", modifyThreatMechanic);
 
-        Mechanic blockSoundMechanic = (context, params) -> {
+        IMechanic blockSoundMechanic = (context, params) -> {
             String matName = text(params, "material");
             if (matName.isBlank()) matName = text(params, "m");
             if (matName.isBlank()) return;
@@ -1847,7 +1846,7 @@ public final class MechanicRegistry {
         register("blocksound", blockSoundMechanic);
         register("playblocksound", blockSoundMechanic);
 
-        Mechanic ramMechanic = (context, params) -> {
+        IMechanic ramMechanic = (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             LivingEntity casterEntity = caster != null ? caster.entity() : null;
             if (casterEntity == null) return;
@@ -1889,7 +1888,7 @@ public final class MechanicRegistry {
         register("goatram", ramMechanic);
         register("ram", ramMechanic);
 
-        Mechanic disengageMechanic = (context, params) -> {
+        IMechanic disengageMechanic = (context, params) -> {
             ActiveMob caster = context.cast() != null ? context.cast().caster() : null;
             LivingEntity casterEntity = caster != null ? caster.entity() : null;
             if (casterEntity == null) return;
@@ -2072,10 +2071,10 @@ public final class MechanicRegistry {
     }
 
     private static String normalize(String id) {
-        Objects.requireNonNull(id, "Mechanic ID must not be null");
+        Objects.requireNonNull(id, "IMechanic ID must not be null");
         String normalized = id.trim().toLowerCase(Locale.ROOT);
         if (normalized.isEmpty()) {
-            throw new IllegalArgumentException("Mechanic ID must not be blank");
+            throw new IllegalArgumentException("IMechanic ID must not be blank");
         }
         return normalized;
     }

@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.EntityTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.IEntityTargeter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargetFilter;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterFilter;
 
@@ -19,7 +19,7 @@ import java.util.Map;
  * Selects targets located in front of the caster's facing vector.
  * Syntax: {@code @InFront{r=12;angle=90}}
  */
-public final class InFrontTargeter implements EntityTargeter {
+public final class InFrontTargeter implements IEntityTargeter {
 
     private static double parseAngle(Map<String, Object> parameters, double def) {
         if (parameters == null) return def;

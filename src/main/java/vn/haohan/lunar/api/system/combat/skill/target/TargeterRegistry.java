@@ -12,23 +12,23 @@ import java.util.function.Predicate;
 /** Registry and safe built-in targeters for the MVP. */
 public final class TargeterRegistry {
 
-    private final Map<String, Targeter> targeters = new LinkedHashMap<>();
+    private final Map<String, ITargeter> targeters = new LinkedHashMap<>();
 
     public TargeterRegistry() {
         registerBuiltins();
     }
 
-    public synchronized void register(String id, Targeter targeter) {
+    public synchronized void register(String id, ITargeter targeter) {
         String normalized = normalize(id);
-        Objects.requireNonNull(targeter, "Targeter must not be null");
+        Objects.requireNonNull(targeter, "ITargeter must not be null");
         if (targeters.putIfAbsent(normalized, targeter) != null) {
-            throw new IllegalArgumentException("Targeter ID already registered: " + normalized);
+            throw new IllegalArgumentException("ITargeter ID already registered: " + normalized);
         }
     }
 
-    public Optional<Targeter> get(String id) {
+    public Optional<ITargeter> get(String id) {
         String key = normalize(id);
-        Targeter targeter = targeters.get(key);
+        ITargeter targeter = targeters.get(key);
         if (targeter == null) {
             if ("pir".equals(key)) return Optional.ofNullable(targeters.get("players_in_radius"));
             if ("eir".equals(key)) return Optional.ofNullable(targeters.get("living_entities_in_radius"));
@@ -37,11 +37,11 @@ public final class TargeterRegistry {
     }
 
     public List<TargetRef> resolve(String id, TargeterContext context) {
-        Objects.requireNonNull(context, "Targeter context must not be null");
+        Objects.requireNonNull(context, "ITargeter context must not be null");
         return get(id).map(targeter -> immutable(targeter.resolve(context))).orElseGet(List::of);
     }
 
-    public Map<String, Targeter> snapshot() {
+    public Map<String, ITargeter> snapshot() {
         return Collections.unmodifiableMap(new LinkedHashMap<>(targeters));
     }
 
@@ -87,10 +87,10 @@ public final class TargeterRegistry {
     }
 
     private static String normalize(String id) {
-        Objects.requireNonNull(id, "Targeter ID must not be null");
+        Objects.requireNonNull(id, "ITargeter ID must not be null");
         String normalized = id.trim().toLowerCase(Locale.ROOT);
         if (normalized.isEmpty()) {
-            throw new IllegalArgumentException("Targeter ID must not be blank");
+            throw new IllegalArgumentException("ITargeter ID must not be blank");
         }
         return normalized;
     }

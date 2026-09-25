@@ -13,7 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.api.manager.MobManager;
+import vn.haohan.lunar.api.manager.IMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
@@ -31,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /** Lifecycle manager for active custom mobs; it is event-driven and never scans every world per tick. */
-public class LunarMobManager implements Listener, MobManager {
+public class LunarMobManager implements Listener, IMobManager {
 
     private final Map<UUID, ActiveMob> activeMobs = new ConcurrentHashMap<>();
     private final Consumer<LivingEntity> modelCleanup;

@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
-import vn.haohan.lunar.api.system.combat.skill.targeter.LocationTargeter;
+import vn.haohan.lunar.api.system.combat.skill.targeter.ILocationTargeter;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.PinRegion;
 
@@ -14,7 +14,7 @@ import java.util.*;
  * Resolves floor block locations situated within a designated PinRegion polygon.
  * Syntax: {@code @BlocksInPinRegion{region=ARENA_1}}
  */
-public final class BlocksInPinRegionTargeter implements LocationTargeter {
+public final class BlocksInPinRegionTargeter implements ILocationTargeter {
 
     @Override
     public String name() {

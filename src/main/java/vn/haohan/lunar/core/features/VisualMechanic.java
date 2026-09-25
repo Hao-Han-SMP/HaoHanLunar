@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.LunarSubSystem;
+import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ import java.util.logging.Level;
  * Manages Lunar dimension visual effects, including biome-specific ambient particles
  * and integration with SkyboxEngine for dynamic atmospheric shaders.
  */
-public class VisualMechanic implements Listener, LunarSubSystem {
+public class VisualMechanic implements Listener, ILunarSubSystem {
 
     private final HaoHanLunarPlugin plugin;
     private int tickCounter = 0;
