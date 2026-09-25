@@ -13,10 +13,7 @@ import java.util.function.BiConsumer;
  * Immutable table of damage multipliers based on DamageCause and attacker EntityType.
  * Maps directly to MythicMobs DamageModifiers and EntityDamageModifiers configurations.
  */
-public final class DamageModifierTable {
-
-    private final Map<DamageCause, Double> causeModifiers;
-    private final Map<EntityType, Double> entityModifiers;
+public record DamageModifierTable(Map<DamageCause, Double> causeModifiers, Map<EntityType, Double> entityModifiers) {
 
     public DamageModifierTable(Map<DamageCause, Double> causeModifiers, Map<EntityType, Double> entityModifiers) {
         this.causeModifiers = causeModifiers != null ? Map.copyOf(causeModifiers) : Map.of();
@@ -170,13 +167,5 @@ public final class DamageModifierTable {
         if (multiplier != 1.0) {
             context.multiplyDamage(multiplier);
         }
-    }
-
-    public Map<DamageCause, Double> causeModifiers() {
-        return causeModifiers;
-    }
-
-    public Map<EntityType, Double> entityModifiers() {
-        return entityModifiers;
     }
 }

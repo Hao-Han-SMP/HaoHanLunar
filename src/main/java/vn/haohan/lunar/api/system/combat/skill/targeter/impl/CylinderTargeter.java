@@ -57,9 +57,9 @@ public final class CylinderTargeter implements IEntityTargeter {
         if (params == null) return def;
         Object raw = params.get("height");
         if (raw == null) raw = params.get("h");
-        if (raw instanceof Number n) return Math.max(0.5, Math.min(n.doubleValue(), 128.0));
+        if (raw instanceof Number n) return Math.clamp(n.doubleValue(), 0.5, 128.0);
         if (raw instanceof String s) {
-            try { return Math.max(0.5, Math.min(Double.parseDouble(s.trim()), 128.0)); }
+            try { return Math.clamp(Double.parseDouble(s.trim()), 0.5, 128.0); }
             catch (NumberFormatException ignored) {}
         }
         return def;

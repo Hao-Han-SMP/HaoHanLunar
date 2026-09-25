@@ -33,8 +33,8 @@ public final class BeamEngine {
             return List.of();
         }
 
-        maxRange = Math.max(0.5, Math.min(maxRange, 100.0));
-        beamWidth = Math.max(0.1, Math.min(beamWidth, 10.0));
+        maxRange = Math.clamp(maxRange, 0.5, 100.0);
+        beamWidth = Math.clamp(beamWidth, 0.1, 10.0);
 
         Vector dir = direction.clone().normalize();
         double effectiveRange = maxRange;

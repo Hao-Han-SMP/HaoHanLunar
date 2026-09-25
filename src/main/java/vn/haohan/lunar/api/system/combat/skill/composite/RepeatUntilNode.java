@@ -21,7 +21,7 @@ public final class RepeatUntilNode implements ICompositeSkillNode {
     public RepeatUntilNode(ICompositeSkillNode child, Predicate<SkillCastContext> stopCondition, int maxIterations) {
         this.child = Objects.requireNonNull(child, "Child node must not be null");
         this.stopCondition = Objects.requireNonNull(stopCondition, "Stop condition must not be null");
-        this.maxIterations = Math.max(1, Math.min(maxIterations, MAX_SAFE_ITERATIONS));
+        this.maxIterations = Math.clamp(maxIterations, 1, MAX_SAFE_ITERATIONS);
     }
 
     @Override

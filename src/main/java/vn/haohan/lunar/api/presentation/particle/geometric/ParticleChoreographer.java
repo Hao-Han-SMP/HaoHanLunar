@@ -3,6 +3,7 @@ package vn.haohan.lunar.api.presentation.particle.geometric;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.util.Vector;
+import vn.haohan.lunar.core.system.util.MathUtil;
 
 import java.util.List;
 
@@ -24,14 +25,16 @@ public final class ParticleChoreographer {
         void spawn(Location location, Particle particle, int count, double offX, double offY, double offZ, double extra);
     }
 
-    public ParticleChoreographer() {}
+    public ParticleChoreographer() {
+        this(DEFAULT_MAX_PARTICLES_PER_TICK);
+    }
 
     public ParticleChoreographer(int maxParticlesPerTick) {
-        this.maxParticlesPerTick = Math.max(10, maxParticlesPerTick);
+        this.maxParticlesPerTick = Math.max(1, maxParticlesPerTick);
     }
 
     public void setParticleSpawner(IParticleSpawner spawner) {
-        this.particleSpawner = spawner != null ? spawner : this::defaultSpawn;
+        this.particleSpawner = (spawner != null) ? spawner : this::defaultSpawn;
     }
 
     public int getMaxParticlesPerTick() {
@@ -39,14 +42,21 @@ public final class ParticleChoreographer {
     }
 
     public void setMaxParticlesPerTick(int max) {
-        this.maxParticlesPerTick = Math.max(10, max);
+        this.maxParticlesPerTick = Math.max(1, max);
     }
 
     public int getSpawnedThisTick() {
         return spawnedThisTick;
     }
 
-    private int checkAndAllocateBudget(int requestedCount, long currentTick) {
+    /**
+     * Resets or increments tick tracker and checks remaining particle budget.
+     *
+     * @param requestedCount number of particles requested to spawn
+     * @param currentTick    current server tick
+     * @return number of particles granted within the budget
+     */
+    public int checkAndAllocateBudget(int requestedCount, long currentTick) {
         if (currentTick != lastTick) {
             lastTick = currentTick;
             spawnedThisTick = 0;
@@ -64,32 +74,32 @@ public final class ParticleChoreographer {
 
     public int spawnHelix(Location origin, Particle particle, double radius, double height, int points, double rotations, long currentTick) {
         if (origin == null || particle == null) return 0;
-        List<Vector> offsets = CurveMath.helix(radius, height, points, rotations);
+        List<Vector> offsets = MathUtil.helix(radius, height, points, rotations);
         return spawnOffsetList(origin, particle, offsets, currentTick);
     }
 
     public int spawnRing(Location origin, Particle particle, double radius, int points, long currentTick) {
         if (origin == null || particle == null) return 0;
-        List<Vector> offsets = CurveMath.ring(radius, points);
+        List<Vector> offsets = MathUtil.ring(radius, points);
         return spawnOffsetList(origin, particle, offsets, currentTick);
     }
 
     public int spawnPolygon(Location origin, Particle particle, int sides, double radius, int pointsPerSide, long currentTick) {
         if (origin == null || particle == null) return 0;
-        List<Vector> offsets = CurveMath.polygon(sides, radius, pointsPerSide);
+        List<Vector> offsets = MathUtil.polygon(sides, radius, pointsPerSide);
         return spawnOffsetList(origin, particle, offsets, currentTick);
     }
 
     public int spawnLine(Location origin, Vector direction, Particle particle, double length, int points, long currentTick) {
         if (origin == null || particle == null) return 0;
-        List<Vector> offsets = CurveMath.line(direction, length, points);
+        List<Vector> offsets = MathUtil.line(direction, length, points);
         return spawnOffsetList(origin, particle, offsets, currentTick);
     }
 
     public int spawnArc(Location origin, Location destination, Particle particle, double arcHeight, int points, long currentTick) {
         if (origin == null || destination == null || particle == null) return 0;
         Vector endOffset = destination.toVector().subtract(origin.toVector());
-        List<Vector> offsets = CurveMath.arc(endOffset, arcHeight, points);
+        List<Vector> offsets = MathUtil.arc(endOffset, arcHeight, points);
         return spawnOffsetList(origin, particle, offsets, currentTick);
     }
 

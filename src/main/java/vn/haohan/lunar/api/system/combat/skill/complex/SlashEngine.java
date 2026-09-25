@@ -30,8 +30,8 @@ public final class SlashEngine {
             return List.of();
         }
 
-        slashRadius = Math.max(0.5, Math.min(slashRadius, 32.0));
-        arcAngleDegrees = Math.max(1.0, Math.min(arcAngleDegrees, 360.0));
+        slashRadius = Math.clamp(slashRadius, 0.5, 32.0);
+        arcAngleDegrees = Math.clamp(arcAngleDegrees, 1.0, 360.0);
         double halfArc = arcAngleDegrees / 2.0;
         double cosThreshold = Math.cos(Math.toRadians(halfArc));
 
@@ -55,7 +55,7 @@ public final class SlashEngine {
 
             double dot = facing.dot(toTarget.clone().normalize());
             if (dot >= cosThreshold) {
-                double angle = Math.toDegrees(Math.acos(Math.max(-1.0, Math.min(1.0, dot))));
+                double angle = Math.toDegrees(Math.acos(Math.clamp(dot, -1.0, 1.0)));
                 SlashHit hit = new SlashHit(living, distance, angle);
                 hits.add(hit);
                 if (onHit != null) {

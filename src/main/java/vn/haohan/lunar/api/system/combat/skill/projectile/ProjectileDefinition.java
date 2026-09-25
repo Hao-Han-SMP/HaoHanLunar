@@ -26,12 +26,12 @@ public record ProjectileDefinition(
         if (id.isBlank()) throw new IllegalArgumentException("Projectile ID must not be blank");
         bulletType = bulletType != null ? bulletType : BulletType.PARTICLE_ONLY;
         velocity = Math.max(0.01, velocity);
-        maxTicks = Math.max(1, Math.min(maxTicks, 1200));
+        maxTicks = Math.clamp(maxTicks, 1, 1200);
         hitboxSize = Math.max(0.1, hitboxSize);
         surfaceMode = surfaceMode != null ? surfaceMode : SurfaceMode.DETONATE;
         maxPierces = Math.max(1, maxPierces);
-        bounceMultiplier = Math.max(0.0, Math.min(bounceMultiplier, 1.5));
-        turnRateDegrees = Math.max(0.1, Math.min(turnRateDegrees, 180.0));
+        bounceMultiplier = Math.clamp(bounceMultiplier, 0.0, 1.5);
+        turnRateDegrees = Math.clamp(turnRateDegrees, 0.1, 180.0);
         callback = callback != null ? callback : new IProjectileCallback() {};
     }
 

@@ -28,8 +28,8 @@ public final class OrbitalEngine {
             return List.of();
         }
 
-        radius = Math.max(0.5, Math.min(radius, 32.0));
-        orbitalCount = Math.max(1, Math.min(orbitalCount, 16));
+        radius = Math.clamp(radius, 0.5, 32.0);
+        orbitalCount = Math.clamp(orbitalCount, 1, 16);
 
         List<OrbitalPoint> points = new ArrayList<>(orbitalCount);
         double angleStep = (2 * Math.PI) / orbitalCount;
@@ -54,7 +54,7 @@ public final class OrbitalEngine {
     ) {
         if (orbitals.isEmpty()) return List.of();
 
-        hitboxRadius = Math.max(0.2, Math.min(hitboxRadius, 5.0));
+        hitboxRadius = Math.clamp(hitboxRadius, 0.2, 5.0);
         List<LivingEntity> hitEntities = new ArrayList<>();
 
         for (OrbitalPoint orbital : orbitals) {

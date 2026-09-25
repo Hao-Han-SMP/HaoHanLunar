@@ -17,7 +17,7 @@ public final class FlyAuraComponent implements IAuraComponent {
     private final boolean applyLevitation;
 
     public FlyAuraComponent(double upwardForce, boolean applyLevitation) {
-        this.upwardForce = Math.max(-1.0, Math.min(upwardForce, 2.0));
+        this.upwardForce = Math.clamp(upwardForce, -1.0, 2.0);
         this.applyLevitation = applyLevitation;
     }
 

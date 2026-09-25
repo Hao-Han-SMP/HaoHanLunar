@@ -125,7 +125,7 @@ public final class EnvironmentalFieldTracker {
         int adjustment = field.mode() == OxygenMode.RESTORE ? field.amount() : -field.amount();
         try {
             int currentAir = player.getRemainingAir();
-            int newAir = Math.max(0, Math.min(player.getMaximumAir(), currentAir + (adjustment * 15)));
+            int newAir = Math.clamp(player.getMaximumAir(), 0, currentAir + (adjustment * 15));
             player.setRemainingAir(newAir);
         } catch (Throwable ignored) {}
 

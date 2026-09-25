@@ -66,9 +66,9 @@ public final class LineTargeter implements IEntityTargeter {
         if (params == null) return def;
         Object raw = params.get("length");
         if (raw == null) raw = params.get("l");
-        if (raw instanceof Number n) return Math.max(1.0, Math.min(n.doubleValue(), 64.0));
+        if (raw instanceof Number n) return Math.clamp(n.doubleValue(), 1.0, 64.0);
         if (raw instanceof String s) {
-            try { return Math.max(1.0, Math.min(Double.parseDouble(s.trim()), 64.0)); }
+            try { return Math.clamp(Double.parseDouble(s.trim()), 1.0, 64.0); }
             catch (NumberFormatException ignored) {}
         }
         return def;
@@ -78,9 +78,9 @@ public final class LineTargeter implements IEntityTargeter {
         if (params == null) return def;
         Object raw = params.get("width");
         if (raw == null) raw = params.get("w");
-        if (raw instanceof Number n) return Math.max(0.2, Math.min(n.doubleValue(), 16.0));
+        if (raw instanceof Number n) return Math.clamp(n.doubleValue(), 0.2, 16.0);
         if (raw instanceof String s) {
-            try { return Math.max(0.2, Math.min(Double.parseDouble(s.trim()), 16.0)); }
+            try { return Math.clamp(Double.parseDouble(s.trim()), 0.2, 16.0); }
             catch (NumberFormatException ignored) {}
         }
         return def;

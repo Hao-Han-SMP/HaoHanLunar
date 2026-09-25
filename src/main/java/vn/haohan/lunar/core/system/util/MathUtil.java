@@ -4,11 +4,18 @@ import org.bukkit.Location;
 import org.bukkit.util.Vector;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Common mathematical and geometric utilities for HaoHanLunar.
- * Includes time conversions, interpolation (lerp, spline), clamping, vector calculations, and trigonometry.
+ * Includes time conversions, interpolation (lerp, spline), clamping, vector calculations, trigonometry,
+ * and geometric shape point generators (helix, ring, polygon, line, arc).
  */
 public final class MathUtil {
+
+    private static final double TWO_PI = Math.PI * 2.0;
+
     private MathUtil() {}
 
     /**
@@ -155,11 +162,11 @@ public final class MathUtil {
         float targetT = t1 + t * (t2 - t1);
 
         Vector3f a1 = new Vector3f(p0).mul((t1 - targetT) / (t1 - t0)).add(new Vector3f(p1).mul((targetT - t0) / (t1 - t0)));
-        Vector3f a2 = new Vector3f(p1).mul((t2 - targetT) / (t2 - t1)).add(new Vector3f(p2).mul((targetT - t1) / (t2 - t1)));
-        Vector3f a3 = new Vector3f(p2).mul((t3 - targetT) / (t3 - t2)).add(new Vector3f(p3).mul((targetT - t2) / (t3 - t2)));
+        Vector3f a2 = new Vector3f(p1).mul((targetT - t1) / (t2 - t1)).add(new Vector3f(p2).mul((t2 - targetT) / (t2 - t1)));
+        Vector3f a3 = new Vector3f(p2).mul((targetT - t2) / (t3 - t2)).add(new Vector3f(p3).mul((t3 - targetT) / (t3 - t2)));
 
         Vector3f b1 = new Vector3f(a1).mul((t2 - targetT) / (t2 - t0)).add(new Vector3f(a2).mul((targetT - t0) / (t2 - t0)));
-        Vector3f b2 = new Vector3f(a2).mul((t3 - targetT) / (t3 - t1)).add(new Vector3f(a3).mul((targetT - t1) / (t3 - t1)));
+        Vector3f b2 = new Vector3f(a2).mul((targetT - t1) / (t3 - t1)).add(new Vector3f(a3).mul((t1 - targetT) / (t3 - t1)));
 
         return new Vector3f(b1).mul((t2 - targetT) / (t2 - t1)).add(new Vector3f(b2).mul((targetT - t1) / (t2 - t1)));
     }
@@ -176,6 +183,130 @@ public final class MathUtil {
         res.add(p1.clone().multiply(2.0 * u * t));
         res.add(p2.clone().multiply(tt));
         return res;
+    }
+
+    /**
+     * Generates a 3D helix spiral.
+     *
+     * @param radius    horizontal radius of the helix
+     * @param height    vertical height
+     * @param points    number of discrete points along the helix
+     * @param rotations total number of full 360-degree rotations
+     * @return list of offset vectors relative to origin
+     */
+    public static List<Vector> helix(double radius, double height, int points, double rotations) {
+        int count = Math.clamp(points, 1, 1000);
+        List<Vector> offsets = new ArrayList<>(count);
+        double totalAngle = TWO_PI * Math.max(0.1, rotations);
+
+        for (int i = 0; i < count; i++) {
+            double progress = (double) i / (count > 1 ? (count - 1) : 1);
+            double angle = progress * totalAngle;
+            double x = radius * Math.cos(angle);
+            double y = progress * height;
+            double z = radius * Math.sin(angle);
+            offsets.add(new Vector(x, y, z));
+        }
+        return offsets;
+    }
+
+    /**
+     * Generates a flat horizontal ring/circle.
+     *
+     * @param radius horizontal radius
+     * @param points number of points
+     * @return list of offset vectors relative to origin
+     */
+    public static List<Vector> ring(double radius, int points) {
+        int count = Math.clamp(points, 3, 500);
+        List<Vector> offsets = new ArrayList<>(count);
+
+        for (int i = 0; i < count; i++) {
+            double angle = (i * TWO_PI) / count;
+            double x = radius * Math.cos(angle);
+            double z = radius * Math.sin(angle);
+            offsets.add(new Vector(x, 0.0, z));
+        }
+        return offsets;
+    }
+
+    /**
+     * Generates a regular polygon (e.g. triangle, square, pentagon, hexagon, octagon).
+     *
+     * @param sides         number of polygon sides (>= 3)
+     * @param radius        distance from center to each vertex
+     * @param pointsPerSide points to interpolate along each side
+     * @return list of offset vectors relative to origin
+     */
+    public static List<Vector> polygon(int sides, double radius, int pointsPerSide) {
+        int numSides = Math.clamp(sides, 3, 32);
+        int pps = Math.clamp(pointsPerSide, 1, 50);
+        List<Vector> vertices = new ArrayList<>(numSides);
+
+        for (int i = 0; i < numSides; i++) {
+            double angle = (i * TWO_PI) / numSides;
+            vertices.add(new Vector(radius * Math.cos(angle), 0.0, radius * Math.sin(angle)));
+        }
+
+        List<Vector> offsets = new ArrayList<>(numSides * pps);
+        for (int i = 0; i < numSides; i++) {
+            Vector v1 = vertices.get(i);
+            Vector v2 = vertices.get((i + 1) % numSides);
+            for (int j = 0; j < pps; j++) {
+                double t = (double) j / pps;
+                double x = v1.getX() + (v2.getX() - v1.getX()) * t;
+                double z = v1.getZ() + (v2.getZ() - v1.getZ()) * t;
+                offsets.add(new Vector(x, 0.0, z));
+            }
+        }
+        return offsets;
+    }
+
+    /**
+     * Generates points along a directional line.
+     *
+     * @param direction unit or non-unit direction vector
+     * @param length    total length of the line
+     * @param points    number of points along the line
+     * @return list of offset vectors relative to origin
+     */
+    public static List<Vector> line(Vector direction, double length, int points) {
+        int count = Math.clamp(points, 2, 500);
+        List<Vector> offsets = new ArrayList<>(count);
+        Vector dir = (direction != null && direction.lengthSquared() > 0)
+                ? direction.clone().normalize()
+                : new Vector(0, 0, 1);
+
+        for (int i = 0; i < count; i++) {
+            double distance = (double) i / (count - 1) * length;
+            offsets.add(dir.clone().multiply(distance));
+        }
+        return offsets;
+    }
+
+    /**
+     * Generates a curved ballistic arc between origin and end offset.
+     *
+     * @param endOffset target position offset relative to origin
+     * @param arcHeight apex height above the linear trajectory
+     * @param points    number of points
+     * @return list of offset vectors relative to origin
+     */
+    public static List<Vector> arc(Vector endOffset, double arcHeight, int points) {
+        int count = Math.clamp(points, 3, 500);
+        List<Vector> offsets = new ArrayList<>(count);
+        Vector end = endOffset != null ? endOffset : new Vector(0, 0, 10);
+
+        for (int i = 0; i < count; i++) {
+            double t = (double) i / (count - 1);
+            // Parabolic curve: 4 * t * (1 - t) reaches 1.0 at t = 0.5
+            double heightOffset = 4.0 * t * (1.0 - t) * arcHeight;
+            double x = end.getX() * t;
+            double y = end.getY() * t + heightOffset;
+            double z = end.getZ() * t;
+            offsets.add(new Vector(x, y, z));
+        }
+        return offsets;
     }
 
     /**

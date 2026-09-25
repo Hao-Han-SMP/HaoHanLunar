@@ -25,7 +25,7 @@ public record DropEntry(String itemId,
             throw new IllegalArgumentException("Drop item ID must not be blank");
         }
         itemId = itemId.trim();
-        chance = Double.isFinite(chance) ? Math.max(0.0, Math.min(1.0, chance)) : 0.0;
+        chance = Double.isFinite(chance) ? Math.clamp(chance, 0.0, 1.0) : 0.0;
         if (minAmount < 1) minAmount = 1;
         if (maxAmount < minAmount) maxAmount = minAmount;
         conditions = conditions != null ? List.copyOf(conditions) : List.of();

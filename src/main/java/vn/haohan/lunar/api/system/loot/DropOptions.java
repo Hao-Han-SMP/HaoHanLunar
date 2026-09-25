@@ -13,7 +13,7 @@ public record DropOptions(
         double bonusLevelMultiplier
 ) {
     public DropOptions {
-        dropsPerPlayerRequiredDamagePercent = Math.max(0.0, Math.min(100.0, dropsPerPlayerRequiredDamagePercent));
+        dropsPerPlayerRequiredDamagePercent = Math.clamp(dropsPerPlayerRequiredDamagePercent, 0.0, 100.0);
         bonusLuckMultiplier = Math.max(0.0, bonusLuckMultiplier);
         bonusLevelMultiplier = Math.max(0.0, bonusLevelMultiplier);
     }

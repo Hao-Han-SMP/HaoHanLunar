@@ -53,7 +53,7 @@ public final class LunarBossBar {
     }
 
     public void setProgress(float progress) {
-        bar.progress(Math.max(0.0f, Math.min(1.0f, progress)));
+        bar.progress(Math.clamp(progress, 0.0f, 1.0f));
     }
 
     public void setTitle(Component title) {

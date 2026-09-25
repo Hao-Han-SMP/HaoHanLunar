@@ -150,7 +150,7 @@ public final class DisplayEntityManager {
                     options.rightRotation()
             );
 
-            Display created = switch (options.type()) {
+            return switch (options.type()) {
                 case BLOCK -> world.spawn(location, BlockDisplay.class, display -> {
                     Material mat = options.blockMaterial() != null ? options.blockMaterial() : Material.CRYING_OBSIDIAN;
                     display.setBlock(mat.createBlockData());
@@ -171,8 +171,6 @@ public final class DisplayEntityManager {
                     applyCommonDisplay(display, transformation, options);
                 });
             };
-
-            return created;
         }
 
         private void applyCommonDisplay(Display display, Transformation transformation, DisplaySpawnOptions options) {

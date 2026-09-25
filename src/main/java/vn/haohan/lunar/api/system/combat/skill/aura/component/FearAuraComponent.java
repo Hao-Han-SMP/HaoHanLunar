@@ -20,7 +20,7 @@ public final class FearAuraComponent implements IAuraComponent {
 
     public FearAuraComponent(double radius, double strength) {
         this.radius = Math.max(0.5, radius);
-        this.strength = Math.max(0.1, Math.min(strength, 3.0));
+        this.strength = Math.clamp(strength, 0.1, 3.0);
     }
 
     public double radius() {

@@ -17,7 +17,10 @@ import org.bukkit.entity.TextDisplay;
 import vn.haohan.lunar.api.presentation.audio.SpatialAudioEngine;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
 
-import java.util.*;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -269,8 +272,7 @@ public final class HaoHanDisplayUIBridge {
             this.lines = (lines != null && !lines.isEmpty()) ? lines : List.of(options != null && options.text() != null ? options.text() : "");
 
             int totalDuration = options != null ? Math.max(1, options.durationTicks()) : 60;
-            int perLineDuration = Math.max(1, totalDuration / Math.max(1, this.lines.size()));
-            this.remainingLineTicks = perLineDuration;
+            this.remainingLineTicks = Math.max(1, totalDuration / Math.max(1, this.lines.size()));
             this.currentCharIndex = (options != null && options.typewriter()) ? 1 : currentLineText().length();
         }
 

@@ -65,9 +65,9 @@ public final class ConeTargeter implements IEntityTargeter {
         if (params == null) return def;
         Object raw = params.get("angle");
         if (raw == null) raw = params.get("a");
-        if (raw instanceof Number n) return Math.max(1.0, Math.min(n.doubleValue(), 360.0));
+        if (raw instanceof Number n) return Math.clamp(n.doubleValue(), 1.0, 360.0);
         if (raw instanceof String s) {
-            try { return Math.max(1.0, Math.min(Double.parseDouble(s.trim()), 360.0)); }
+            try { return Math.clamp(Double.parseDouble(s.trim()), 1.0, 360.0); }
             catch (NumberFormatException ignored) {}
         }
         return def;

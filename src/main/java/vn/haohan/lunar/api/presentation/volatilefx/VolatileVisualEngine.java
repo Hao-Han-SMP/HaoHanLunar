@@ -1,10 +1,6 @@
 package vn.haohan.lunar.api.presentation.volatilefx;
 
-import org.bukkit.Location;
-import org.bukkit.Particle;
-import org.bukkit.SoundCategory;
-import org.bukkit.World;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
@@ -67,7 +63,7 @@ public final class VolatileVisualEngine {
                     if (isSolidBlock(block)) {
                         Location blockLoc = block.getLocation();
                         float normalizedDist = (float) (Math.sqrt(distSq) / radius);
-                        float stage = Math.max(0.1f, Math.min(1.0f, maxStage * (1.0f - (normalizedDist * 0.6f))));
+                        float stage = Math.clamp(maxStage * (1.0f - (normalizedDist * 0.6f)), 0.1f, 1.0f);
 
                         sendBlockDamagePacket(recipients, blockLoc, stage);
                         ACTIVE_CRACKS.put(CrackedBlockKey.of(blockLoc), expireTick);

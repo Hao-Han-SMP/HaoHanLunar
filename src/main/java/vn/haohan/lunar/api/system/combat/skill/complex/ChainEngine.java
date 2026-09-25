@@ -27,9 +27,9 @@ public final class ChainEngine {
             return new ChainResult(List.of(), 0);
         }
 
-        bounceRadius = Math.max(1.0, Math.min(bounceRadius, 32.0));
-        maxBounces = Math.max(1, Math.min(maxBounces, 20));
-        damageDecay = Math.max(0.0, Math.min(damageDecay, 1.0));
+        bounceRadius = Math.clamp(bounceRadius, 1.0, 32.0);
+        maxBounces = Math.clamp(maxBounces, 1, 20);
+        damageDecay = Math.clamp(damageDecay, 0.0, 1.0);
 
         List<LivingEntity> hitOrder = new ArrayList<>();
         Set<UUID> visited = new HashSet<>();

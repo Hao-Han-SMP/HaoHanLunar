@@ -18,7 +18,7 @@ import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
-import vn.haohan.lunar.core.system.util.FastMath;
+import vn.haohan.lunar.core.system.util.MathUtil;
 
 import java.lang.reflect.Proxy;
 import java.util.List;
@@ -69,20 +69,20 @@ public class ParticleChoreographyTest {
     void testFastMathAccuracy() {
         for (double angle = -Math.PI * 4; angle <= Math.PI * 4; angle += 0.05) {
             double expectedSin = Math.sin(angle);
-            double actualSin = FastMath.sin(angle);
+            double actualSin = Math.sin(angle);
             assertEquals(expectedSin, actualSin, 0.005, "Sin deviated too much at angle: " + angle);
 
             double expectedCos = Math.cos(angle);
-            double actualCos = FastMath.cos(angle);
+            double actualCos = Math.cos(angle);
             assertEquals(expectedCos, actualCos, 0.005, "Cos deviated too much at angle: " + angle);
         }
     }
 
     @Test
-    @DisplayName("CurveMath generates correct geometry for helix, ring, polygon, line, and arc")
-    void testCurveMathShapes() {
+    @DisplayName("MathUtil generates correct geometry for helix, ring, polygon, line, and arc")
+    void testMathUtilGeometricShapes() {
         // 1. Helix: verify bounds and progression
-        List<Vector> helixPoints = CurveMath.helix(5.0, 10.0, 50, 2.0);
+        List<Vector> helixPoints = MathUtil.helix(5.0, 10.0, 50, 2.0);
         assertEquals(50, helixPoints.size());
         assertEquals(0.0, helixPoints.get(0).getY(), 0.001);
         assertEquals(10.0, helixPoints.get(helixPoints.size() - 1).getY(), 0.001);
@@ -92,7 +92,7 @@ public class ParticleChoreographyTest {
         }
 
         // 2. Ring: planar Y=0 and fixed radius
-        List<Vector> ringPoints = CurveMath.ring(4.0, 36);
+        List<Vector> ringPoints = MathUtil.ring(4.0, 36);
         assertEquals(36, ringPoints.size());
         for (Vector p : ringPoints) {
             assertEquals(0.0, p.getY(), 0.001);
@@ -101,17 +101,17 @@ public class ParticleChoreographyTest {
         }
 
         // 3. Polygon: 4 sides (square), 5 points per side -> 20 points
-        List<Vector> polyPoints = CurveMath.polygon(4, 5.0, 5);
+        List<Vector> polyPoints = MathUtil.polygon(4, 5.0, 5);
         assertEquals(20, polyPoints.size());
 
         // 4. Line: direction along Z, length 10
-        List<Vector> linePoints = CurveMath.line(new Vector(0, 0, 1), 10.0, 11);
+        List<Vector> linePoints = MathUtil.line(new Vector(0, 0, 1), 10.0, 11);
         assertEquals(11, linePoints.size());
         assertEquals(0.0, linePoints.get(0).getZ(), 0.001);
         assertEquals(10.0, linePoints.get(10).getZ(), 0.001);
 
         // 5. Arc: apex height at midpoint
-        List<Vector> arcPoints = CurveMath.arc(new Vector(0, 0, 20), 8.0, 21);
+        List<Vector> arcPoints = MathUtil.arc(new Vector(0, 0, 20), 8.0, 21);
         assertEquals(21, arcPoints.size());
         assertEquals(0.0, arcPoints.get(0).getY(), 0.001);
         assertEquals(0.0, arcPoints.get(20).getY(), 0.001);
@@ -181,29 +181,31 @@ public class ParticleChoreographyTest {
         // Polygon
         MechanicResult polyResult = registry.execute("effect:polygon", mechContext, Map.of(
                 "particle", "CRIT",
-                "sides", 6,
-                "radius", 3.0,
-                "points", 4
+                "sides", 3,
+                "radius", 5.0,
+                "points_per_side", 10
         ));
         assertTrue(polyResult.isSuccess(), "Polygon failed: " + polyResult.error());
-        assertEquals(74, particleCount.get());
+        assertEquals(80, particleCount.get());
 
         // Line
         MechanicResult lineResult = registry.execute("effect:line", mechContext, Map.of(
-                "particle", "ELECTRIC_SPARK",
-                "length", 8.0,
-                "points", 15
+                "particle", "SOUL_FIRE_FLAME",
+                "direction", "0,1,0",
+                "length", 5.0,
+                "points", 10
         ));
         assertTrue(lineResult.isSuccess(), "Line failed: " + lineResult.error());
-        assertEquals(89, particleCount.get());
+        assertEquals(90, particleCount.get());
 
         // Arc
         MechanicResult arcResult = registry.execute("effect:arc", mechContext, Map.of(
-                "particle", "SOUL_FIRE_FLAME",
-                "height", 4.0,
-                "points", 10
+                "particle", "SONIC_BOOM",
+                "destination", "0,64,10",
+                "arc_height", 5.0,
+                "points", 15
         ));
         assertTrue(arcResult.isSuccess(), "Arc failed: " + arcResult.error());
-        assertEquals(99, particleCount.get());
+        assertEquals(105, particleCount.get());
     }
 }

@@ -24,7 +24,7 @@ public final class StatAuraComponent implements IAuraComponent {
     public StatAuraComponent(double radius, PotionEffectType effectType, int amplifier, boolean affectOwner) {
         this.radius = Math.max(0.5, radius);
         this.effectType = Objects.requireNonNull(effectType, "EffectType must not be null");
-        this.amplifier = Math.max(0, Math.min(amplifier, 255));
+        this.amplifier = Math.clamp(amplifier, 0, 255);
         this.affectOwner = affectOwner;
     }
 

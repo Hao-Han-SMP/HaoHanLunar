@@ -1,10 +1,6 @@
 package vn.haohan.lunar.api.presentation.audio;
 
-import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
-import org.bukkit.Registry;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -64,8 +60,7 @@ public final class SpatialAudioEngine {
             }
 
             currentTick++;
-            boolean allFinished = steps.stream().allMatch(s -> s.delayTicks() < currentTick);
-            return allFinished;
+            return steps.stream().allMatch(s -> s.delayTicks() < currentTick);
         }
     }
 
@@ -157,7 +152,7 @@ public final class SpatialAudioEngine {
             case INVERSE_SQUARE -> 1.0 / (1.0 + (distance * distance) / Math.max(1.0, maxRadius * 2.0));
         };
 
-        return (float) Math.max(0.0, Math.min(baseVolume, baseVolume * factor));
+        return (float)Math.clamp(baseVolume, 0.0, baseVolume * factor);
     }
 
     /**
