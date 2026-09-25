@@ -10,10 +10,14 @@ import vn.haohan.lunar.mechanics.BeaconShieldMechanic;
 import vn.haohan.lunar.mechanics.LunarSurfaceSpreadMechanic;
 import vn.haohan.lunar.mechanics.TelescopeMechanic;
 import vn.haohan.lunar.mechanics.LunarWardenMechanic;
+import vn.haohan.lunar.mechanics.ModelEngineDeathListener;
+import vn.haohan.lunar.robot.LunarRobotMechanic;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 
 public final class HaoHanLunarPlugin extends JavaPlugin {
 
@@ -28,6 +32,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private LunarSurfaceSpreadMechanic lunarSurfaceSpreadMechanic;
     private TelescopeMechanic telescopeMechanic;
     private LunarWardenMechanic lunarWardenMechanic;
+    private LunarRobotMechanic lunarRobotMechanic;
+    private ModelEngineDeathListener modelEngineDeathListener;
+    private vn.haohan.lunar.charger.BatteryChargerMechanic batteryChargerMechanic;
 
     public static HaoHanLunarPlugin getInstance() {
         return instance;
@@ -60,6 +67,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         lunarSurfaceSpreadMechanic = new LunarSurfaceSpreadMechanic(this);
         telescopeMechanic = new TelescopeMechanic(this);
         lunarWardenMechanic = new LunarWardenMechanic(this);
+        lunarRobotMechanic = new LunarRobotMechanic(this);
+        modelEngineDeathListener = new ModelEngineDeathListener(this);
+        batteryChargerMechanic = new vn.haohan.lunar.charger.BatteryChargerMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();
@@ -70,6 +80,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(beaconShieldMechanic, this);
         pm.registerEvents(lunarSurfaceSpreadMechanic, this);
         pm.registerEvents(telescopeMechanic, this);
+        pm.registerEvents(lunarRobotMechanic, this);
+        pm.registerEvents(modelEngineDeathListener, this);
+        pm.registerEvents(batteryChargerMechanic, this);
 
         // Start main repeating task (runs every tick)
         Bukkit.getScheduler().runTaskTimer(this, () -> {
@@ -80,10 +93,58 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
                 visualMechanic.tick();
                 beaconShieldMechanic.tick();
                 lunarSurfaceSpreadMechanic.tick();
+                lunarRobotMechanic.tick();
+                batteryChargerMechanic.tick();
             } catch (Exception e) {
                 getLogger().warning("Error in tick loop: " + e.getMessage());
             }
         }, 1L, 1L);
+
+        // Register commands with Paper Command API (BasicCommand)
+        registerCommand("spawnrobot", "Spawn a Quadruped Lunar Robot", new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack source, String[] args) {
+                lunarRobotMechanic.handleSpawnRobotCommand(source);
+            }
+
+            @Override
+            public boolean canUse(org.bukkit.command.CommandSender sender) {
+                return sender.isOp() || sender.hasPermission("haohan.lunar.admin");
+            }
+        });
+
+        registerCommand("robottablet", "Give the Robot Tablet controller", new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack source, String[] args) {
+                lunarRobotMechanic.handleTabletCommand(source);
+            }
+
+            @Override
+            public boolean canUse(org.bukkit.command.CommandSender sender) {
+                return sender.isOp() || sender.hasPermission("haohan.lunar.admin");
+            }
+        });
+
+        registerCommand("spawnwarden", "Spawn TheLunarWarden boss", new BasicCommand() {
+            @Override
+            public void execute(CommandSourceStack source, String[] args) {
+                var sender = source.getSender();
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage("Chỉ người chơi mới có thể dùng lệnh này!");
+                    return;
+                }
+                lunarWardenMechanic.spawnWarden(player.getLocation());
+                player.sendMessage("§aSpawned TheLunarWarden!");
+            }
+
+            @Override
+            public boolean canUse(org.bukkit.command.CommandSender sender) {
+                return sender.isOp() || sender.hasPermission("haohan.lunar.admin");
+            }
+        });
+
+        // Scan and restore loaded in-world robots after restart
+        lunarRobotMechanic.scanLoadedEntities();
 
         getLogger().info("HaoHanLunar plugin successfully enabled and hooks registered!");
     }
@@ -102,6 +163,12 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }
         if (telescopeMechanic != null) {
             telescopeMechanic.removeAllMarkers();
+        }
+        if (lunarRobotMechanic != null) {
+            lunarRobotMechanic.cleanupAll();
+        }
+        if (batteryChargerMechanic != null) {
+            batteryChargerMechanic.cleanupOnDisable();
         }
 
         // Clean up low gravity and mining attributes modifiers from players
@@ -141,5 +208,17 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
     public TelescopeMechanic getTelescopeMechanic() {
         return telescopeMechanic;
+    }
+
+    public LunarRobotMechanic getLunarRobotMechanic() {
+        return lunarRobotMechanic;
+    }
+
+    public ModelEngineDeathListener getModelEngineDeathListener() {
+        return modelEngineDeathListener;
+    }
+
+    public vn.haohan.lunar.charger.BatteryChargerMechanic getBatteryChargerMechanic() {
+        return batteryChargerMechanic;
     }
 }

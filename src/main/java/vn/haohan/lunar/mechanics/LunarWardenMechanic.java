@@ -19,6 +19,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -205,6 +206,30 @@ public class LunarWardenMechanic implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onBossDeath(EntityDeathEvent event) {
+        if (!(event.getEntity() instanceof IronGolem golem)) return;
+        BossState state = bossStates.remove(golem.getUniqueId());
+        if (state != null) {
+            // Release any impaled player
+            if (state.impaledTargetUUID != null) {
+                Entity victim = Bukkit.getEntity(state.impaledTargetUUID);
+                if (victim instanceof Player p) {
+                    p.removePotionEffect(PotionEffectType.SLOWNESS);
+                }
+                state.impaledTargetUUID = null;
+            }
+            // Celestial Boss Death visuals & sound
+            Location loc = golem.getLocation();
+            if (loc.getWorld() != null) {
+                loc.getWorld().playSound(loc, Sound.ENTITY_WARDEN_DEATH, 2.0f, 0.8f);
+                loc.getWorld().playSound(loc, Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.5f, 0.7f);
+                loc.getWorld().spawnParticle(Particle.FLASH, loc.clone().add(0, 2.5, 0), 3, 0.5, 0.5, 0.5, 0.0);
+                loc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc.clone().add(0, 2.0, 0), 60, 1.2, 1.5, 1.2, 0.08);
+            }
+        }
+    }
+
     public void spawnWarden(Location loc) {
         IronGolem golem = loc.getWorld().spawn(loc, IronGolem.class);
         golem.setCustomName("§c§lThe Lunar Warden");
@@ -300,7 +325,15 @@ public class LunarWardenMechanic implements Listener {
                         if (victim instanceof Player p) {
                             p.removePotionEffect(PotionEffectType.SLOWNESS);
                         }
+                        state.impaledTargetUUID = null;
                     }
+                    try {
+                        ModeledEntity me = ModelEngineAPI.getModeledEntity(uuid);
+                        if (me != null && !me.isDestroyed()) {
+                            me.destroy();
+                            ModelEngineAPI.removeModeledEntity(uuid);
+                        }
+                    } catch (Throwable ignored) {}
                     return true;
                 }
                 try {

@@ -190,11 +190,144 @@ public class LunarItems {
                                 .maxStackSize(64)
                                 .build());
 
-                // 6. Smithing Recipes for Spacesuit Armor Upgrade
+                // 7. Lunar Quadruped Robot Items
+                registry.register(ItemDefinition.builder("haohan:robot_tablet")
+                                .material(Material.PAPER)
+                                .displayName("§b§lBảng Điều Khiển Robot")
+                                .lore(List.of(
+                                                "§7Thiết bị kết nối và điều khiển từ xa cho Robot 4 Chân.",
+                                                "§8▪ Chuột phải vào Robot hoang dã để giải mã kết nối.",
+                                                "§8▪ Chuột phải khi đã liên kết để mở Dashboard quản lý."))
+                                .customModelData(6001)
+                                .type(ItemType.SPECIAL)
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:empty_module_slot")
+                                .material(Material.PAPER)
+                                .displayName("§7Ô Trống")
+                                .lore(List.of("§8Khe cắm module trống trên Robot."))
+                                .customModelData(6100)
+                                .type(ItemType.SPECIAL)
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:robot_module_ore_scan")
+                                .material(Material.PAPER)
+                                .displayName("§6§lModule Dò Quặng")
+                                .lore(List.of(
+                                                "§7Module cảm biến địa chất cho Robot 4 Chân.",
+                                                "§e▪ Quét radar tìm quặng phổ thông xung quanh.",
+                                                "§e▪ Tạo hiệu ứng Hologram xung quanh quặng hiếm.",
+                                                "§7Độ hiệu quả: §a100.0%"))
+                                .customModelData(6101)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("robot_module", "ore_scan", "efficiency", 100.0))
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:robot_module_combat")
+                                .material(Material.PAPER)
+                                .displayName("§c§lModule Chiến Đấu")
+                                .lore(List.of(
+                                                "§7Module vũ trang cận chiến cho Robot 4 Chân.",
+                                                "§c▪ Hỗ trợ người chơi tiêu diệt mục tiêu thù địch.",
+                                                "§c▪ Tăng sát thương và tốc độ đánh theo độ hiệu quả.",
+                                                "§7Độ hiệu quả: §a100.0%"))
+                                .customModelData(6102)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("robot_module", "combat", "efficiency", 100.0))
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:robot_module_speed")
+                                .material(Material.PAPER)
+                                .displayName("§b§lModule Tốc Hành")
+                                .lore(List.of(
+                                                "§7Module truyền động gia tốc cho Robot 4 Chân.",
+                                                "§b▪ Cho phép người chơi ngồi lên và cưỡi di chuyển nhanh.",
+                                                "§b▪ Giảm ảnh hưởng của trọng lực và triệt tiêu rơi.",
+                                                "§7Độ hiệu quả: §a100.0%"))
+                                .customModelData(6103)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("robot_module", "speed", "efficiency", 100.0))
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:robot_module_thrust")
+                                .material(Material.PAPER)
+                                .displayName("§e§lModule Đẩy Phản Lực")
+                                .lore(List.of(
+                                                "§7Module phản lực tên lửa cho Robot 4 Chân.",
+                                                "§6▪ Đẩy robot và người chơi phóng thẳng lên cao.",
+                                                "§6▪ Tiêu hao năng lượng lớn khi kích hoạt.",
+                                                "§7Độ hiệu quả: §a100.0%"))
+                                .customModelData(6104)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("robot_module", "thrust", "efficiency", 100.0))
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:robot_battery_small")
+                                .material(Material.CARROT_ON_A_STICK)
+                                .displayName("§a§lPin Robot Nhỏ")
+                                .lore(List.of(
+                                                "§7Nguồn năng lượng sơ cấp cho Robot 4 Chân.",
+                                                "§a▪ Dung lượng: §f5,000 / 5,000 EU §a(100%)",
+                                                "§8Đặt vào Trạm Sạc để nạp lại năng lượng."))
+                                .customModelData(6201)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("robot_battery", "small", "capacity", 5000, "max_damage", 5000))
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:robot_battery_medium")
+                                .material(Material.CARROT_ON_A_STICK)
+                                .displayName("§b§lPin Robot Vừa")
+                                .lore(List.of(
+                                                "§7Nguồn năng lượng tiêu chuẩn cho Robot 4 Chân.",
+                                                "§b▪ Dung lượng: §f15,000 / 15,000 EU §a(100%)",
+                                                "§8Đặt vào Trạm Sạc để nạp lại năng lượng."))
+                                .customModelData(6202)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("robot_battery", "medium", "capacity", 15000, "max_damage", 15000))
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:robot_battery_large")
+                                .material(Material.CARROT_ON_A_STICK)
+                                .displayName("§d§lPin Robot Lớn")
+                                .lore(List.of(
+                                                "§7Lõi năng lượng lượng tử cho Robot 4 Chân.",
+                                                "§d▪ Dung lượng: §f30,000 / 30,000 EU §a(100%)",
+                                                "§8Đặt vào Trạm Sạc để nạp lại năng lượng."))
+                                .customModelData(6203)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("robot_battery", "large", "capacity", 30000, "max_damage", 30000))
+                                .maxStackSize(1)
+                                .build());
+
+                registry.register(ItemDefinition.builder("haohan:battery_charger")
+                                .material(Material.CARROT_ON_A_STICK)
+                                .displayName("§e§lTrạm Sạc Pin Robot")
+                                .lore(List.of(
+                                                "§7Trạm sạc năng lượng cao cấp cho Pin Robot 4 Chân.",
+                                                "§e▪ Chế độ: §fNạp Thụ Động (Quang năng) & Nạp Nhanh",
+                                                "§8Chuột phải lên mặt đất để đặt Trạm Sạc."))
+                                .customModelData(6205)
+                                .type(ItemType.SPECIAL)
+                                .properties(Map.of("battery_charger", true))
+                                .maxStackSize(16)
+                                .build());
+
+                // 8. Smithing Recipes for Spacesuit Armor Upgrade
                 registerSpacesuitRecipes();
 
-                // 7. Shapeless Recipes for Telescope Repair
+                // 9. Shapeless Recipes for Telescope Repair
                 registerTelescopeRecipes();
+
+                // 10. Robot Crafting & Maintenance Recipes
+                registerRobotRecipes();
         }
 
         private static void registerSpacesuitPart(vn.haohan.itemcore.api.item.ItemRegistry registry,
@@ -354,6 +487,159 @@ public class LunarItems {
 
                 if (!recipeRegistry.exists(repairBrokenRecipe.getId())) {
                         recipeRegistry.register(repairBrokenRecipe);
+                }
+        }
+
+        private static void registerRobotRecipes() {
+                var recipeRegistry = HaoHanItemCore.get().getRecipeRegistry();
+
+                // 1. Tablet Recipe
+                RecipeDefinition tabletRecipe = new ShapedRecipeDefinition(
+                                "haohan:robot_tablet",
+                                List.of(
+                                                "SGS",
+                                                "RAR",
+                                                "SMS"),
+                                Map.of(
+                                                'S', new Ingredient.ItemIngredient("haohan:steel_ingot", 1),
+                                                'G', new Ingredient.MaterialIngredient(Material.GLASS_PANE, 1),
+                                                'R', new Ingredient.MaterialIngredient(Material.REDSTONE, 1),
+                                                'A', new Ingredient.ItemIngredient("haohan:aero_compound", 1),
+                                                'M', new Ingredient.MaterialIngredient(Material.AMETHYST_SHARD, 1)),
+                                new ItemResult("haohan:robot_tablet", 1));
+                if (!recipeRegistry.exists(tabletRecipe.getId())) {
+                        recipeRegistry.register(tabletRecipe);
+                }
+
+                // 2. Battery Recipes
+                RecipeDefinition batterySmall = new ShapedRecipeDefinition(
+                                "haohan:robot_battery_small",
+                                List.of(
+                                                " C ",
+                                                "SRS",
+                                                " K "),
+                                Map.of(
+                                                'C', new Ingredient.MaterialIngredient(Material.COPPER_INGOT, 1),
+                                                'S', new Ingredient.ItemIngredient("haohan:steel_ingot", 1),
+                                                'R', new Ingredient.MaterialIngredient(Material.REDSTONE, 1),
+                                                'K', new Ingredient.ItemIngredient("haohan:kreep_dust", 1)),
+                                new ItemResult("haohan:robot_battery_small", 1));
+                if (!recipeRegistry.exists(batterySmall.getId())) {
+                        recipeRegistry.register(batterySmall);
+                }
+
+                RecipeDefinition batteryMed = new ShapedRecipeDefinition(
+                                "haohan:robot_battery_medium",
+                                List.of(
+                                                " G ",
+                                                "DBD",
+                                                " K "),
+                                Map.of(
+                                                'G', new Ingredient.MaterialIngredient(Material.GOLD_INGOT, 1),
+                                                'D', new Ingredient.MaterialIngredient(Material.DIAMOND, 1),
+                                                'B', new Ingredient.ItemIngredient("haohan:robot_battery_small", 1),
+                                                'K', new Ingredient.ItemIngredient("haohan:kreep_dust", 1)),
+                                new ItemResult("haohan:robot_battery_medium", 1));
+                if (!recipeRegistry.exists(batteryMed.getId())) {
+                        recipeRegistry.register(batteryMed);
+                }
+
+                RecipeDefinition batteryLarge = new ShapedRecipeDefinition(
+                                "haohan:robot_battery_large",
+                                List.of(
+                                                " N ",
+                                                "ABA",
+                                                " K "),
+                                Map.of(
+                                                'N', new Ingredient.MaterialIngredient(Material.NETHERITE_INGOT, 1),
+                                                'A', new Ingredient.ItemIngredient("haohan:aero_compound", 1),
+                                                'B', new Ingredient.ItemIngredient("haohan:robot_battery_medium", 1),
+                                                'K', new Ingredient.ItemIngredient("haohan:kreep_dust", 1)),
+                                new ItemResult("haohan:robot_battery_large", 1));
+                if (!recipeRegistry.exists(batteryLarge.getId())) {
+                        recipeRegistry.register(batteryLarge);
+                }
+
+                RecipeDefinition chargerRecipe = new ShapedRecipeDefinition(
+                                "haohan:battery_charger",
+                                List.of(
+                                                "SCS",
+                                                "RBR",
+                                                "SKS"),
+                                Map.of(
+                                                'S', new Ingredient.ItemIngredient("haohan:steel_ingot", 1),
+                                                'C', new Ingredient.MaterialIngredient(Material.COPPER_INGOT, 1),
+                                                'R', new Ingredient.MaterialIngredient(Material.REDSTONE, 1),
+                                                'B', new Ingredient.ItemIngredient("haohan:robot_battery_small", 1),
+                                                'K', new Ingredient.ItemIngredient("haohan:kreep_dust", 1)),
+                                new ItemResult("haohan:battery_charger", 1));
+                if (!recipeRegistry.exists(chargerRecipe.getId())) {
+                        recipeRegistry.register(chargerRecipe);
+                }
+
+                // 3. Module Recipes
+                RecipeDefinition modOre = new ShapedRecipeDefinition(
+                                "haohan:robot_module_ore_scan",
+                                List.of(
+                                                " C ",
+                                                "SAS",
+                                                " R "),
+                                Map.of(
+                                                'C', new Ingredient.MaterialIngredient(Material.COMPASS, 1),
+                                                'S', new Ingredient.ItemIngredient("haohan:steel_ingot", 1),
+                                                'A', new Ingredient.ItemIngredient("haohan:raw_anorthosite", 1),
+                                                'R', new Ingredient.MaterialIngredient(Material.REDSTONE, 1)),
+                                new ItemResult("haohan:robot_module_ore_scan", 1));
+                if (!recipeRegistry.exists(modOre.getId())) {
+                        recipeRegistry.register(modOre);
+                }
+
+                RecipeDefinition modCombat = new ShapedRecipeDefinition(
+                                "haohan:robot_module_combat",
+                                List.of(
+                                                " D ",
+                                                "SPS",
+                                                " R "),
+                                Map.of(
+                                                'D', new Ingredient.MaterialIngredient(Material.DIAMOND_SWORD, 1),
+                                                'S', new Ingredient.ItemIngredient("haohan:steel_ingot", 1),
+                                                'P', new Ingredient.ItemIngredient("haohan:pyroxene_debris", 1),
+                                                'R', new Ingredient.MaterialIngredient(Material.REDSTONE, 1)),
+                                new ItemResult("haohan:robot_module_combat", 1));
+                if (!recipeRegistry.exists(modCombat.getId())) {
+                        recipeRegistry.register(modCombat);
+                }
+
+                RecipeDefinition modSpeed = new ShapedRecipeDefinition(
+                                "haohan:robot_module_speed",
+                                List.of(
+                                                " F ",
+                                                "SIS",
+                                                " U "),
+                                Map.of(
+                                                'F', new Ingredient.MaterialIngredient(Material.FEATHER, 1),
+                                                'S', new Ingredient.ItemIngredient("haohan:steel_ingot", 1),
+                                                'I', new Ingredient.ItemIngredient("haohan:raw_ilmenite", 1),
+                                                'U', new Ingredient.MaterialIngredient(Material.SUGAR, 1)),
+                                new ItemResult("haohan:robot_module_speed", 1));
+                if (!recipeRegistry.exists(modSpeed.getId())) {
+                        recipeRegistry.register(modSpeed);
+                }
+
+                RecipeDefinition modThrust = new ShapedRecipeDefinition(
+                                "haohan:robot_module_thrust",
+                                List.of(
+                                                " F ",
+                                                "SAS",
+                                                " B "),
+                                Map.of(
+                                                'F', new Ingredient.MaterialIngredient(Material.FIRE_CHARGE, 1),
+                                                'S', new Ingredient.ItemIngredient("haohan:steel_ingot", 1),
+                                                'A', new Ingredient.ItemIngredient("haohan:aero_compound", 1),
+                                                'B', new Ingredient.MaterialIngredient(Material.BLAZE_POWDER, 1)),
+                                new ItemResult("haohan:robot_module_thrust", 1));
+                if (!recipeRegistry.exists(modThrust.getId())) {
+                        recipeRegistry.register(modThrust);
                 }
         }
 }

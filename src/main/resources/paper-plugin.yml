@@ -8,10 +8,9 @@ dependencies:
     HaoHanItemCore:
       load: BEFORE
       required: true
+    HaoHanDisplayUI:
+      load: BEFORE
+      required: true
     ModelEngine:
       load: BEFORE
       required: true
-commands:
-  spawnwarden:
-    description: Spawn TheLunarWarden boss
-    permission: op
