@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import vn.haohan.lunar.api.system.world.pin.PinBoundaryListener;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
+import vn.haohan.lunar.charger.BatteryChargerMechanic;
 import vn.haohan.lunar.core.command.LunarCommands;
 import vn.haohan.lunar.core.features.*;
 import vn.haohan.lunar.core.features.beacon.BeaconShieldMechanic;
@@ -27,6 +28,7 @@ import vn.haohan.lunar.core.subsystem.engine.PinSubSystem;
 import vn.haohan.lunar.core.subsystem.engine.PlayerDataSubSystem;
 import vn.haohan.lunar.core.system.data.PlayerDataManager;
 import vn.haohan.lunar.core.system.item.LunarItems;
+import vn.haohan.lunar.robot.LunarRobotMechanic;
 
 import java.util.List;
 
@@ -51,6 +53,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private TelescopeMechanic telescopeMechanic;
     private LunarWardenMechanic lunarWardenMechanic;
     private LunarClaymoreMechanic lunarClaymoreMechanic;
+    private LunarRobotMechanic lunarRobotMechanic;
+    private ModelEngineDeathListener modelEngineDeathListener;
+    private BatteryChargerMechanic batteryChargerMechanic;
 
     /**
      * Returns the singleton plugin instance.
@@ -108,6 +113,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         telescopeMechanic = new TelescopeMechanic(this);
         lunarWardenMechanic = new LunarWardenMechanic(this);
         lunarClaymoreMechanic = new LunarClaymoreMechanic(this);
+        lunarRobotMechanic = new LunarRobotMechanic(this);
+        modelEngineDeathListener = new ModelEngineDeathListener(this);
+        batteryChargerMechanic = new BatteryChargerMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();
@@ -119,6 +127,10 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(lunarSurfaceSpreadMechanic, this);
         pm.registerEvents(telescopeMechanic, this);
         pm.registerEvents(lunarClaymoreMechanic, this);
+        pm.registerEvents(lunarRobotMechanic, this);
+        pm.registerEvents(modelEngineDeathListener, this);
+        pm.registerEvents(batteryChargerMechanic, this);
+
         try {
             PinManager.get().load(getDataFolder().toPath().resolve("regions.yml"));
             pm.registerEvents(new PinBoundaryListener(), this);
@@ -127,7 +139,33 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }
 
         // Register commands dynamically for Paper plugins
-        // 1. /tplunar (aliases: /lunar, /tplunardimension, /gotolunar)
+        // 1. /spawnrobot
+        Bukkit.getCommandMap().register("haohan", new BukkitCommand("spawnrobot") {
+            {
+                setDescription("Triệu hồi Robot 4 Chân hoang dã");
+                setPermission("haohan.admin");
+            }
+
+            @Override
+            public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+                return lunarRobotMechanic.onCommand(sender, this, commandLabel, args);
+            }
+        });
+
+        // 2. /robottablet
+        Bukkit.getCommandMap().register("haohan", new BukkitCommand("robottablet") {
+            {
+                setDescription("Nhận Tablet điều khiển Robot 4 Chân");
+                setPermission("haohan.admin");
+            }
+
+            @Override
+            public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+                return lunarRobotMechanic.onCommand(sender, this, commandLabel, args);
+            }
+        });
+
+        // 3. /tplunar (aliases: /lunar, /tplunardimension, /gotolunar)
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("tplunar") {
             {
                 setDescription("Teleport sang thế giới Mặt Trăng haohan:lunar");
@@ -169,7 +207,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         });
 
-        // 2. /spawnwarden [showcase|clear]
+        // 4. /spawnwarden [showcase|clear]
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("spawnwarden") {
             {
                 setDescription("Triệu hồi Boss The Lunar Warden");
@@ -210,7 +248,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         });
 
-        // 3. /wardenshowcase [spacing] (aliases: /spawnwardenshowcase, /wardendummy, /showcasewarden, /wardenline)
+        // 5. /wardenshowcase [spacing] (aliases: /spawnwardenshowcase, /wardendummy, /showcasewarden, /wardenline)
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("wardenshowcase") {
             {
                 setDescription("Triệu hồi hàng Boss biểu diễn tất cả các chiêu thức The Lunar Warden liên tục tại chỗ");
@@ -240,7 +278,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         });
 
-        // 4. /clearwarden (aliases: /wardenclear, /cleardummy, /wardencleardummy, /killwarden)
+        // 6. /clearwarden (aliases: /wardenclear, /cleardummy, /wardencleardummy, /killwarden)
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("clearwarden") {
             {
                 setDescription("Xóa toàn bộ Boss The Lunar Warden và các Boss Showcase");
@@ -266,6 +304,8 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
                 beaconShieldMechanic.tick();
                 lunarSurfaceSpreadMechanic.tick();
                 WardenTrailCaptureSystem.renderTrails();
+                lunarRobotMechanic.tick();
+                batteryChargerMechanic.tick();
             } catch (Exception e) {
                 getLogger().warning("Error in tick loop: " + e.getMessage());
             }
@@ -278,6 +318,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         LunarSubSystems.register(new PinSubSystem());
         LunarSubSystems.init(this);
         LunarCommands.init(this);
+
+        // Scan and restore loaded in-world robots after restart
+        lunarRobotMechanic.scanLoadedEntities();
 
         getLogger().info("HaoHanLunar plugin successfully enabled and hooks registered!");
     }
@@ -310,6 +353,12 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }
         if (telescopeMechanic != null) {
             telescopeMechanic.removeAllMarkers();
+        }
+        if (lunarRobotMechanic != null) {
+            lunarRobotMechanic.cleanupAll();
+        }
+        if (batteryChargerMechanic != null) {
+            batteryChargerMechanic.cleanupOnDisable();
         }
 
         // Clean up low gravity and mining attributes modifiers from players
@@ -363,5 +412,17 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
     public LunarClaymoreMechanic getLunarClaymoreMechanic() {
         return lunarClaymoreMechanic;
+    }
+
+    public LunarRobotMechanic getLunarRobotMechanic() {
+        return lunarRobotMechanic;
+    }
+
+    public ModelEngineDeathListener getModelEngineDeathListener() {
+        return modelEngineDeathListener;
+    }
+
+    public BatteryChargerMechanic getBatteryChargerMechanic() {
+        return batteryChargerMechanic;
     }
 }
