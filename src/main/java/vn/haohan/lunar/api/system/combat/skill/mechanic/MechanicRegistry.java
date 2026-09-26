@@ -44,7 +44,7 @@ import vn.haohan.lunar.api.system.world.totem.TotemDefinition;
 import vn.haohan.lunar.api.system.world.totem.TotemManager;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.system.util.SafeExpressionEvaluator;
+import vn.haohan.lunar.core.util.SafeExpressionEvaluator;
 import vn.haohan.lunar.core.system.variable.VariableManager;
 import vn.haohan.lunar.core.system.variable.VariableScope;
 import vn.haohan.lunar.core.system.variable.VariableValue;

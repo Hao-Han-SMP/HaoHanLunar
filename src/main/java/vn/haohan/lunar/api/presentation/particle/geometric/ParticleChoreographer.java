@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.presentation.particle.geometric;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.core.system.util.MathUtil;
+import vn.haohan.lunar.core.util.MathUtil;
 
 import java.util.List;
 

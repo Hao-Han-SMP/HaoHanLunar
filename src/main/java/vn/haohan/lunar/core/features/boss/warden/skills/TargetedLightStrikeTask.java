@@ -5,7 +5,7 @@ import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import vn.haohan.lunar.core.system.util.MathUtil;
+import vn.haohan.lunar.core.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;
 import vn.haohan.lunar.core.features.boss.warden.util.WardenLocationUtil;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;

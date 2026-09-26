@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.config.migration;
+package vn.haohan.lunar.core.config.migration;
 
 import org.bukkit.entity.EntityType;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -9,8 +9,8 @@ import vn.haohan.lunar.api.system.mob.scaling.DynamicScalingDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillChainParser;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
-import vn.haohan.lunar.api.system.config.ConfigLoadException;
-import vn.haohan.lunar.api.system.config.LunarYamlLoader;
+import vn.haohan.lunar.api.config.ConfigLoadException;
+import vn.haohan.lunar.api.config.LunarYamlLoader;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.loot.DropTableDefinition;
 import vn.haohan.lunar.core.features.boss.warden.WardenSkillRegistry;

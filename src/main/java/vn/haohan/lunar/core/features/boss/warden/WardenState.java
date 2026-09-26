@@ -9,7 +9,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import vn.haohan.lunar.core.system.util.MathUtil;
+import vn.haohan.lunar.core.util.MathUtil;
 
 import java.util.*;
 

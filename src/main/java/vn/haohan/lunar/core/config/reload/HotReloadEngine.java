@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.config.reload;
+package vn.haohan.lunar.core.config.reload;
 
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;

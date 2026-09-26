@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.system.util.MathUtil;
+import vn.haohan.lunar.core.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
 import vn.haohan.lunar.core.features.boss.warden.WardenState;
 import vn.haohan.lunar.core.features.boss.warden.combat.WardenCombatHandler;

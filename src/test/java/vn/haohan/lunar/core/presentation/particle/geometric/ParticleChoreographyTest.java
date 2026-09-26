@@ -18,7 +18,7 @@ import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
-import vn.haohan.lunar.core.system.util.MathUtil;
+import vn.haohan.lunar.core.util.MathUtil;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

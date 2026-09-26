@@ -9,7 +9,7 @@ import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.IronGolem;
 import org.bukkit.entity.Player;
-import vn.haohan.lunar.core.system.util.MathUtil;
+import vn.haohan.lunar.core.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
 import vn.haohan.lunar.core.features.boss.warden.WardenState;
 

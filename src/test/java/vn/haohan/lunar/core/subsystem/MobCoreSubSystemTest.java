@@ -16,7 +16,7 @@ import vn.haohan.lunar.core.subsystem.engine.ItemCoreSubSystem;
 import vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem;
 import vn.haohan.lunar.core.subsystem.engine.PinSubSystem;
 import vn.haohan.lunar.core.subsystem.engine.PlayerDataSubSystem;
-import vn.haohan.lunar.core.system.util.SafeExpressionEvaluator;
+import vn.haohan.lunar.core.util.SafeExpressionEvaluator;
 import vn.haohan.lunar.core.system.variable.VariableValue;
 
 import java.lang.reflect.Proxy;

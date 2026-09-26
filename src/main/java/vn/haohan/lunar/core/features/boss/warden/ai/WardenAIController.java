@@ -12,7 +12,7 @@ import org.bukkit.entity.Projectile;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.system.util.MathUtil;
+import vn.haohan.lunar.core.util.MathUtil;
 import vn.haohan.lunar.core.features.boss.warden.WardenBehavior;
 import vn.haohan.lunar.core.features.boss.warden.WardenConstants;
 import vn.haohan.lunar.core.features.boss.warden.WardenState;

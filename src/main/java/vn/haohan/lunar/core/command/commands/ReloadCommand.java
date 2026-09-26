@@ -2,7 +2,7 @@ package vn.haohan.lunar.core.command.commands;
 
 import org.bukkit.command.CommandSender;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.api.system.config.ConfigValidationReport;
+import vn.haohan.lunar.api.config.ConfigValidationReport;
 import vn.haohan.lunar.core.command.ICommand;
 import vn.haohan.lunar.core.subsystem.LunarSubSystems;
 import vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem;

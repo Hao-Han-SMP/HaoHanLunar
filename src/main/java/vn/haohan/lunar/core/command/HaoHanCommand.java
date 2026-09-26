@@ -115,7 +115,6 @@ public class HaoHanCommand implements ICommand {
         String subKey;
         String[] subArgs;
 
-        // If invoked directly through an alias shortcut like /clearwarden or /tplunar or /lunarmob
         if (label != null && !label.equalsIgnoreCase("hhl") && !label.equalsIgnoreCase("haohanlunar")) {
             if (label.equalsIgnoreCase("mob") || label.equalsIgnoreCase("lunarmob") || label.equalsIgnoreCase("lmob")) {
                 if (args == null || args.length == 0) {
@@ -142,7 +141,6 @@ public class HaoHanCommand implements ICommand {
             return true;
         }
 
-        // Handle /hhl mob <subcommand>
         if (subKey.equals("mob") || subKey.equals("lunarmob") || subKey.equals("lmob")) {
             if (subArgs.length > 0) {
                 String nestedSubKey = subArgs[0].toLowerCase(Locale.ROOT);

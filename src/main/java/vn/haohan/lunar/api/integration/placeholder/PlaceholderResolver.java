@@ -9,7 +9,7 @@ import vn.haohan.lunar.api.system.mob.scaling.MobLevelApplier;
 import vn.haohan.lunar.api.system.mob.stat.StatType;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.system.util.SafeExpressionEvaluator;
+import vn.haohan.lunar.core.util.SafeExpressionEvaluator;
 import vn.haohan.lunar.core.system.variable.VariableManager;
 import vn.haohan.lunar.core.system.variable.VariableValue;
 

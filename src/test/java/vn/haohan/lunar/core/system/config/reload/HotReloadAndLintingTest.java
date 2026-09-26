@@ -15,6 +15,7 @@ import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
+import vn.haohan.lunar.core.config.reload.HotReloadEngine;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.mob.ActiveMob;

@@ -1,8 +1,8 @@
 package vn.haohan.lunar.api.system.mob;
 
-import vn.haohan.lunar.api.system.config.ConfigLoadException;
-import vn.haohan.lunar.api.system.config.ConfigValidationReport;
-import vn.haohan.lunar.api.system.config.LunarYamlLoader;
+import vn.haohan.lunar.api.config.ConfigLoadException;
+import vn.haohan.lunar.api.config.ConfigValidationReport;
+import vn.haohan.lunar.api.config.LunarYamlLoader;
 
 import java.nio.file.Path;
 import java.util.*;

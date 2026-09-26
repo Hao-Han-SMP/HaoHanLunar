@@ -1,8 +1,8 @@
 package vn.haohan.lunar.core.system.config;
 
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.api.system.config.ConfigValidationReport;
-import vn.haohan.lunar.api.system.config.LunarYamlLoader;
+import vn.haohan.lunar.api.config.ConfigValidationReport;
+import vn.haohan.lunar.api.config.LunarYamlLoader;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

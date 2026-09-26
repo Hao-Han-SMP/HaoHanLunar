@@ -2,7 +2,7 @@ package vn.haohan.lunar.core.mob;
 
 import org.bukkit.entity.EntityType;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.api.system.config.LunarYamlLoader;
+import vn.haohan.lunar.api.config.LunarYamlLoader;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;

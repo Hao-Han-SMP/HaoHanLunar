@@ -16,9 +16,10 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.projectile.ProjectileTracker;
 import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
-import vn.haohan.lunar.api.system.config.ConfigValidationReport;
+import vn.haohan.lunar.api.config.ConfigValidationReport;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
+import vn.haohan.lunar.core.config.reload.HotReloadEngine;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
 import vn.haohan.lunar.core.subsystem.mob.MobSkillRuntime;
@@ -48,7 +49,7 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
     private ItemProviderRegistry itemProviderRegistry;
     private Path configRoot;
     private final vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics performanceMetrics = new vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics();
-    private vn.haohan.lunar.core.system.config.reload.HotReloadEngine hotReloadEngine;
+    private HotReloadEngine hotReloadEngine;
 
     private AuraRegistry auraRegistry;
     private AuraScheduler auraScheduler;
@@ -157,7 +158,7 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
         LunarAPI.setItemProvider(itemProviderRegistry);
 
         this.configRoot = plugin != null ? plugin.getDataFolder().toPath() : Path.of("src/main/resources");
-        hotReloadEngine = new vn.haohan.lunar.core.system.config.reload.HotReloadEngine(configRoot, mobRegistry, skillRegistry, dropManager, fixedSpawnerManager, mobManager, java.util.concurrent.ForkJoinPool.commonPool());
+        hotReloadEngine = new HotReloadEngine(configRoot, mobRegistry, skillRegistry, dropManager, fixedSpawnerManager, mobManager, java.util.concurrent.ForkJoinPool.commonPool());
 
         // Register event listeners
         if (plugin != null && plugin.getServer() != null) {
@@ -419,11 +420,11 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
         return mobSkillRuntime;
     }
 
-    public vn.haohan.lunar.core.system.config.reload.HotReloadEngine hotReloadEngine() {
+    public HotReloadEngine hotReloadEngine() {
         return hotReloadEngine;
     }
 
-    public vn.haohan.lunar.core.system.config.reload.HotReloadEngine getHotReloadEngine() {
+    public HotReloadEngine getHotReloadEngine() {
         return hotReloadEngine;
     }
 
