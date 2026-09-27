@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.variable;
+package vn.haohan.lunar.api.system.variable;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.LivingEntity;
@@ -90,13 +90,20 @@ public final class VariableManager implements Listener {
         };
     }
 
+    private final Map<String, NamespacedKey> pdcKeyCache = new ConcurrentHashMap<>();
+
+    private NamespacedKey getPdcKey(String varName) {
+        return pdcKeyCache.computeIfAbsent(varName.trim().toLowerCase(Locale.ROOT),
+                k -> new NamespacedKey("haohanlunar", PDC_PREFIX + k));
+    }
+
     /**
      * Persists a variable into the entity's PersistentDataContainer.
      */
     public void saveToPdc(LivingEntity entity, String varName, VariableValue value) {
         if (entity == null || varName == null || varName.isBlank() || value == null) return;
         try {
-            NamespacedKey key = new NamespacedKey("haohanlunar", PDC_PREFIX + varName.trim().toLowerCase(Locale.ROOT));
+            NamespacedKey key = getPdcKey(varName);
             PersistentDataContainer pdc = entity.getPersistentDataContainer();
             pdc.set(key, PersistentDataType.STRING, value.type().name() + ":" + value.asString());
         } catch (Throwable ignored) {
@@ -109,7 +116,7 @@ public final class VariableManager implements Listener {
     public Optional<VariableValue> loadFromPdc(LivingEntity entity, String varName) {
         if (entity == null || varName == null || varName.isBlank()) return Optional.empty();
         try {
-            NamespacedKey key = new NamespacedKey("haohanlunar", PDC_PREFIX + varName.trim().toLowerCase(Locale.ROOT));
+            NamespacedKey key = getPdcKey(varName);
             PersistentDataContainer pdc = entity.getPersistentDataContainer();
             String raw = pdc.get(key, PersistentDataType.STRING);
             if (raw == null || !raw.contains(":")) return Optional.empty();

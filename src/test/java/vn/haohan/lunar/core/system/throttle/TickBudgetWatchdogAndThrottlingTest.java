@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.throttle;
+package vn.haohan.lunar.api.system.throttle;
 
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;

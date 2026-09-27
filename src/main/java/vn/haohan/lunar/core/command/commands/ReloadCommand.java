@@ -4,8 +4,8 @@ import org.bukkit.command.CommandSender;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.config.ConfigValidationReport;
 import vn.haohan.lunar.core.command.ICommand;
-import vn.haohan.lunar.core.service.LunarServices;
-import vn.haohan.lunar.core.service.engine.MobCoreService;
+import vn.haohan.lunar.api.service.Services;
+import vn.haohan.lunar.api.service.engine.MobCoreService;
 
 public class ReloadCommand implements ICommand {
 
@@ -26,7 +26,7 @@ public class ReloadCommand implements ICommand {
 
     @Override
     public boolean execute(HaoHanLunarPlugin plugin, CommandSender sender, String label, String[] args) {
-        MobCoreService mobSystem = LunarServices.get(MobCoreService.class);
+        MobCoreService mobSystem = Services.get(MobCoreService.class);
         if (mobSystem != null) {
             ConfigValidationReport report = mobSystem.reload();
             if (report != null && report.isValid()) {

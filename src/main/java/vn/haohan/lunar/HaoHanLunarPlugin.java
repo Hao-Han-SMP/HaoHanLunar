@@ -12,12 +12,12 @@ import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
 import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
 import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
-import vn.haohan.lunar.core.service.LunarServices;
-import vn.haohan.lunar.core.service.engine.ItemCoreService;
-import vn.haohan.lunar.core.service.engine.MobCoreService;
-import vn.haohan.lunar.core.service.engine.PinService;
-import vn.haohan.lunar.core.service.engine.PlayerDataService;
-import vn.haohan.lunar.core.system.data.PlayerDataManager;
+import vn.haohan.lunar.api.service.Services;
+import vn.haohan.lunar.api.service.engine.ItemCoreService;
+import vn.haohan.lunar.api.service.engine.MobCoreService;
+import vn.haohan.lunar.api.service.engine.PinService;
+import vn.haohan.lunar.api.service.engine.PlayerDataService;
+import vn.haohan.lunar.api.system.data.PlayerDataManager;
 import vn.haohan.lunar.core.system.item.LunarItems;
 
 /**
@@ -126,11 +126,11 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         }, 1L, 1L);
 
         // Initialize Lunar Services and commands
-        LunarServices.register(new MobCoreService());
-        LunarServices.register(new ItemCoreService());
-        LunarServices.register(new PlayerDataService());
-        LunarServices.register(new PinService());
-        LunarServices.init(this);
+        Services.register(new MobCoreService());
+        Services.register(new ItemCoreService());
+        Services.register(new PlayerDataService());
+        Services.register(new PinService());
+        Services.init(this);
 
         // Register main command dispatcher
         new HaoHanCommand().register(this);
@@ -176,7 +176,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         }
 
-        LunarServices.disable(this);
+        Services.disable(this);
         getLogger().info("HaoHanLunar plugin successfully disabled.");
     }
 

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.variable;
+package vn.haohan.lunar.api.system.variable;
 
 import org.bukkit.Location;
 

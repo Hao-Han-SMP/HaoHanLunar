@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.service;
+package vn.haohan.lunar.api.service;
 
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitTask;
@@ -8,21 +8,21 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Registry and lifecycle coordinator for all {@link ILunarService} implementations.
+ * Registry and lifecycle coordinator for all {@link IService} implementations.
  * Ensures ordered startup, shutdown, and tick scheduling.
  */
-public final class LunarServices {
+public final class Services {
 
-    private static final List<ILunarService> services = new ArrayList<>();
-    private static final List<ILunarService> tickableServices = new CopyOnWriteArrayList<>();
+    private static final List<IService> services = new ArrayList<>();
+    private static final List<IService> tickableServices = new CopyOnWriteArrayList<>();
     private static BukkitTask tickTask;
 
-    private LunarServices() {}
+    private Services() {}
 
     /**
      * Registers a service before lifecycle initialization.
      */
-    public static void register(ILunarService service) {
+    public static void register(IService service) {
         if (service != null && !services.contains(service)) {
             services.add(service);
             if (service.isTickable()) {
@@ -35,10 +35,10 @@ public final class LunarServices {
      * Initializes all registered services in order of priority (highest first).
      */
     public static void init(HaoHanLunarPlugin plugin) {
-        services.sort(Comparator.comparingInt(ILunarService::priority).reversed());
+        services.sort(Comparator.comparingInt(IService::priority).reversed());
 
         plugin.getLogger().info("[Services] Initializing " + services.size() + " services...");
-        for (ILunarService service : services) {
+        for (IService service : services) {
             try {
                 plugin.getLogger().info("[Services] Enabling: " + service.name() + " (priority " + service.priority() + ")");
                 service.init(plugin);
@@ -51,7 +51,7 @@ public final class LunarServices {
         // Start tick loop if any tickable services exist
         if (!tickableServices.isEmpty()) {
             tickTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-                for (ILunarService service : tickableServices) {
+                for (IService service : tickableServices) {
                     try {
                         service.tick();
                     } catch (Exception e) {
@@ -72,10 +72,10 @@ public final class LunarServices {
             tickTask = null;
         }
 
-        List<ILunarService> reversed = new ArrayList<>(services);
+        List<IService> reversed = new ArrayList<>(services);
         Collections.reverse(reversed);
 
-        for (ILunarService service : reversed) {
+        for (IService service : reversed) {
             try {
                 plugin.getLogger().info("[Services] Disabling: " + service.name());
                 service.disable(plugin);
@@ -92,8 +92,8 @@ public final class LunarServices {
      * Finds a registered service by class.
      */
     @SuppressWarnings("unchecked")
-    public static <T extends ILunarService> T get(Class<T> clazz) {
-        for (ILunarService service : services) {
+    public static <T extends IService> T get(Class<T> clazz) {
+        for (IService service : services) {
             if (clazz.isInstance(service)) {
                 return (T) service;
             }
@@ -104,8 +104,8 @@ public final class LunarServices {
     /**
      * Finds a registered service by name.
      */
-    public static ILunarService get(String name) {
-        for (ILunarService service : services) {
+    public static IService get(String name) {
+        for (IService service : services) {
             if (service.name().equalsIgnoreCase(name)) {
                 return service;
             }
@@ -116,7 +116,7 @@ public final class LunarServices {
     /**
      * Returns an unmodifiable view of all registered services.
      */
-    public static List<ILunarService> getAll() {
+    public static List<IService> getAll() {
         return Collections.unmodifiableList(services);
     }
 }

@@ -23,7 +23,7 @@ import vn.haohan.lunar.api.system.mob.equipment.EquipmentApplier;
 import vn.haohan.lunar.api.system.mob.equipment.ItemProviderRegistry;
 import vn.haohan.lunar.api.system.mob.scaling.MobLevelApplier;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.system.throttle.DynamicThrottlingEngine;
+import vn.haohan.lunar.api.system.throttle.DynamicThrottlingEngine;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

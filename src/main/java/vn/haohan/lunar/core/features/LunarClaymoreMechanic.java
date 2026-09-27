@@ -29,7 +29,7 @@ import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.features.boss.warden.visual.BlockWaveRenderer;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenAudio;
 import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
-import vn.haohan.lunar.core.service.ILunarService;
+import vn.haohan.lunar.api.service.IService;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Mace enchantments (Density, Breach, Wind Burst), smooth slash animation and melee cleave,
  * defensive guard block (Block_Sword), and anti-loss inventory protection for the Lunar Claymore (Thanh Kiếm Nguyệt Thạch).
  */
-public class LunarClaymoreMechanic implements Listener, ILunarService {
+public class LunarClaymoreMechanic implements Listener, IService {
 
     private final HaoHanLunarPlugin plugin;
     private static final int CMD_IDLE = 6001;

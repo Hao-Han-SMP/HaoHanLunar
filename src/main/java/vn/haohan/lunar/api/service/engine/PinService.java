@@ -1,15 +1,15 @@
-package vn.haohan.lunar.core.service.engine;
+package vn.haohan.lunar.api.service.engine;
 
 import org.bukkit.event.Listener;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.system.world.pin.PinBoundaryListener;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
-import vn.haohan.lunar.core.service.ILunarService;
+import vn.haohan.lunar.api.service.IService;
 
 /**
  * Service managing pin-based region boundaries and boundary transition events.
  */
-public class PinService implements ILunarService, Listener {
+public class PinService implements IService, Listener {
 
     private PinBoundaryListener boundaryListener;
 

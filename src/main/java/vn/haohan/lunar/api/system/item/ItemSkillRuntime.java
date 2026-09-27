@@ -1,4 +1,6 @@
-package vn.haohan.lunar.core.system.item;
+package vn.haohan.lunar.api.system.item;
+
+import vn.haohan.lunar.core.system.item.MythicItemDefinition;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;

@@ -10,8 +10,8 @@ import vn.haohan.lunar.api.system.mob.stat.StatType;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.util.SafeExpressionEvaluator;
-import vn.haohan.lunar.core.system.variable.VariableManager;
-import vn.haohan.lunar.core.system.variable.VariableValue;
+import vn.haohan.lunar.api.system.variable.VariableManager;
+import vn.haohan.lunar.api.system.variable.VariableValue;
 
 import java.util.Locale;
 import java.util.UUID;

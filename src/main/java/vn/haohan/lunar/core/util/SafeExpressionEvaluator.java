@@ -4,7 +4,7 @@ import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.integration.placeholder.PlaceholderResolver;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.core.mob.ActiveMob;
-import vn.haohan.lunar.core.system.variable.VariableManager;
+import vn.haohan.lunar.api.system.variable.VariableManager;
 
 import java.util.ArrayList;
 import java.util.List;

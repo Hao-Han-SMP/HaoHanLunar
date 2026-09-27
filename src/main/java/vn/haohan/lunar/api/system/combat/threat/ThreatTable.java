@@ -63,7 +63,12 @@ public final class ThreatTable implements IThreatTable {
         if (targetId == null) {
             return;
         }
-        double topThreat = threatScores.values().stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+        double topThreat = 0.0;
+        for (double score : threatScores.values()) {
+            if (score > topThreat) {
+                topThreat = score;
+            }
+        }
         double forcedThreat = Math.max(topThreat * 1.15, topThreat + Math.max(10.0, bonusAmount));
         threatScores.put(targetId, forcedThreat);
         lastInteractions.put(targetId, currentTick);
@@ -95,7 +100,11 @@ public final class ThreatTable implements IThreatTable {
     }
 
     public double totalThreat() {
-        return threatScores.values().stream().mapToDouble(Double::doubleValue).sum();
+        double sum = 0.0;
+        for (double score : threatScores.values()) {
+            sum += score;
+        }
+        return sum;
     }
 
     public void removeTarget(UUID targetId) {
@@ -166,9 +175,19 @@ public final class ThreatTable implements IThreatTable {
     }
 
     public Optional<UUID> getTopThreatTarget() {
-        return threatScores.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey);
+        if (threatScores.isEmpty()) {
+            return Optional.empty();
+        }
+        UUID topTarget = null;
+        double maxThreat = -1.0;
+        for (Map.Entry<UUID, Double> entry : threatScores.entrySet()) {
+            double score = entry.getValue();
+            if (score > maxThreat) {
+                maxThreat = score;
+                topTarget = entry.getKey();
+            }
+        }
+        return Optional.ofNullable(topTarget);
     }
 
     public Optional<UUID> topTarget() {

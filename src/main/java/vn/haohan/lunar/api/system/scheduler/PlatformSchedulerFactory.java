@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.scheduler;
+package vn.haohan.lunar.api.system.scheduler;
 
 import org.bukkit.plugin.Plugin;
 

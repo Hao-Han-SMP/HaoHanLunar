@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.service.engine;
+package vn.haohan.lunar.api.service.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.LunarAPI;
@@ -21,11 +21,11 @@ import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
 import vn.haohan.lunar.core.config.reload.HotReloadEngine;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.service.ILunarService;
+import vn.haohan.lunar.api.service.IService;
 import vn.haohan.lunar.core.mob.MobSkillRuntime;
 import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
-import vn.haohan.lunar.core.system.throttle.DynamicThrottlingEngine;
-import vn.haohan.lunar.core.system.variable.VariableManager;
+import vn.haohan.lunar.api.system.throttle.DynamicThrottlingEngine;
+import vn.haohan.lunar.api.system.variable.VariableManager;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -36,7 +36,7 @@ import java.util.UUID;
  * Subsystem initializing the mob runtime, skill engine, combat pipeline,
  * auras, projectiles, and variables, then binding them to the public {@link LunarAPI} service locator.
  */
-public class MobCoreService implements ILunarService {
+public class MobCoreService implements IService {
 
     private LunarMobManager mobManager;
     private MobDefinitionRegistry mobRegistry;

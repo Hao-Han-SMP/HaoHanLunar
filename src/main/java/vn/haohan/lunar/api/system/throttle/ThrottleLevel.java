@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.throttle;
+package vn.haohan.lunar.api.system.throttle;
 
 /**
  * Level of Detail (LOD) throttle levels applied dynamically when server TPS fluctuates.

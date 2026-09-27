@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.Damageable;
 import vn.haohan.itemcore.api.item.ItemBehavior;
 import vn.haohan.itemcore.api.item.ItemContext;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.system.data.PlayerLunarData;
+import vn.haohan.lunar.api.system.data.PlayerLunarData;
 
 import java.util.Map;
 

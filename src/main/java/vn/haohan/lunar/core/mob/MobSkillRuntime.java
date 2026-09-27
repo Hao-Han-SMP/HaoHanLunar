@@ -33,8 +33,8 @@ import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 import vn.haohan.lunar.api.system.combat.skill.target.TargeterContext;
 import vn.haohan.lunar.api.system.combat.skill.target.BasicTargeterRegistry;
 import vn.haohan.lunar.api.system.combat.threat.TargetChangeReason;
-import vn.haohan.lunar.core.system.throttle.DynamicThrottlingEngine;
-import vn.haohan.lunar.core.system.variable.VariableHolder;
+import vn.haohan.lunar.api.system.throttle.DynamicThrottlingEngine;
+import vn.haohan.lunar.api.system.variable.VariableHolder;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

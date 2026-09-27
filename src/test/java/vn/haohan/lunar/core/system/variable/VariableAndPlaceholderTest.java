@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.variable;
+package vn.haohan.lunar.api.system.variable;
 
 import vn.haohan.lunar.api.integration.placeholder.PlaceholderResolver;
 

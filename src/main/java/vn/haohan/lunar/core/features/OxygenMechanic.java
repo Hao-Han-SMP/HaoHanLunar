@@ -15,8 +15,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.util.BoundingBox;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.service.ILunarService;
-import vn.haohan.lunar.core.system.data.PlayerLunarData;
+import vn.haohan.lunar.api.service.IService;
+import vn.haohan.lunar.api.system.data.PlayerLunarData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class OxygenMechanic implements Listener, ILunarService {
+public class OxygenMechanic implements Listener, IService {
 
     private final HaoHanLunarPlugin plugin;
     private final Map<ChunkKey, SafeZoneCacheEntry> safeZoneCache = new ConcurrentHashMap<>();

@@ -1,6 +1,7 @@
 package vn.haohan.lunar.core.system.item;
 
 import org.bukkit.Material;
+import vn.haohan.lunar.api.system.item.ItemSkillBinding;
 
 import java.util.*;
 

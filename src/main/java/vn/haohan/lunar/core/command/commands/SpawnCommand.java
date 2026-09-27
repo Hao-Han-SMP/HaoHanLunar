@@ -8,8 +8,8 @@ import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.core.command.ICommand;
-import vn.haohan.lunar.core.service.LunarServices;
-import vn.haohan.lunar.core.service.engine.MobCoreService;
+import vn.haohan.lunar.api.service.Services;
+import vn.haohan.lunar.api.service.engine.MobCoreService;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +45,7 @@ public class SpawnCommand implements ICommand {
                 EntityType type = def.entityType();
                 var entity = player.getWorld().spawnEntity(player.getLocation(), type);
                 if (entity instanceof LivingEntity living) {
-                    MobCoreService subSystem = LunarServices.get(MobCoreService.class);
+                    MobCoreService subSystem = Services.get(MobCoreService.class);
                     if (subSystem != null && subSystem.getMobManager() != null) {
                         subSystem.getMobManager().register(living, def, "1.0", null);
                     }

@@ -1,13 +1,13 @@
-package vn.haohan.lunar.core.service.engine;
+package vn.haohan.lunar.api.service.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.service.ILunarService;
+import vn.haohan.lunar.api.service.IService;
 import vn.haohan.lunar.core.system.item.LunarItems;
 
 /**
  * Service registering custom item definitions and handlers with the external HaoHanItemCore runtime.
  */
-public class ItemCoreService implements ILunarService {
+public class ItemCoreService implements IService {
 
     @Override
     public String name() {

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.service;
+package vn.haohan.lunar.api.service;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 
@@ -6,7 +6,7 @@ import vn.haohan.lunar.HaoHanLunarPlugin;
  * Fundamental lifecycle contract for modular services in HaoHanLunar.
  * Each service manages its own lifecycle (init, disable), tick loop, priority, and dependencies.
  */
-public interface ILunarService {
+public interface IService {
 
     /**
      * The unique name of this service.

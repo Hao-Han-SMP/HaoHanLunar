@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.throttle;
+package vn.haohan.lunar.api.system.throttle;
 
 import java.util.concurrent.atomic.AtomicReference;
 

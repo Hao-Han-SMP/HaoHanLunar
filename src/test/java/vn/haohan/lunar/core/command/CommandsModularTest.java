@@ -15,7 +15,7 @@ import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
 import vn.haohan.lunar.api.system.debug.trace.SkillTracer;
 import vn.haohan.lunar.api.system.debug.validator.ConfigValidationService;
-import vn.haohan.lunar.core.system.item.ItemDefinitionRegistry;
+import vn.haohan.lunar.api.system.item.ItemDefinitionRegistry;
 import vn.haohan.lunar.core.system.item.MythicItemDefinition;
 
 import java.io.IOException;

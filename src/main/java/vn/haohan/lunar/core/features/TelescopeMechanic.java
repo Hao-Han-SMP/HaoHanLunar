@@ -24,12 +24,12 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.service.ILunarService;
+import vn.haohan.lunar.api.service.IService;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class TelescopeMechanic implements Listener, ILunarService {
+public class TelescopeMechanic implements Listener, IService {
 
     private static class RevealedMarker {
         final ItemDisplay display;

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.service;
+package vn.haohan.lunar.api.service;
 
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -12,12 +12,12 @@ import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
-import vn.haohan.lunar.core.service.engine.ItemCoreService;
-import vn.haohan.lunar.core.service.engine.MobCoreService;
-import vn.haohan.lunar.core.service.engine.PinService;
-import vn.haohan.lunar.core.service.engine.PlayerDataService;
+import vn.haohan.lunar.api.service.engine.ItemCoreService;
+import vn.haohan.lunar.api.service.engine.MobCoreService;
+import vn.haohan.lunar.api.service.engine.PinService;
+import vn.haohan.lunar.api.service.engine.PlayerDataService;
 import vn.haohan.lunar.core.util.SafeExpressionEvaluator;
-import vn.haohan.lunar.core.system.variable.VariableValue;
+import vn.haohan.lunar.api.system.variable.VariableValue;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

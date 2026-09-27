@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.item;
+package vn.haohan.lunar.api.system.item;
 
 import java.util.Map;
 import java.util.UUID;

@@ -3,7 +3,12 @@ package vn.haohan.lunar.api.system.combat.raycast;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.function.Predicate;
 
 /**
@@ -98,14 +103,19 @@ public final class RaycastEngine {
         double tMaxY = stepY > 0 ? (Math.floor(origin.getY()) + 1.0 - origin.getY()) * tDeltaY : (origin.getY() - Math.floor(origin.getY())) * tDeltaY;
         double tMaxZ = stepZ > 0 ? (Math.floor(origin.getZ()) + 1.0 - origin.getZ()) * tDeltaZ : (origin.getZ() - Math.floor(origin.getZ())) * tDeltaZ;
 
-        Vector normal = new Vector(0, 0, 0);
+        int normX = 0;
+        int normY = 0;
+        int normZ = 0;
+        Vector currentVoxel = new Vector(x, y, z);
         double distance = 0.0;
 
         while (distance <= maxDist) {
-            Vector currentVoxel = new Vector(x, y, z);
+            currentVoxel.setX((double) x);
+            currentVoxel.setY((double) y);
+            currentVoxel.setZ((double) z);
             if (solidVoxelChecker.test(currentVoxel)) {
                 Vector hitPoint = ray.getPoint(distance);
-                return Optional.of(new RaycastHit<>(hitPoint, normal.clone(), distance, currentVoxel));
+                return Optional.of(new RaycastHit<>(hitPoint, new Vector(normX, normY, normZ), distance, currentVoxel.clone()));
             }
 
             if (tMaxX < tMaxY) {
@@ -113,24 +123,32 @@ public final class RaycastEngine {
                     distance = tMaxX;
                     tMaxX += tDeltaX;
                     x += stepX;
-                    normal = new Vector(-stepX, 0, 0);
+                    normX = -stepX;
+                    normY = 0;
+                    normZ = 0;
                 } else {
                     distance = tMaxZ;
                     tMaxZ += tDeltaZ;
                     z += stepZ;
-                    normal = new Vector(0, 0, -stepZ);
+                    normX = 0;
+                    normY = 0;
+                    normZ = -stepZ;
                 }
             } else {
                 if (tMaxY < tMaxZ) {
                     distance = tMaxY;
                     tMaxY += tDeltaY;
                     y += stepY;
-                    normal = new Vector(0, -stepY, 0);
+                    normX = 0;
+                    normY = -stepY;
+                    normZ = 0;
                 } else {
                     distance = tMaxZ;
                     tMaxZ += tDeltaZ;
                     z += stepZ;
-                    normal = new Vector(0, 0, -stepZ);
+                    normX = 0;
+                    normY = 0;
+                    normZ = -stepZ;
                 }
             }
         }

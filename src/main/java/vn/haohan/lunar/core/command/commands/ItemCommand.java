@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.StringUtil;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.command.ICommand;
-import vn.haohan.lunar.core.system.item.ItemDefinitionRegistry;
+import vn.haohan.lunar.api.system.item.ItemDefinitionRegistry;
 import vn.haohan.lunar.core.system.item.MythicItemDefinition;
 
 import java.util.ArrayList;

@@ -10,9 +10,9 @@ import org.bukkit.util.StringUtil;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.service.ILunarService;
-import vn.haohan.lunar.core.service.LunarServices;
-import vn.haohan.lunar.core.service.engine.MobCoreService;
+import vn.haohan.lunar.api.service.IService;
+import vn.haohan.lunar.api.service.Services;
+import vn.haohan.lunar.api.service.engine.MobCoreService;
 
 import java.util.*;
 
@@ -126,8 +126,8 @@ public interface ICommand extends TabCompleter, CommandExecutor {
     /**
      * Retrieves an active subsystem registered with the plugin.
      */
-    default <T extends ILunarService> T getService(Class<T> type) {
-        return LunarServices.get(type);
+    default <T extends IService> T getService(Class<T> type) {
+        return Services.get(type);
     }
 
     /**

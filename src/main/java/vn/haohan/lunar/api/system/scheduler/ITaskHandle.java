@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.scheduler;
+package vn.haohan.lunar.api.system.scheduler;
 
 /**
  * Handle returned by scheduling calls allowing cancellation and state inspection.

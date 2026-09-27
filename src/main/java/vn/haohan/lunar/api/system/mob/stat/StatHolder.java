@@ -9,6 +9,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public final class StatHolder {
 
+    private static final StatType[] STAT_TYPES = StatType.values();
+    private static final int STAT_COUNT = STAT_TYPES.length;
+
     private final Map<StatType, Double> baseStats = new ConcurrentHashMap<>();
     private final List<StatModifier> modifiers = new CopyOnWriteArrayList<>();
 
@@ -53,23 +56,33 @@ public final class StatHolder {
         cleanupExpired(currentTick);
         Map<StatType, Double> computed = new EnumMap<>(StatType.class);
 
-        for (StatType type : StatType.values()) {
-            double base = getBase(type);
-            double flat = 0.0;
-            double pctAdd = 0.0;
-            double mult = 1.0;
+        if (modifiers.isEmpty()) {
+            for (StatType type : STAT_TYPES) {
+                computed.put(type, type.clamp(getBase(type)));
+            }
+            return new StatSnapshot(computed);
+        }
 
-            for (StatModifier m : modifiers) {
-                if (m.statType() == type && !m.isExpired(currentTick)) {
-                    switch (m.operation()) {
-                        case FLAT -> flat += m.value();
-                        case PERCENT_ADD -> pctAdd += m.value();
-                        case PERCENT_MULT -> mult *= (1.0 + m.value());
-                    }
+        double[] flat = new double[STAT_COUNT];
+        double[] pctAdd = new double[STAT_COUNT];
+        double[] mult = new double[STAT_COUNT];
+        Arrays.fill(mult, 1.0);
+
+        for (StatModifier m : modifiers) {
+            if (!m.isExpired(currentTick)) {
+                int idx = m.statType().ordinal();
+                switch (m.operation()) {
+                    case FLAT -> flat[idx] += m.value();
+                    case PERCENT_ADD -> pctAdd[idx] += m.value();
+                    case PERCENT_MULT -> mult[idx] *= (1.0 + m.value());
                 }
             }
+        }
 
-            double total = (base + flat) * (1.0 + pctAdd) * mult;
+        for (int i = 0; i < STAT_COUNT; i++) {
+            StatType type = STAT_TYPES[i];
+            double base = getBase(type);
+            double total = (base + flat[i]) * (1.0 + pctAdd[i]) * mult[i];
             computed.put(type, type.clamp(total));
         }
 

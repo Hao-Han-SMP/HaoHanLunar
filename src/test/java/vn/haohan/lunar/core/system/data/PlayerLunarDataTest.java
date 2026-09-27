@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.data;
+package vn.haohan.lunar.api.system.data;
 
 import org.junit.jupiter.api.Test;
 
