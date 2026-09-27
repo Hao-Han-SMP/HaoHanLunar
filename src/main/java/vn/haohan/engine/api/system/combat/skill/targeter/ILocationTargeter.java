@@ -1,0 +1,22 @@
+package vn.haohan.engine.api.system.combat.skill.targeter;
+
+import org.bukkit.Location;
+import vn.haohan.engine.api.system.combat.skill.SkillCastContext;
+
+import java.util.Collection;
+import java.util.Map;
+
+/**
+ * ITargeter returning a collection of Locations.
+ */
+@FunctionalInterface
+public interface ILocationTargeter extends ISkillTargeter<Location> {
+
+    @Override
+    default String name() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    Collection<Location> resolve(SkillCastContext context, Map<String, Object> parameters);
+}

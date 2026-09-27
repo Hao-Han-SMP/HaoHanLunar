@@ -5,20 +5,20 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import vn.haohan.lunar.core.command.HaoHanCommand;
-import vn.haohan.lunar.core.features.*;
-import vn.haohan.lunar.core.features.beacon.BeaconShieldMechanic;
-import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
-import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
-import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
-import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
-import vn.haohan.lunar.api.service.Services;
-import vn.haohan.lunar.api.service.engine.ItemCoreService;
-import vn.haohan.lunar.api.service.engine.MobCoreService;
-import vn.haohan.lunar.api.service.engine.PinService;
-import vn.haohan.lunar.api.service.engine.PlayerDataService;
-import vn.haohan.lunar.api.system.data.PlayerDataManager;
-import vn.haohan.lunar.core.system.item.LunarItems;
+import vn.haohan.lunar.command.HaoHanCommand;
+import vn.haohan.lunar.features.*;
+import vn.haohan.lunar.features.beacon.BeaconShieldMechanic;
+import vn.haohan.lunar.features.boss.warden.LunarWardenMechanic;
+import vn.haohan.lunar.features.boss.warden.util.WardenEntityManager;
+import vn.haohan.lunar.features.boss.warden.visual.WardenTrailCaptureSystem;
+import vn.haohan.lunar.features.weapon.claymore.SmoothSlashTask;
+import vn.haohan.engine.core.service.Services;
+import vn.haohan.lunar.service.ItemCoreService;
+import vn.haohan.engine.core.service.MobCoreService;
+import vn.haohan.engine.core.service.PinService;
+import vn.haohan.lunar.service.PlayerDataService;
+import vn.haohan.engine.api.system.data.PlayerDataManager;
+import vn.haohan.lunar.item.LunarItems;
 
 /**
  * Main Paper plugin entry point for HaoHanLunar.
