@@ -22,9 +22,9 @@ import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
+import vn.haohan.lunar.core.service.ILunarService;
 
-public class GravityMechanic implements Listener, ILunarSubSystem {
+public class GravityMechanic implements Listener, ILunarService {
 
     private final HaoHanLunarPlugin plugin;
     private final NamespacedKey modifierKey;

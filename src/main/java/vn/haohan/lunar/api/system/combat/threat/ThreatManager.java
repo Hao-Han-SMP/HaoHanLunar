@@ -13,7 +13,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import vn.haohan.lunar.api.event.MobTargetChangeEvent;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.Map;
 import java.util.Optional;

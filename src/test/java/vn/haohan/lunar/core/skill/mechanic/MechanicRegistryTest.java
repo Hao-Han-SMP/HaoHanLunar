@@ -5,7 +5,7 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -59,7 +59,7 @@ class MechanicRegistryTest {
                 });
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        ActiveLunarMob mob = new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        ActiveMob mob = new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
         SkillDefinition skill = new SkillDefinition("test", Set.of(SkillTrigger.ON_COMBAT), 0);
         return new MechanicContext(new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 0), List.of());
     }

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.features.beacon;
+package vn.haohan.lunar.core.lunar.beacon;
 
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;

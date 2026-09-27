@@ -1,8 +1,8 @@
 package vn.haohan.lunar.core.system.throttle;
 
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics;
-import vn.haohan.lunar.core.system.debug.metrics.TickBudgetWatchdog;
+import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
+import vn.haohan.lunar.api.system.debug.metrics.TickBudgetWatchdog;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -28,7 +28,7 @@ import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
 import vn.haohan.lunar.api.system.loot.instanced.InstancedDropTracker;
 import vn.haohan.lunar.api.system.loot.pity.PityManager;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

@@ -23,7 +23,7 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
 import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import java.lang.reflect.Proxy;
@@ -142,7 +142,7 @@ public class VolatileVisualEngineTest {
     @DisplayName("MechanicRegistry executes fake_block_crack, camera_shake, and ground_slam_fx successfully")
     void testVolatileMechanicsInRegistry() {
         Location loc = new Location(mockWorld, 0, 64, 0);
-        ActiveLunarMob mob = createDummyMob("lunar_warden", loc);
+        ActiveMob mob = createDummyMob("lunar_warden", loc);
 
         SkillDefinition skill = new SkillDefinition("slam_combo", Set.of(SkillTrigger.ON_COMBAT), 0);
         SkillCastContext castContext = new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 0);
@@ -158,7 +158,7 @@ public class VolatileVisualEngineTest {
         assertTrue(r3.isSuccess());
     }
 
-    private ActiveLunarMob createDummyMob(String id, Location loc) {
+    private ActiveMob createDummyMob(String id, Location loc) {
         UUID uuid = UUID.randomUUID();
         LivingEntity entity = (LivingEntity) Proxy.newProxyInstance(LivingEntity.class.getClassLoader(),
                 new Class<?>[]{LivingEntity.class}, (proxy, method, args) -> {
@@ -182,6 +182,6 @@ public class VolatileVisualEngineTest {
                 Set.of()
         );
 
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity(id, "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity(id, "1"));
     }
 }

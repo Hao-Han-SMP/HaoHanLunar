@@ -6,7 +6,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import vn.haohan.lunar.api.manager.ICombatManager;
 import vn.haohan.lunar.api.system.mob.IMob;
 import vn.haohan.lunar.api.spawner.cluster.PackAggroCoordinator;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.List;
 import java.util.Objects;
@@ -31,7 +31,7 @@ public final class DamagePipeline implements ICombatManager {
     private static final ThreadLocal<Integer> CALL_DEPTH = ThreadLocal.withInitial(() -> 0);
 
     private PackAggroCoordinator packAggroCoordinator = new PackAggroCoordinator();
-    private vn.haohan.lunar.core.subsystem.mob.LunarMobManager mobManager;
+    private vn.haohan.lunar.core.mob.LunarMobManager mobManager;
 
     public DamagePipeline() {
         // Built-in pre-checks
@@ -189,7 +189,7 @@ public final class DamagePipeline implements ICombatManager {
         });
     }
 
-    public void setMobManager(vn.haohan.lunar.core.subsystem.mob.LunarMobManager mobManager) {
+    public void setMobManager(vn.haohan.lunar.core.mob.LunarMobManager mobManager) {
         this.mobManager = mobManager;
     }
 

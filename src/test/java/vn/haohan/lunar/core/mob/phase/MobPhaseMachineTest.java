@@ -7,7 +7,7 @@ import vn.haohan.lunar.api.system.mob.phase.MobPhase;
 import vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine;
 import vn.haohan.lunar.api.system.mob.phase.IPhaseCondition;
 import vn.haohan.lunar.api.system.mob.phase.PhaseContext;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -33,7 +33,7 @@ class MobPhaseMachineTest {
                 new MobPhase("enraged", 0.5, "enter_enraged", null, true),
                 new MobPhase("normal", 1.0, "enter_normal", "exit_normal", false)),
                                                       new CooldownRegistry(), phaseSkill -> skills.add(phaseSkill.skillId()));
-        ActiveLunarMob mob = mob();
+        ActiveMob mob = mob();
 
         assertTrue(machine.update(mob, 100, 100, 1).changed());
         assertEquals("normal", machine.state(mob.entityId()).orElseThrow().phaseId());
@@ -64,7 +64,7 @@ class MobPhaseMachineTest {
 
         MobPhaseMachine machine = new MobPhaseMachine(List.of(oncePhase, normalPhase),
                 new CooldownRegistry(), phaseSkill -> skills.add(phaseSkill.skillId()));
-        ActiveLunarMob mob = mob();
+        ActiveMob mob = mob();
 
         // 1. Initial 100% health -> normal phase
         machine.update(mob, 100, 100, 1);
@@ -99,7 +99,7 @@ class MobPhaseMachineTest {
 
         MobPhaseMachine machine = new MobPhaseMachine(List.of(berserkPhase, normalPhase),
                 new CooldownRegistry(), ignored -> {});
-        ActiveLunarMob mob = mob();
+        ActiveMob mob = mob();
 
         // ICondition not satisfied: aliveTicks < 100
         PhaseContext ctx1 = new PhaseContext(mob, 100, 100, 10, 50, 4, Map.of(), null);
@@ -137,7 +137,7 @@ class MobPhaseMachineTest {
 
         MobPhaseMachine machine = new MobPhaseMachine(List.of(p1, p2, normal),
                 new CooldownRegistry(), ignored -> {});
-        ActiveLunarMob mob = mob();
+        ActiveMob mob = mob();
 
         // Start normal at tick 0
         machine.update(mob, 100, 100, 0);
@@ -159,7 +159,7 @@ class MobPhaseMachineTest {
     void removesStateOnDeathCleanupAndRejectsInvalidHealth() {
         MobPhaseMachine machine = new MobPhaseMachine(List.of(new MobPhase("normal", 0, null, null, false)),
                 new CooldownRegistry(), ignored -> { });
-        ActiveLunarMob mob = mob();
+        ActiveMob mob = mob();
         assertFalse(machine.update(mob, 1, 0, 1).changed());
         assertEquals(1, machine.update(mob, 10, 10, 2).current() == null ? 0 : 1);
         machine.remove(mob.entityId());
@@ -168,7 +168,7 @@ class MobPhaseMachineTest {
         assertEquals(1, machine.cleanupAll());
     }
 
-    private static ActiveLunarMob mob() {
+    private static ActiveMob mob() {
         UUID uuid = UUID.randomUUID();
         LivingEntity entity = (LivingEntity) Proxy.newProxyInstance(LivingEntity.class.getClassLoader(),
                 new Class<?>[]{LivingEntity.class}, (proxy, method, args) -> {
@@ -177,6 +177,6 @@ class MobPhaseMachineTest {
                 });
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 }

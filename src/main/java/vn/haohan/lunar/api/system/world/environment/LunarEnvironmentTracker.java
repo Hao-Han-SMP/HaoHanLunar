@@ -2,8 +2,8 @@ package vn.haohan.lunar.api.system.world.environment;
 
 import org.bukkit.World;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
+import vn.haohan.lunar.core.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

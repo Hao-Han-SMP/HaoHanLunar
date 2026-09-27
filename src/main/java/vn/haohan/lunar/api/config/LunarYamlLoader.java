@@ -4,6 +4,7 @@ import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.MarkedYAMLException;
+import vn.haohan.lunar.core.util.PatternUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -21,7 +21,6 @@ import java.util.stream.Stream;
 public final class LunarYamlLoader {
 
     private static final List<String> DIRECTORIES = List.of("mobs", "skills", "drops", "spawners");
-    private static final Pattern VALID_ID = Pattern.compile("[a-z0-9](?:[a-z0-9_.-]*[a-z0-9])?");
 
     private final AtomicReference<LoadedConfigBatch> activeSnapshot = new AtomicReference<>(LoadedConfigBatch.empty());
 
@@ -122,7 +121,7 @@ public final class LunarYamlLoader {
             issues.add(issue(file, "$.id", "Expected a string"));
             return null;
         }
-        if (!VALID_ID.matcher(id).matches()) {
+        if (!PatternUtil.isValidConfigId(id)) {
             issues.add(issue(file, "$.id", "Invalid configuration ID: " + id));
             return null;
         }

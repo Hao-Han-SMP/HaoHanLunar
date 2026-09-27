@@ -7,7 +7,7 @@ import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -42,7 +42,7 @@ class SkillInterruptAndCooldownGroupTest {
 
     @Test
     void testChannelingLockAndOverrideBehavior() {
-        ActiveLunarMob mob = createMockMob();
+        ActiveMob mob = createMockMob();
 
         // 1. Start Channeling Skill 1
         CancellationToken token1 = mob.registerSkillExecution("lunar_beam", true, false);
@@ -116,7 +116,7 @@ class SkillInterruptAndCooldownGroupTest {
         assertTrue(registry.tryAcquire(entityId, skillB, currentTick));
     }
 
-    private ActiveLunarMob createMockMob() {
+    private ActiveMob createMockMob() {
         UUID uuid = UUID.randomUUID();
         World mockWorld = (World) Proxy.newProxyInstance(World.class.getClassLoader(), new Class<?>[]{World.class},
                 (p, m, a) -> "world");
@@ -132,6 +132,6 @@ class SkillInterruptAndCooldownGroupTest {
                 });
         MobDefinition def = new MobDefinition(new MobDefinitionId("test_boss"), EntityType.ZOMBIE, "Test Boss",
                 null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(mockEntity, def, new LunarMobIdentity("test_boss", "1.0"));
+        return new ActiveMob(mockEntity, def, new LunarMobIdentity("test_boss", "1.0"));
     }
 }

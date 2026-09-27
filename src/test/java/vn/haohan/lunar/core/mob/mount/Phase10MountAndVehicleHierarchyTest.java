@@ -97,8 +97,8 @@ class Phase10MountAndVehicleHierarchyTest {
                 List.of()
         );
 
-        ActiveLunarMob drake = createMockMob(drakeDef);
-        ActiveLunarMob knight = createMockMob(knightDef);
+        ActiveMob drake = createMockMob(drakeDef);
+        ActiveMob knight = createMockMob(knightDef);
 
         mobManager.register(drake);
         mobManager.register(knight);
@@ -119,9 +119,9 @@ class Phase10MountAndVehicleHierarchyTest {
         MobDefinition rider1Def = new MobDefinition(new MobDefinitionId("RIDER_1"), EntityType.SKELETON, "Rider 1", null, Map.of(), Map.of(), List.of(), null, Set.of());
         MobDefinition rider2Def = new MobDefinition(new MobDefinitionId("RIDER_2"), EntityType.ZOMBIE, "Rider 2", null, Map.of(), Map.of(), List.of(), null, Set.of());
 
-        ActiveLunarMob drake = createMockMob(drakeDef);
-        ActiveLunarMob rider1 = createMockMob(rider1Def);
-        ActiveLunarMob rider2 = createMockMob(rider2Def);
+        ActiveMob drake = createMockMob(drakeDef);
+        ActiveMob rider1 = createMockMob(rider1Def);
+        ActiveMob rider2 = createMockMob(rider2Def);
 
         mobManager.register(drake);
         mobManager.register(rider1);
@@ -148,8 +148,8 @@ class Phase10MountAndVehicleHierarchyTest {
         MobDefinition mountDef = new MobDefinition(new MobDefinitionId("BEAST"), EntityType.RAVAGER, "Beast", null, Map.of(), Map.of(), List.of(), null, Set.of());
         MobDefinition riderDef = new MobDefinition(new MobDefinitionId("WARRIOR"), EntityType.PIGLIN_BRUTE, "Warrior", null, Map.of(), Map.of(), List.of(), null, Set.of());
 
-        ActiveLunarMob beast = createMockMob(mountDef);
-        ActiveLunarMob warrior = createMockMob(riderDef);
+        ActiveMob beast = createMockMob(mountDef);
+        ActiveMob warrior = createMockMob(riderDef);
 
         mobManager.register(beast);
         mobManager.register(warrior);
@@ -174,8 +174,8 @@ class Phase10MountAndVehicleHierarchyTest {
         MobDefinition mountDef = new MobDefinition(new MobDefinitionId("HORSE"), EntityType.HORSE, "Horse", null, Map.of(), Map.of(), List.of(), null, Set.of());
         MobDefinition riderDef = new MobDefinition(new MobDefinitionId("RIDER"), EntityType.SKELETON, "Rider", null, Map.of(), Map.of(), List.of(), null, Set.of());
 
-        ActiveLunarMob horse = createMockMob(mountDef);
-        ActiveLunarMob rider = createMockMob(riderDef);
+        ActiveMob horse = createMockMob(mountDef);
+        ActiveMob rider = createMockMob(riderDef);
 
         mobManager.register(horse);
         mobManager.register(rider);
@@ -209,8 +209,8 @@ class Phase10MountAndVehicleHierarchyTest {
         MobDefinition mountDef = new MobDefinition(new MobDefinitionId("WOLF_MOUNT"), EntityType.WOLF, "Wolf", null, Map.of(), Map.of(), List.of(), null, Set.of());
         MobDefinition riderDef = new MobDefinition(new MobDefinitionId("ORC_RIDER"), EntityType.ZOMBIE, "Orc", null, Map.of(), Map.of(), List.of(), null, Set.of());
 
-        ActiveLunarMob mount = createMockMob(mountDef);
-        ActiveLunarMob rider = createMockMob(riderDef);
+        ActiveMob mount = createMockMob(mountDef);
+        ActiveMob rider = createMockMob(riderDef);
 
         mobManager.register(mount);
         mobManager.register(rider);
@@ -244,7 +244,7 @@ class Phase10MountAndVehicleHierarchyTest {
 
     // --- Mock Helpers ---
 
-    private ActiveLunarMob createMockMob(MobDefinition def) {
+    private ActiveMob createMockMob(MobDefinition def) {
         UUID entityUuid = UUID.randomUUID();
         AtomicReference<Vector> velocityRef = new AtomicReference<>(new Vector(0, 0, 0));
         AtomicBoolean deadRef = new AtomicBoolean(false);
@@ -269,7 +269,7 @@ class Phase10MountAndVehicleHierarchyTest {
                 });
 
         LunarMobIdentity identity = new LunarMobIdentity(def.id().value(), "1");
-        return new ActiveLunarMob(entity, def, identity);
+        return new ActiveMob(entity, def, identity);
     }
 
     private static World mockWorld(String name) {

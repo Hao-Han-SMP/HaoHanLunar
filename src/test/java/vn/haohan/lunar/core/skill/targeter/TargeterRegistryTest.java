@@ -10,7 +10,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -39,7 +39,7 @@ class TargeterRegistryTest {
         TargeterRegistry registry = new TargeterRegistry();
         World world = mockWorld("lunar");
         LivingEntity aliveCaster = mockLivingEntity(world, 0, 64, 0, true, false);
-        ActiveLunarMob mob = activeMob(aliveCaster);
+        ActiveMob mob = activeMob(aliveCaster);
         SkillDefinition skill = new SkillDefinition("slam", Set.of(SkillTrigger.ON_COMBAT), 20);
         SkillCastContext context = new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 1);
 
@@ -60,7 +60,7 @@ class TargeterRegistryTest {
         World world = mockWorld("lunar");
         LivingEntity enemy = mockLivingEntity(world, 10, 64, 0, true, false);
         Mob casterMob = mockMob(world, 0, 64, 0, enemy);
-        ActiveLunarMob mob = activeMob(casterMob);
+        ActiveMob mob = activeMob(casterMob);
         SkillDefinition skill = new SkillDefinition("slam", Set.of(SkillTrigger.ON_COMBAT), 20);
         SkillCastContext context = new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 1);
 
@@ -241,10 +241,10 @@ class TargeterRegistryTest {
 
     // --- Mock Helpers ---
 
-    private static ActiveLunarMob activeMob(LivingEntity entity) {
+    private static ActiveMob activeMob(LivingEntity entity) {
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 
     private static World mockWorld(String name) {

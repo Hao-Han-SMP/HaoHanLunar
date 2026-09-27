@@ -12,9 +12,9 @@ import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.api.system.mob.pack.PackManager;
 import vn.haohan.lunar.core.command.commands.*;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics;
-import vn.haohan.lunar.core.system.debug.trace.SkillTracer;
-import vn.haohan.lunar.core.system.debug.validator.ConfigValidationService;
+import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
+import vn.haohan.lunar.api.system.debug.trace.SkillTracer;
+import vn.haohan.lunar.api.system.debug.validator.ConfigValidationService;
 import vn.haohan.lunar.core.system.item.ItemDefinitionRegistry;
 import vn.haohan.lunar.core.system.item.MythicItemDefinition;
 

@@ -19,7 +19,7 @@ import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.mob.MobOptionDefinition;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.lang.reflect.Proxy;
 import java.util.List;

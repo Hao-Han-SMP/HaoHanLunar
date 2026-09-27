@@ -7,7 +7,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

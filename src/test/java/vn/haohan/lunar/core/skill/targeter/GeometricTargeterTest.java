@@ -9,7 +9,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -34,7 +34,7 @@ class GeometricTargeterTest {
     @Test
     void targetFilterSortingAndLimits() {
         World mockWorld = createMockWorld();
-        ActiveLunarMob mob = sampleMob(mockWorld, 0, 0, 0);
+        ActiveMob mob = sampleMob(mockWorld, 0, 0, 0);
         SkillCastContext context = sampleContext(mob);
 
         LivingEntity e1 = createMockLivingEntity(mockWorld, 5, 0, 0, 50.0, EntityType.ZOMBIE);
@@ -69,7 +69,7 @@ class GeometricTargeterTest {
     @Test
     void targetFilterIgnoresCasterAndCreative() {
         World mockWorld = createMockWorld();
-        ActiveLunarMob mob = sampleMob(mockWorld, 0, 0, 0);
+        ActiveMob mob = sampleMob(mockWorld, 0, 0, 0);
         SkillCastContext context = sampleContext(mob);
 
         Player creativePlayer = createMockPlayer(mockWorld, 2, 0, 0, GameMode.CREATIVE);
@@ -123,7 +123,7 @@ class GeometricTargeterTest {
     void geometricTargetersRegisteredAndResolvable() {
         TargeterRegistry registry = new TargeterRegistry();
         World mockWorld = createMockWorld();
-        ActiveLunarMob mob = sampleMob(mockWorld, 0, 64, 0);
+        ActiveMob mob = sampleMob(mockWorld, 0, 64, 0);
         SkillCastContext context = sampleContext(mob);
 
         assertTrue(registry.hasTargeter("cone"));
@@ -201,12 +201,12 @@ class GeometricTargeterTest {
                 });
     }
 
-    private static SkillCastContext sampleContext(ActiveLunarMob mob) {
+    private static SkillCastContext sampleContext(ActiveMob mob) {
         SkillDefinition skill = new SkillDefinition("geom_skill", Set.of(SkillTrigger.ON_COMBAT), 20);
         return new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100);
     }
 
-    private static ActiveLunarMob sampleMob(World mockWorld, double x, double y, double z) {
+    private static ActiveMob sampleMob(World mockWorld, double x, double y, double z) {
         UUID uuid = UUID.randomUUID();
         LivingEntity entity = (LivingEntity) Proxy.newProxyInstance(LivingEntity.class.getClassLoader(),
                 new Class<?>[]{LivingEntity.class}, (proxy, method, args) -> {
@@ -225,6 +225,6 @@ class GeometricTargeterTest {
                 });
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 }

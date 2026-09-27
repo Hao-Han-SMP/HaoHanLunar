@@ -4,7 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.util.StringUtil;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.command.ICommand;
-import vn.haohan.lunar.core.system.debug.validator.ConfigValidationService;
+import vn.haohan.lunar.api.system.debug.validator.ConfigValidationService;
 
 import java.nio.file.Path;
 import java.util.ArrayList;

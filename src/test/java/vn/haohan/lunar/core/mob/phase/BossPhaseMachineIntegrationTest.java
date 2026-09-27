@@ -10,7 +10,7 @@ import vn.haohan.lunar.api.system.mob.phase.MobPhase;
 import vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine;
 import vn.haohan.lunar.api.system.mob.phase.PhaseContext;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import java.lang.reflect.Proxy;

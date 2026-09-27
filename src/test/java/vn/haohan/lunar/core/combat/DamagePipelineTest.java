@@ -7,7 +7,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -181,7 +181,7 @@ class DamagePipelineTest {
         AtomicInteger loopPrevented = new AtomicInteger(0);
 
         LivingEntity attackerEntity = mockLiving(world, true, false, false, d -> {});
-        ActiveLunarMob attackerMob = mockActiveMob(attackerEntity, "boss_mob");
+        ActiveMob attackerMob = mockActiveMob(attackerEntity, "boss_mob");
 
         // The victim triggers a counter-attack damage when damaged!
         LivingEntity counterAttackerVictim = mockLiving(world, true, false, false, damage -> {
@@ -261,7 +261,7 @@ class DamagePipelineTest {
                 });
     }
 
-    private static ActiveLunarMob mockActiveMob(LivingEntity entity, String id) {
+    private static ActiveMob mockActiveMob(LivingEntity entity, String id) {
         MobDefinition def = new MobDefinition(
                 new MobDefinitionId(id),
                 EntityType.IRON_GOLEM,
@@ -274,6 +274,6 @@ class DamagePipelineTest {
                 Set.of()
         );
         LunarMobIdentity identity = new LunarMobIdentity(id, "1.0.0");
-        return new ActiveLunarMob(entity, def, identity);
+        return new ActiveMob(entity, def, identity);
     }
 }

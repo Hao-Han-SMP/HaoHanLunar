@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -109,7 +109,7 @@ class DamageModifierAndImmunityTest {
         DamagePipeline pipeline = new DamagePipeline();
         AtomicReference<Double> appliedRef = new AtomicReference<>(0.0);
         LivingEntity victimEntity = mockLiving(appliedRef::set);
-        ActiveLunarMob victimMob = mockActiveMob(victimEntity, "boss_lunar");
+        ActiveMob victimMob = mockActiveMob(victimEntity, "boss_lunar");
 
         victimMob.setDamageModifiers(new DamageModifierTable(
                 Map.of(DamageCause.FIRE, 0.5, DamageCause.FALL, 0.0),
@@ -157,7 +157,7 @@ class DamageModifierAndImmunityTest {
     void immunityMechanicInRegistryAppliesToCasterMob() {
         MechanicRegistry registry = new MechanicRegistry();
         LivingEntity casterEntity = mockLiving(d -> {});
-        ActiveLunarMob casterMob = mockActiveMob(casterEntity, "boss_mechanic");
+        ActiveMob casterMob = mockActiveMob(casterEntity, "boss_mechanic");
 
         SkillDefinition skill = new SkillDefinition(
                 "channel_barrier",
@@ -222,7 +222,7 @@ class DamageModifierAndImmunityTest {
                 null,
                 Set.of()
         );
-        vn.haohan.lunar.core.subsystem.mob.ActiveMob mob = new vn.haohan.lunar.core.subsystem.mob.ActiveMob(
+        vn.haohan.lunar.core.mob.ActiveMob mob = new vn.haohan.lunar.core.mob.ActiveMob(
                 entity, def, new LunarMobIdentity("boss_def", "1.0")
         );
         assertEquals(0.5, mob.damageModifiers().calculateMultiplier(DamageCause.FIRE, null), 0.001);
@@ -234,7 +234,7 @@ class DamageModifierAndImmunityTest {
     void expandedCrowdControlAndTauntMechanics() {
         MechanicRegistry registry = new MechanicRegistry();
         LivingEntity casterEntity = mockLiving(d -> {});
-        ActiveLunarMob casterMob = mockActiveMob(casterEntity, "boss_cc");
+        ActiveMob casterMob = mockActiveMob(casterEntity, "boss_cc");
 
         SkillDefinition skill = new SkillDefinition("cc_test", Set.of(SkillTrigger.ON_TIMER), 10, List.of());
         SkillCastContext castContext = new SkillCastContext(casterMob, skill, SkillTrigger.ON_TIMER, 100L);
@@ -288,7 +288,7 @@ class DamageModifierAndImmunityTest {
                 });
     }
 
-    private static ActiveLunarMob mockActiveMob(LivingEntity entity, String id) {
+    private static ActiveMob mockActiveMob(LivingEntity entity, String id) {
         MobDefinition def = new MobDefinition(
                 new MobDefinitionId(id),
                 EntityType.IRON_GOLEM,
@@ -301,6 +301,6 @@ class DamageModifierAndImmunityTest {
                 Set.of()
         );
         LunarMobIdentity identity = new LunarMobIdentity(id, "1.0.0");
-        return new ActiveLunarMob(entity, def, identity);
+        return new ActiveMob(entity, def, identity);
     }
 }

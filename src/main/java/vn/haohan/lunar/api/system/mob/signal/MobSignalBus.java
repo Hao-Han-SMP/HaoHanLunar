@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.system.mob.signal;
 import org.bukkit.Location;
 import org.bukkit.World;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.ArrayList;
 import java.util.List;

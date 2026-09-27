@@ -8,7 +8,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -59,14 +59,14 @@ public class BoneLocationTargeterTest {
                 });
     }
 
-    private ActiveLunarMob createActiveMob(World world, double x, double y, double z) {
+    private ActiveMob createActiveMob(World world, double x, double y, double z) {
         LivingEntity entity = createMockLivingEntity(world, x, y, z);
         MobDefinition def = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity("warden", "1"));
     }
 
-    private SkillCastContext createContext(ActiveLunarMob mob) {
+    private SkillCastContext createContext(ActiveMob mob) {
         SkillDefinition skill = new SkillDefinition("bone_skill", Set.of(SkillTrigger.ON_COMBAT), 20);
         return new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100L);
     }
@@ -75,7 +75,7 @@ public class BoneLocationTargeterTest {
     @DisplayName("BoneLocationTargeter falls back gracefully to eye location when ModelEngine is not present")
     void testBoneFallbackToEyeLocation() {
         World world = createMockWorld();
-        ActiveLunarMob caster = createActiveMob(world, 10.0, 64.0, 20.0);
+        ActiveMob caster = createActiveMob(world, 10.0, 64.0, 20.0);
         SkillCastContext context = createContext(caster);
 
         BoneLocationTargeter targeter = new BoneLocationTargeter();
@@ -102,7 +102,7 @@ public class BoneLocationTargeterTest {
             return entity.getLocation();
         };
 
-        ActiveLunarMob caster = createActiveMob(world, 0.0, 0.0, 0.0);
+        ActiveMob caster = createActiveMob(world, 0.0, 0.0, 0.0);
         SkillCastContext context = createContext(caster);
 
         BoneLocationTargeter targeter = new BoneLocationTargeter(customResolver);
@@ -120,7 +120,7 @@ public class BoneLocationTargeterTest {
         assertTrue(registry.isLocationTargeter("bone"));
 
         World world = createMockWorld();
-        ActiveLunarMob caster = createActiveMob(world, 5.0, 60.0, 5.0);
+        ActiveMob caster = createActiveMob(world, 5.0, 60.0, 5.0);
         SkillCastContext context = createContext(caster);
 
         Collection<Location> locs = registry.resolveLocations("@BoneLocation{bone=mouth}", context);

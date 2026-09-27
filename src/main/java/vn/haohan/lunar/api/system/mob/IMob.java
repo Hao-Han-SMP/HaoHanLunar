@@ -2,13 +2,25 @@ package vn.haohan.lunar.api.system.mob;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.api.system.combat.threat.IThreatTable;
+import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBarTracker;
+import vn.haohan.lunar.api.system.combat.DamageModifierTable;
+import vn.haohan.lunar.api.system.combat.ImmunityTable;
+import vn.haohan.lunar.api.system.combat.cc.CrowdControlTracker;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
+import vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason;
+import vn.haohan.lunar.api.system.combat.threat.IThreatTable;
+import vn.haohan.lunar.api.system.mob.ai.antistuck.AntiStuckController;
+import vn.haohan.lunar.api.system.mob.disguise.DisguiseData;
+import vn.haohan.lunar.api.system.mob.stat.StatHolder;
 
+import java.util.Collections;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * Represents an active custom mob instance in the world.
+ * Public domain contract representing an active custom mob instance in the world.
+ * Provides unified access to mob identity, combat systems, stats, navigation,
+ * boss presentation, and lifecycle controls.
  */
 public interface IMob {
 
@@ -128,5 +140,220 @@ public interface IMob {
      */
     default Location spawnLocation() {
         return null;
+    }
+
+    /**
+     * Returns the stat holder tracking custom stats and attributes.
+     */
+    default StatHolder stats() {
+        return null;
+    }
+
+    /**
+     * Returns the immunity table protecting this mob from specific damage causes or effects.
+     */
+    default ImmunityTable immunityTable() {
+        return null;
+    }
+
+    /**
+     * Returns the crowd control tracker managing stuns, silences, and roots.
+     */
+    default CrowdControlTracker crowdControl() {
+        return null;
+    }
+
+    /**
+     * Returns the anti-stuck navigation controller.
+     */
+    default AntiStuckController antiStuckController() {
+        return null;
+    }
+
+    /**
+     * Returns the damage modifier table containing multiplicative/additive adjustments.
+     */
+    default DamageModifierTable damageModifiers() {
+        return DamageModifierTable.empty();
+    }
+
+    /**
+     * Updates the damage modifier table.
+     */
+    default void setDamageModifiers(DamageModifierTable damageModifiers) {}
+
+    /**
+     * Returns the boss bar tracker associated with this mob.
+     */
+    default LunarBossBarTracker bossBars() {
+        return null;
+    }
+
+    /**
+     * Checks if this mob is currently invulnerable.
+     */
+    default boolean isInvulnerable(long currentTick) {
+        return false;
+    }
+
+    /**
+     * Sets invulnerability for a duration in ticks.
+     */
+    default void setInvulnerableTicks(int ticks, long currentTick) {}
+
+    /**
+     * Checks if the mob is currently in a berserk state.
+     */
+    default boolean isBerserk() {
+        return false;
+    }
+
+    /**
+     * Sets the berserk state.
+     */
+    default void setBerserk(boolean berserk) {}
+
+    /**
+     * Checks if the mob is soft-leashed to its spawn point.
+     */
+    default boolean isSoftLeashed() {
+        return false;
+    }
+
+    /**
+     * Updates the soft leash state.
+     */
+    default void setSoftLeashed(boolean softLeashed) {}
+
+    /**
+     * Returns the disguise definition applied to this mob, or null if none.
+     */
+    default DisguiseData disguise() {
+        return null;
+    }
+
+    /**
+     * Applies or removes disguise on this mob.
+     */
+    default void setDisguise(DisguiseData disguise) {}
+
+    /**
+     * Checks if this mob has an active disguise.
+     */
+    default boolean isDisguised() {
+        return disguise() != null;
+    }
+
+    /**
+     * Returns the active ModelEngine model ID if applied.
+     */
+    default String activeModelId() {
+        return null;
+    }
+
+    /**
+     * Sets the active ModelEngine model ID.
+     */
+    default void setActiveModelId(String activeModelId) {}
+
+    /**
+     * Returns the active ModelEngine state.
+     */
+    default String activeModelState() {
+        return null;
+    }
+
+    /**
+     * Sets the active ModelEngine state.
+     */
+    default void setActiveModelState(String activeModelState) {}
+
+    /**
+     * Returns the UUID of the parent mob if part of a minion/spawn hierarchy.
+     */
+    default UUID parentUUID() {
+        return null;
+    }
+
+    /**
+     * Sets the parent entity UUID.
+     */
+    default void setParentUUID(UUID parentUUID) {}
+
+    /**
+     * Returns the vehicle mount UUID if this mob is riding another entity.
+     */
+    default UUID mountUUID() {
+        return null;
+    }
+
+    /**
+     * Sets the mount vehicle UUID.
+     */
+    default void setMountUUID(UUID mountUUID) {}
+
+    /**
+     * Checks if this mob is currently riding another entity.
+     */
+    default boolean isMounted() {
+        return mountUUID() != null;
+    }
+
+    /**
+     * Returns the set of entity UUIDs currently riding this mob.
+     */
+    default Set<UUID> riderUUIDs() {
+        return Collections.emptySet();
+    }
+
+    /**
+     * Checks if this mob has any passengers/riders.
+     */
+    default boolean hasRiders() {
+        return !riderUUIDs().isEmpty();
+    }
+
+    /**
+     * Resolves the maximum health of this mob.
+     */
+    default double maxHealth() {
+        return entity() != null ? entity().getHealth() : 20.0;
+    }
+
+    /**
+     * Checks if the mob is currently channeling a skill.
+     */
+    default boolean isChanneling() {
+        return false;
+    }
+
+    /**
+     * Returns the identifier of the skill currently being channeled, or null.
+     */
+    default String activeChannelingSkill() {
+        return null;
+    }
+
+    /**
+     * Interrupts all active and channeling skills on this mob.
+     *
+     * @param reason the reason for the interruption
+     * @return the number of skills interrupted
+     */
+    default int interruptActiveSkills(InterruptReason reason) {
+        return 0;
+    }
+
+    /**
+     * Resets the mob back to its spawn location, clearing threat, soft leash,
+     * restoring full health, and cancelling active abilities.
+     */
+    default void resetToSpawn() {}
+
+    /**
+     * Resets the mob back to its spawn location with the given tick.
+     */
+    default void resetToSpawn(long currentTick) {
+        resetToSpawn();
     }
 }

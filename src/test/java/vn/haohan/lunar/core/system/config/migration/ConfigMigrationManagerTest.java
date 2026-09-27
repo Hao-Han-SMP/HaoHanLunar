@@ -8,7 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.core.config.migration.ConfigMigrationManager;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -96,7 +96,7 @@ class ConfigMigrationManagerTest {
                 null,
                 Set.of()
         );
-        ActiveLunarMob activeMob = new ActiveLunarMob(mockLiving, initialDef, new LunarMobIdentity("lunar_boss", "1.0"));
+        ActiveMob activeMob = new ActiveMob(mockLiving, initialDef, new LunarMobIdentity("lunar_boss", "1.0"));
         activeMob.setStance("phase_2");
         mobManager.register(activeMob);
 

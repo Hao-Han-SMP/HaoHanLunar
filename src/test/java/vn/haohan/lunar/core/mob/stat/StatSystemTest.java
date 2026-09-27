@@ -14,7 +14,7 @@ import vn.haohan.lunar.api.system.combat.DamageContext;
 import vn.haohan.lunar.api.system.combat.DamagePipeline;
 import vn.haohan.lunar.api.system.combat.DamageResult;
 import vn.haohan.lunar.api.system.mob.stat.*;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -84,11 +84,11 @@ class StatSystemTest {
         );
     }
 
-    private ActiveLunarMob createMob(String mobId, double initialHealth, double maxHealth) {
+    private ActiveMob createMob(String mobId, double initialHealth, double maxHealth) {
         LivingEntity entity = mockLivingEntity(initialHealth, maxHealth);
         MobDefinition definition = new MobDefinition(new MobDefinitionId(mobId),
                 EntityType.IRON_GOLEM, mobId, null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity(mobId, "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity(mobId, "1"));
     }
 
     @Test
@@ -151,8 +151,8 @@ class StatSystemTest {
     void testDamagePipelineCriticalStrikeAndLifesteal() {
         DamagePipeline pipeline = new DamagePipeline();
 
-        ActiveLunarMob attacker = createMob("vampire_boss", 50.0, 100.0);
-        ActiveLunarMob victim = createMob("target_dummy", 500.0, 500.0);
+        ActiveMob attacker = createMob("vampire_boss", 50.0, 100.0);
+        ActiveMob victim = createMob("target_dummy", 500.0, 500.0);
 
         // Attacker stats: 100% crit chance, 2.0x crit damage, 25% lifesteal
         attacker.stats().setBase(StatType.CRIT_CHANCE, 1.0);
@@ -183,8 +183,8 @@ class StatSystemTest {
     void testDamagePipelineArmorMitigation() {
         DamagePipeline pipeline = new DamagePipeline();
 
-        ActiveLunarMob attacker = createMob("attacker", 100.0, 100.0);
-        ActiveLunarMob victim = createMob("tank_boss", 500.0, 500.0);
+        ActiveMob attacker = createMob("attacker", 100.0, 100.0);
+        ActiveMob victim = createMob("tank_boss", 500.0, 500.0);
 
         // Victim armor: 100 -> 100 / (100 + 100) = 50% mitigation
         victim.stats().setBase(StatType.ARMOR, 100.0);
@@ -235,7 +235,7 @@ class StatSystemTest {
 
     @Test
     void testStatPlaceholders() {
-        ActiveLunarMob mob = createMob("stat_boss", 100.0, 100.0);
+        ActiveMob mob = createMob("stat_boss", 100.0, 100.0);
         mob.stats().setBase(StatType.DAMAGE, 150.0);
         mob.stats().setBase(StatType.CRIT_CHANCE, 0.35);
         mob.stats().setBase(StatType.LIFESTEAL, 0.15);

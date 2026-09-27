@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.mob;
+package vn.haohan.lunar.core.mob;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,6 +19,7 @@ import org.bukkit.projectiles.ProjectileSource;
 import vn.haohan.lunar.api.event.MobTargetChangeEvent;
 import vn.haohan.lunar.api.event.SkillPostCastEvent;
 import vn.haohan.lunar.api.event.SkillPreCastEvent;
+import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterRegistry;
 import vn.haohan.lunar.api.system.mob.phase.MobPhase;
 import vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine;
 import vn.haohan.lunar.api.system.mob.phase.PhaseContext;
@@ -30,7 +31,7 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 import vn.haohan.lunar.api.system.combat.skill.target.TargeterContext;
-import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
+import vn.haohan.lunar.api.system.combat.skill.target.BasicTargeterRegistry;
 import vn.haohan.lunar.api.system.combat.threat.TargetChangeReason;
 import vn.haohan.lunar.core.system.throttle.DynamicThrottlingEngine;
 import vn.haohan.lunar.core.system.variable.VariableHolder;
@@ -50,17 +51,16 @@ public class MobSkillRuntime implements Listener {
     private final SkillRegistry skillRegistry;
     private final MechanicRegistry mechanicRegistry;
     private final ConditionRegistry conditionRegistry;
-    private final TargeterRegistry targeterRegistry;
-    private final vn.haohan.lunar.api.system.combat.skill.targeter.TargeterRegistry extendedTargeterRegistry = new vn.haohan.lunar.api.system.combat.skill.targeter.TargeterRegistry();
+    private final BasicTargeterRegistry targeterRegistry;
+    private final TargeterRegistry extendedTargeterRegistry = new TargeterRegistry();
     private final CooldownRegistry cooldownRegistry;
     private final SkillScheduler skillScheduler;
     private final DynamicThrottlingEngine throttlingEngine;
     private final Logger logger;
 
-    // Cache parsed inline skill entries: "skillName ~trigger chance" -> ParsedSkillEntry
     private final Map<String, ParsedSkillRef> skillRefCache = new ConcurrentHashMap<>();
 
-    public MobSkillRuntime(LunarMobManager mobManager, SkillRegistry skillRegistry, MechanicRegistry mechanicRegistry, ConditionRegistry conditionRegistry, TargeterRegistry targeterRegistry, CooldownRegistry cooldownRegistry, SkillScheduler skillScheduler, DynamicThrottlingEngine throttlingEngine, Logger logger) {
+    public MobSkillRuntime(LunarMobManager mobManager, SkillRegistry skillRegistry, MechanicRegistry mechanicRegistry, ConditionRegistry conditionRegistry, BasicTargeterRegistry targeterRegistry, CooldownRegistry cooldownRegistry, SkillScheduler skillScheduler, DynamicThrottlingEngine throttlingEngine, Logger logger) {
         this.mobManager = Objects.requireNonNull(mobManager, "IMobManager must not be null");
         this.skillRegistry = Objects.requireNonNull(skillRegistry, "SkillRegistry must not be null");
         this.mechanicRegistry = Objects.requireNonNull(mechanicRegistry, "MechanicRegistry must not be null");
@@ -95,10 +95,7 @@ public class MobSkillRuntime implements Listener {
 
             LivingEntity primaryTarget = resolvePrimaryTarget(mob);
 
-            // 1. Dispatch ON_TIMER
             dispatchTrigger(mob, SkillTrigger.ON_TIMER, primaryTarget, null, Map.of(), currentTick);
-
-            // 2. Dispatch ON_COMBAT if in combat
             if (inCombat) {
                 dispatchTrigger(mob, SkillTrigger.ON_COMBAT, primaryTarget, null, Map.of(), currentTick);
             }
@@ -113,7 +110,6 @@ public class MobSkillRuntime implements Listener {
         LivingEntity caster = mob.entity();
         if (caster == null || !caster.isValid() || caster.isDead()) return;
 
-        // CC check: Stunned or silenced mobs cannot cast skills (except ON_DEATH)
         if ((mob.crowdControl().isSilenced() || mob.crowdControl().isStunned()) && trigger != SkillTrigger.ON_DEATH) {
             return;
         }
@@ -133,7 +129,6 @@ public class MobSkillRuntime implements Listener {
             ParsedSkillRef ref = skillRefCache.computeIfAbsent(rawRef, this::parseSkillRef);
             if (ref == null) continue;
 
-            // Chance roll
             if (ref.chance() < 1.0 && java.util.concurrent.ThreadLocalRandom.current().nextDouble() > ref.chance()) {
                 continue;
             }
@@ -142,7 +137,6 @@ public class MobSkillRuntime implements Listener {
             if (chainOpt.isEmpty()) continue;
             SkillChainDefinition chain = chainOpt.get();
 
-            // Trigger match check
             boolean matchesTrigger = false;
             if (ref.explicitTrigger() != null) {
                 matchesTrigger = (ref.explicitTrigger() == trigger);
@@ -151,12 +145,10 @@ public class MobSkillRuntime implements Listener {
             }
             if (!matchesTrigger) continue;
 
-            // Cooldown check
             if (!cooldownRegistry.isReady(mob.entityId(), chain.definition().id(), currentTick)) {
                 continue;
             }
 
-            // ICondition evaluation
             ConditionContext conditionContext = new ConditionContext(caster, triggerEntity, mob.stance(), cooldownRegistry, baseVars, currentTick);
 
             if (!chain.conditions().isEmpty()) {
@@ -166,12 +158,10 @@ public class MobSkillRuntime implements Listener {
                 }
             }
 
-            // Acquire cooldown
             if (!cooldownRegistry.tryAcquire(mob.entityId(), chain.definition(), currentTick)) {
                 continue;
             }
 
-            // Execute mechanics definition prepared
             SkillDefinition skillDef = chain.definition();
             if (!skillDef.triggers().contains(trigger)) {
                 Set<SkillTrigger> triggers = new HashSet<>(skillDef.triggers());
@@ -179,14 +169,12 @@ public class MobSkillRuntime implements Listener {
                 skillDef = new SkillDefinition(skillDef.id(), triggers, skillDef.cooldownTicks());
             }
 
-            // Target resolution
             LivingEntity targetLiving = triggerEntity instanceof LivingEntity le ? le : resolvePrimaryTarget(mob);
             TargeterContext targeterContext = new TargeterContext(caster, targetLiving, triggerLocation != null ? triggerLocation : caster.getLocation(), 32.0, 64);
             List<TargetRef> targets = resolveTargets(mob, chain.targeter(), targeterContext, skillDef, trigger, currentTick);
 
-            LivingEntity primaryTarget = triggerEntity instanceof LivingEntity le ? le : (!targets.isEmpty() && targets.get(0).entity() instanceof LivingEntity le2 ? le2 : null);
+            LivingEntity primaryTarget = triggerEntity instanceof LivingEntity le ? le : (!targets.isEmpty() && targets.getFirst().entity() instanceof LivingEntity le2 ? le2 : null);
 
-            // Fire SkillPreCastEvent
             try {
                 SkillPreCastEvent preCast = new SkillPreCastEvent(mob, chain.definition(), primaryTarget, 1.0);
                 Bukkit.getPluginManager().callEvent(preCast);
@@ -195,7 +183,6 @@ public class MobSkillRuntime implements Listener {
                 }
             }
             catch (Throwable ignored) {
-                // If Bukkit events cannot be called in standalone tests, proceed
             }
 
             VariableHolder castVars = new VariableHolder();
@@ -209,7 +196,6 @@ public class MobSkillRuntime implements Listener {
 
             executeMechanics(mob, chain, castContext, targets);
 
-            // Fire SkillPostCastEvent
             try {
                 SkillPostCastEvent postCast = new SkillPostCastEvent(mob, chain.definition(), primaryTarget, true);
                 Bukkit.getPluginManager().callEvent(postCast);
@@ -338,7 +324,7 @@ public class MobSkillRuntime implements Listener {
             }
         }
 
-        return new ParsedSkillRef(skillId, explicitTrigger, Math.max(0.0, Math.min(1.0, chance)));
+        return new ParsedSkillRef(skillId, explicitTrigger, Math.clamp(chance, 0.0, 1.0));
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -352,7 +338,6 @@ public class MobSkillRuntime implements Listener {
             }
         }
 
-        // 1. Attacker CC Checks (Stun / Disarm)
         if (rawAttacker instanceof LivingEntity livingAttacker) {
             ActiveMob activeAttacker = mobManager.get(livingAttacker.getUniqueId());
             if (activeAttacker != null) {
@@ -370,7 +355,6 @@ public class MobSkillRuntime implements Listener {
             }
         }
 
-        // 2. Victim CC, Immunity & DamageModifier Checks
         if (event.getEntity() instanceof LivingEntity livingVictim) {
             ActiveMob activeVictim = mobManager.get(livingVictim.getUniqueId());
             if (activeVictim != null) {
@@ -392,7 +376,6 @@ public class MobSkillRuntime implements Listener {
                     event.setDamage(event.getDamage() * multiplier);
                 }
 
-                // Threat recording on active victim
                 if (rawAttacker instanceof LivingEntity livingAttacker) {
                     double finalDamage = event.getFinalDamage();
                     UUID previousTarget = activeVictim.threatTable().currentTargetId();
@@ -428,7 +411,6 @@ public class MobSkillRuntime implements Listener {
         if (event instanceof EntityDamageByEntityEvent byEntity) {
             Entity attacker = rawAttacker;
 
-            // Check if attacker is active mob (ON_ATTACK)
             if (attacker instanceof LivingEntity livingAttacker) {
                 ActiveMob activeAttacker = mobManager.get(livingAttacker.getUniqueId());
                 if (activeAttacker != null) {
@@ -437,7 +419,6 @@ public class MobSkillRuntime implements Listener {
                 }
             }
 
-            // Check if victim is active mob (ON_DAMAGED)
             if (byEntity.getEntity() instanceof LivingEntity livingVictim) {
                 ActiveMob activeVictim = mobManager.get(livingVictim.getUniqueId());
                 if (activeVictim != null) {
@@ -456,15 +437,12 @@ public class MobSkillRuntime implements Listener {
         }
     }
 
-    // --- Bukkit Event Listeners ---
-
     @EventHandler(priority = EventPriority.MONITOR)
     public void onEntityDeath(EntityDeathEvent event) {
         LivingEntity dead = event.getEntity();
         ActiveMob activeDead = mobManager.get(dead.getUniqueId());
         LivingEntity killer = dead.getKiller();
 
-        // Remove dead entity from all active mobs' threat tables
         UUID deadId = dead.getUniqueId();
         for (ActiveMob mob : mobManager.snapshot()) {
             if (mob.threatTable() != null) {
@@ -472,12 +450,9 @@ public class MobSkillRuntime implements Listener {
             }
         }
 
-        // Victim dead mob
         if (activeDead != null) {
             dispatchTrigger(activeDead, SkillTrigger.ON_DEATH, killer, dead.getLocation(), Map.of(), skillScheduler.currentTick());
         }
-
-        // Killer mob
         if (killer != null) {
             ActiveMob activeKiller = mobManager.get(killer.getUniqueId());
             if (activeKiller != null) {
@@ -505,8 +480,6 @@ public class MobSkillRuntime implements Listener {
             if (mob != null) {
                 dispatchTrigger(mob, SkillTrigger.ON_HEAL, null, living.getLocation(), Map.of("amount", event.getAmount(), "heal_reason", event.getRegainReason().name()), skillScheduler.currentTick());
             }
-
-            // Heal threat: add threat to active mobs targeting or engaged with this entity
             UUID healedId = living.getUniqueId();
             long curTick = skillScheduler.currentTick();
             for (ActiveMob activeMob : mobManager.snapshot()) {

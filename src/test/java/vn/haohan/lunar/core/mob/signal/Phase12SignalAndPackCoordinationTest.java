@@ -13,7 +13,7 @@ import vn.haohan.lunar.api.system.combat.skill.condition.ConditionResult;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.mob.signal.MobSignalBus;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -56,8 +56,8 @@ class Phase12SignalAndPackCoordinationTest {
     @Test
     void testDirectPointToPointSignal() {
         World world = createMockWorld("lunar_world");
-        ActiveLunarMob boss = createMockMob("lunar_boss", world, new Location(world, 0, 64, 0));
-        ActiveLunarMob guard = createMockMob("lunar_guard", world, new Location(world, 5, 64, 5));
+        ActiveMob boss = createMockMob("lunar_boss", world, new Location(world, 0, 64, 0));
+        ActiveMob guard = createMockMob("lunar_guard", world, new Location(world, 5, 64, 5));
         mobManager.register(boss);
         mobManager.register(guard);
 
@@ -82,12 +82,12 @@ class Phase12SignalAndPackCoordinationTest {
     @Test
     void testBroadcastSignalToFiveGuardsWithFiltering() {
         World world = createMockWorld("lunar_world");
-        ActiveLunarMob boss = createMockMob("king_boss", world, new Location(world, 0, 64, 0));
+        ActiveMob boss = createMockMob("king_boss", world, new Location(world, 0, 64, 0));
         mobManager.register(boss);
 
-        List<ActiveLunarMob> guards = new ArrayList<>();
+        List<ActiveMob> guards = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            ActiveLunarMob guard = createMockMob("guard_minion", world, new Location(world, i * 2, 64, 0));
+            ActiveMob guard = createMockMob("guard_minion", world, new Location(world, i * 2, 64, 0));
             // Set minions parent to boss
             guard.setParentUUID(boss.entityId());
             mobManager.register(guard);
@@ -95,7 +95,7 @@ class Phase12SignalAndPackCoordinationTest {
         }
 
         // Add an unrelated foreign mob far away
-        ActiveLunarMob outsider = createMockMob("outsider", world, new Location(world, 100, 64, 100));
+        ActiveMob outsider = createMockMob("outsider", world, new Location(world, 100, 64, 100));
         mobManager.register(outsider);
 
         List<UUID> notifiedMobIds = new ArrayList<>();
@@ -121,8 +121,8 @@ class Phase12SignalAndPackCoordinationTest {
     @Test
     void testSignalInfiniteRecursionCascadeDepthBarrier() {
         World world = createMockWorld("lunar_world");
-        ActiveLunarMob mobA = createMockMob("ping_mob", world, new Location(world, 0, 64, 0));
-        ActiveLunarMob mobB = createMockMob("pong_mob", world, new Location(world, 1, 64, 0));
+        ActiveMob mobA = createMockMob("ping_mob", world, new Location(world, 0, 64, 0));
+        ActiveMob mobB = createMockMob("pong_mob", world, new Location(world, 1, 64, 0));
         mobManager.register(mobA);
         mobManager.register(mobB);
 
@@ -156,9 +156,9 @@ class Phase12SignalAndPackCoordinationTest {
     @Test
     void testDistressCallThreatSharing() {
         World world = createMockWorld("lunar_world");
-        ActiveLunarMob caller = createMockMob("pack_wolf_1", world, new Location(world, 0, 64, 0));
-        ActiveLunarMob ally1 = createMockMob("pack_wolf_2", world, new Location(world, 5, 64, 0));
-        ActiveLunarMob ally2 = createMockMob("pack_wolf_3", world, new Location(world, 10, 64, 0));
+        ActiveMob caller = createMockMob("pack_wolf_1", world, new Location(world, 0, 64, 0));
+        ActiveMob ally1 = createMockMob("pack_wolf_2", world, new Location(world, 5, 64, 0));
+        ActiveMob ally2 = createMockMob("pack_wolf_3", world, new Location(world, 10, 64, 0));
         mobManager.register(caller);
         mobManager.register(ally1);
         mobManager.register(ally2);
@@ -184,9 +184,9 @@ class Phase12SignalAndPackCoordinationTest {
     void testFlockingSeparationVectorCalculation() {
         World world = createMockWorld("lunar_world");
         // Wolf A at (0, 64, 0)
-        ActiveLunarMob wolfA = createMockMob("wolf_a", world, new Location(world, 0, 64, 0));
+        ActiveMob wolfA = createMockMob("wolf_a", world, new Location(world, 0, 64, 0));
         // Wolf B very close at (0.5, 64, 0)
-        ActiveLunarMob wolfB = createMockMob("wolf_b", world, new Location(world, 0.5, 64, 0));
+        ActiveMob wolfB = createMockMob("wolf_b", world, new Location(world, 0.5, 64, 0));
 
         // Separation distance is 2.0. Distance is 0.5.
         Vector push = packService.computeSeparationVector(wolfA, List.of(wolfB));
@@ -201,7 +201,7 @@ class Phase12SignalAndPackCoordinationTest {
     @Test
     void testSignalConditionEvaluation() {
         World world = createMockWorld("lunar_world");
-        ActiveLunarMob mob = createMockMob("cond_mob", world, new Location(world, 0, 64, 0));
+        ActiveMob mob = createMockMob("cond_mob", world, new Location(world, 0, 64, 0));
 
         ConditionContext ctx = new ConditionContext(
                 mob.entity(), null, "default", new CooldownRegistry(), Map.of("signal", "SHIELD_WALL"), 0L);
@@ -215,7 +215,7 @@ class Phase12SignalAndPackCoordinationTest {
 
     // --- Helpers and Dynamic Mocks ---
 
-    private ActiveLunarMob createMockMob(String id, World world, Location loc) {
+    private ActiveMob createMockMob(String id, World world, Location loc) {
         MobDefinition def = new MobDefinition(
                 new MobDefinitionId(id),
                 EntityType.ZOMBIE,
@@ -232,7 +232,7 @@ class Phase12SignalAndPackCoordinationTest {
         );
         UUID uuid = UUID.randomUUID();
         LivingEntity entity = createMockLivingEntity(id, world, loc, uuid);
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity(id, "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity(id, "1"));
     }
 
     private LivingEntity createMockLivingEntity(String name, World world, Location loc) {

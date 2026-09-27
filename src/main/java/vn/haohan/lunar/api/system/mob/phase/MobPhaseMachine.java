@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.system.mob.phase;
 import org.bukkit.Bukkit;
 import vn.haohan.lunar.api.event.MobPhaseChangeEvent;
 import vn.haohan.lunar.api.system.combat.skill.CooldownRegistry;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

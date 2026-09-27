@@ -13,7 +13,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -161,7 +161,7 @@ class VariableAndPlaceholderTest {
         UUID mobUuid = UUID.randomUUID();
         LivingEntity mobEntity = mockEntity(mobUuid, 0, 64, 0);
         MobDefinition mobDef = testDefinition("lunar_boss");
-        ActiveLunarMob mob = new ActiveLunarMob(mobEntity, mobDef, new LunarMobIdentity("lunar_boss", "1.0"));
+        ActiveMob mob = new ActiveMob(mobEntity, mobDef, new LunarMobIdentity("lunar_boss", "1.0"));
         mob.setStance("enraged");
 
         UUID playerUuid = UUID.randomUUID();
@@ -196,7 +196,7 @@ class VariableAndPlaceholderTest {
         variableManager.getGlobal().set("b", "<global.var.a>");
 
         String template = "Loop: <global.var.a>";
-        String result = PlaceholderResolver.resolve(template, (ActiveLunarMob) null, null, variableManager);
+        String result = PlaceholderResolver.resolve(template, (ActiveMob) null, null, variableManager);
         assertFalse(result.isEmpty());
     }
 

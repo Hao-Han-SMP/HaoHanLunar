@@ -1,6 +1,6 @@
 package vn.haohan.lunar.core.mob;
 
-import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -27,7 +27,7 @@ class LunarMobManagerTest {
         MobDefinition definition = definition("warden");
         AtomicInteger cleanupCalls = new AtomicInteger();
         LunarMobManager manager = new LunarMobManager(ignored -> cleanupCalls.incrementAndGet());
-        ActiveLunarMob active = new ActiveLunarMob(entity, definition,
+        ActiveMob active = new ActiveMob(entity, definition,
                 new LunarMobIdentity("warden", "1"));
 
         manager.register(active);
@@ -45,11 +45,11 @@ class LunarMobManagerTest {
         UUID second = UUID.randomUUID();
         AtomicInteger cleanupCalls = new AtomicInteger();
         LunarMobManager manager = new LunarMobManager(ignored -> cleanupCalls.incrementAndGet());
-        manager.register(new ActiveLunarMob(entity(first, true, false), definition("one"),
+        manager.register(new ActiveMob(entity(first, true, false), definition("one"),
                 new LunarMobIdentity("one", "1")));
-        assertThrows(IllegalStateException.class, () -> manager.register(new ActiveLunarMob(
+        assertThrows(IllegalStateException.class, () -> manager.register(new ActiveMob(
                 entity(first, true, false), definition("one"), new LunarMobIdentity("one", "1"))));
-        manager.register(new ActiveLunarMob(entity(second, false, true), definition("two"),
+        manager.register(new ActiveMob(entity(second, false, true), definition("two"),
                 new LunarMobIdentity("two", "1")));
 
         assertEquals(1, manager.cleanupInvalidEntities());
@@ -61,9 +61,9 @@ class LunarMobManagerTest {
     void cleanupAllRemovesEveryTrackedEntry() {
         AtomicInteger cleanupCalls = new AtomicInteger();
         LunarMobManager manager = new LunarMobManager(ignored -> cleanupCalls.incrementAndGet());
-        manager.register(new ActiveLunarMob(entity(UUID.randomUUID(), true, false), definition("one"),
+        manager.register(new ActiveMob(entity(UUID.randomUUID(), true, false), definition("one"),
                 new LunarMobIdentity("one", "1")));
-        manager.register(new ActiveLunarMob(entity(UUID.randomUUID(), true, false), definition("two"),
+        manager.register(new ActiveMob(entity(UUID.randomUUID(), true, false), definition("two"),
                 new LunarMobIdentity("two", "1")));
 
         assertEquals(2, manager.cleanupAll());

@@ -1,7 +1,7 @@
 package vn.haohan.lunar.api.system.mob.disguise;
 
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.Collections;
 import java.util.Map;

@@ -15,7 +15,7 @@ import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 import vn.haohan.lunar.api.system.combat.skill.targeter.TargeterRegistry;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import java.lang.reflect.Proxy;
@@ -214,10 +214,10 @@ class TargeterGeometricAndAudienceTest {
 
     // --- Mock Helpers ---
 
-    private static ActiveLunarMob activeMob(LivingEntity entity) {
+    private static ActiveMob activeMob(LivingEntity entity) {
         MobDefinition definition = new MobDefinition(new MobDefinitionId("boss"), EntityType.WITHER,
                 "Boss", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("boss", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("boss", "1"));
     }
 
     private static World mockWorldWithLiving(String name, List<LivingEntity> entities) {

@@ -2,6 +2,7 @@ package vn.haohan.lunar.core.system.debug.metrics;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;

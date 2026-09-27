@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.debug.trace;
+package vn.haohan.lunar.api.system.debug.trace;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

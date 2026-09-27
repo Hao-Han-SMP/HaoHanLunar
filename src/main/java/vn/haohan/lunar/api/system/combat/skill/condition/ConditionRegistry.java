@@ -19,8 +19,8 @@ import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.SinglePin;
 import org.bukkit.entity.Ageable;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
-import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
+import vn.haohan.lunar.core.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 import java.util.function.Supplier;
 
 import java.util.*;

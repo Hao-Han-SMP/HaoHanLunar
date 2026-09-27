@@ -9,7 +9,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -195,7 +195,7 @@ class LunarFixedSpawnerTest {
         LivingEntity entity = mockLivingMob(world, farLoc, 5.0, 100.0, teleported, healed, threatCleared);
 
         MobDefinition mobDef = definitions.get("lunar_warden").orElseThrow();
-        ActiveLunarMob activeMob = new ActiveLunarMob(entity, mobDef, new LunarMobIdentity("lunar_warden", "1"));
+        ActiveMob activeMob = new ActiveMob(entity, mobDef, new LunarMobIdentity("lunar_warden", "1"));
         mobManager.register(activeMob);
 
         spawner.attachTrackedMob(activeMob.entityId());

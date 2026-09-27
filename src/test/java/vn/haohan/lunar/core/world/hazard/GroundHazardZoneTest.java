@@ -9,7 +9,7 @@ import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -119,7 +119,7 @@ class GroundHazardZoneTest {
 
         World mockWorld = mockWorld();
         Location loc = new Location(mockWorld, 10, 64, 10);
-        ActiveLunarMob mob = createMockMob();
+        ActiveMob mob = createMockMob();
         SkillDefinition skillDef = new SkillDefinition("create_trap", Set.of(SkillTrigger.ON_COMBAT), 10L);
         SkillCastContext castContext = new SkillCastContext(mob, skillDef, SkillTrigger.ON_COMBAT, 50L);
         MechanicContext context = new MechanicContext(castContext, List.of(TargetRef.of(loc)));
@@ -161,7 +161,7 @@ class GroundHazardZoneTest {
         );
     }
 
-    private static ActiveLunarMob createMockMob() {
+    private static ActiveMob createMockMob() {
         LivingEntity entity = (LivingEntity) Proxy.newProxyInstance(
                 LivingEntity.class.getClassLoader(),
                 new Class<?>[]{LivingEntity.class},
@@ -173,7 +173,7 @@ class GroundHazardZoneTest {
                 }
         );
         MobDefinition def = new MobDefinition(new MobDefinitionId("boss"), EntityType.IRON_GOLEM, "Boss", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity("boss", "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity("boss", "1"));
     }
 
     private static class MockLivingEntity {

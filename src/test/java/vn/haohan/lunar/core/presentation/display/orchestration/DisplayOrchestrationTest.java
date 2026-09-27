@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -41,7 +41,7 @@ public class DisplayOrchestrationTest {
                 });
     }
 
-    private ActiveLunarMob createDummyMob(World world) {
+    private ActiveMob createDummyMob(World world) {
         UUID uuid = UUID.randomUUID();
         Location loc = new Location(world, 10, 64, 10);
 
@@ -61,7 +61,7 @@ public class DisplayOrchestrationTest {
 
         MobDefinition def = new MobDefinition(new MobDefinitionId("meteor_blaze"), EntityType.BLAZE,
                 "Meteor Blaze", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity("meteor_blaze", "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity("meteor_blaze", "1"));
     }
 
     @Test
@@ -154,7 +154,7 @@ public class DisplayOrchestrationTest {
     @DisplayName("MechanicRegistry executes spawndisplay and displaytransform correctly")
     void testDisplayMechanicsIntegration() {
         World world = createMockWorld();
-        ActiveLunarMob mob = createDummyMob(world);
+        ActiveMob mob = createDummyMob(world);
         MechanicRegistry registry = new MechanicRegistry();
 
         SkillDefinition skill = new SkillDefinition("meteor_strike", Set.of(SkillTrigger.ON_COMBAT), 20);

@@ -1,13 +1,13 @@
-package vn.haohan.lunar.core.subsystem.engine;
+package vn.haohan.lunar.core.service.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
+import vn.haohan.lunar.core.service.ILunarService;
 import vn.haohan.lunar.core.system.data.PlayerDataManager;
 
 /**
- * SubSystem managing persistence and in-memory caches of player lunar progression.
+ * Service managing persistence and in-memory caches of player lunar progression.
  */
-public final class PlayerDataSubSystem implements ILunarSubSystem {
+public class PlayerDataService implements ILunarService {
 
     private PlayerDataManager dataManager;
 

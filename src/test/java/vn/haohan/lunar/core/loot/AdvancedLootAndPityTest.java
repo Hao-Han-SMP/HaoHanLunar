@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
 import vn.haohan.lunar.api.system.loot.pity.PityManager;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -106,7 +106,7 @@ class AdvancedLootAndPityTest {
         LunarMobManager mobManager = new LunarMobManager();
         World world = mockWorld("world");
         LivingEntity entity = mockLivingEntity(world, 0, 64, 0);
-        ActiveLunarMob mob = new ActiveLunarMob(entity, mobDef, new LunarMobIdentity("boss_titan", "1"));
+        ActiveMob mob = new ActiveMob(entity, mobDef, new LunarMobIdentity("boss_titan", "1"));
         mobManager.register(mob);
 
         UUID p1 = UUID.randomUUID();

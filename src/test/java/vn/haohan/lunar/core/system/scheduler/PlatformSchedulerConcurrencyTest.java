@@ -6,7 +6,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.threat.ThreatTable;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -116,11 +116,11 @@ class PlatformSchedulerConcurrencyTest {
                         LivingEntity mockEntity = createMockEntity(mobId);
                         MobDefinition def = new MobDefinition(new MobDefinitionId("boss_" + threadIdx),
                                 EntityType.ZOMBIE, "Boss " + threadIdx, null, Map.of(), Map.of(), List.of(), null, Set.of());
-                        ActiveLunarMob mob = new ActiveLunarMob(mockEntity, def, new LunarMobIdentity(def.id().value(), "1"));
+                        ActiveMob mob = new ActiveMob(mockEntity, def, new LunarMobIdentity(def.id().value(), "1"));
 
                         mobManager.register(mob);
                         mobManager.get(mobId);
-                        Collection<vn.haohan.lunar.core.subsystem.mob.ActiveMob> snapshot = mobManager.snapshot();
+                        Collection<vn.haohan.lunar.core.mob.ActiveMob> snapshot = mobManager.snapshot();
                         assertNotNull(snapshot);
                         if (random.nextBoolean()) {
                             mobManager.unregister(mobId);

@@ -12,11 +12,11 @@ import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
 import vn.haohan.lunar.core.features.boss.warden.util.WardenEntityManager;
 import vn.haohan.lunar.core.features.boss.warden.visual.WardenTrailCaptureSystem;
 import vn.haohan.lunar.core.features.weapon.claymore.SmoothSlashTask;
-import vn.haohan.lunar.core.subsystem.LunarSubSystems;
-import vn.haohan.lunar.core.subsystem.engine.ItemCoreSubSystem;
-import vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem;
-import vn.haohan.lunar.core.subsystem.engine.PinSubSystem;
-import vn.haohan.lunar.core.subsystem.engine.PlayerDataSubSystem;
+import vn.haohan.lunar.core.service.LunarServices;
+import vn.haohan.lunar.core.service.engine.ItemCoreService;
+import vn.haohan.lunar.core.service.engine.MobCoreService;
+import vn.haohan.lunar.core.service.engine.PinService;
+import vn.haohan.lunar.core.service.engine.PlayerDataService;
 import vn.haohan.lunar.core.system.data.PlayerDataManager;
 import vn.haohan.lunar.core.system.item.LunarItems;
 
@@ -125,12 +125,12 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         }, 1L, 1L);
 
-        // Initialize Lunar SubSystems and commands
-        LunarSubSystems.register(new MobCoreSubSystem());
-        LunarSubSystems.register(new ItemCoreSubSystem());
-        LunarSubSystems.register(new PlayerDataSubSystem());
-        LunarSubSystems.register(new PinSubSystem());
-        LunarSubSystems.init(this);
+        // Initialize Lunar Services and commands
+        LunarServices.register(new MobCoreService());
+        LunarServices.register(new ItemCoreService());
+        LunarServices.register(new PlayerDataService());
+        LunarServices.register(new PinService());
+        LunarServices.init(this);
 
         // Register main command dispatcher
         new HaoHanCommand().register(this);
@@ -176,7 +176,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             }
         }
 
-        LunarSubSystems.disable(this);
+        LunarServices.disable(this);
         getLogger().info("HaoHanLunar plugin successfully disabled.");
     }
 

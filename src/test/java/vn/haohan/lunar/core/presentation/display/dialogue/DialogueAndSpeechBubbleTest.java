@@ -23,7 +23,7 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
 import vn.haohan.lunar.api.system.combat.skill.target.TargetRef;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import java.lang.reflect.Proxy;
@@ -82,7 +82,7 @@ class DialogueAndSpeechBubbleTest {
     @Test
     @DisplayName("DisplayBubble session creation, multi-line progression, and expiry lifecycle")
     void testDisplayBubbleSessionLifecycle() {
-        ActiveLunarMob mob = createDummyMob("lunar_guard", "Lunar Guard");
+        ActiveMob mob = createDummyMob("lunar_guard", "Lunar Guard");
         BubbleOptions options = new BubbleOptions(
                 "First line|Second line",
                 List.of("First line", "Second line"),
@@ -126,7 +126,7 @@ class DialogueAndSpeechBubbleTest {
     @Test
     @DisplayName("sendDialoguePrompt sends formatted interactive prompt with clickable command signal")
     void testDialogueChoiceAndClickablePrompt() {
-        ActiveLunarMob mob = createDummyMob("space_merchant", "Space Merchant");
+        ActiveMob mob = createDummyMob("space_merchant", "Space Merchant");
         AtomicReference<Component> receivedMessage = new AtomicReference<>();
 
         Player mockPlayer = (Player) Proxy.newProxyInstance(Player.class.getClassLoader(),
@@ -156,7 +156,7 @@ class DialogueAndSpeechBubbleTest {
     @Test
     @DisplayName("IMechanic speak/dialogue replaces placeholders and registers session")
     void testSpeakMechanicWithPlaceholders() {
-        ActiveLunarMob mob = createDummyMob("lunar_boss", "Moon Guardian");
+        ActiveMob mob = createDummyMob("lunar_boss", "Moon Guardian");
         Player mockPlayer = (Player) Proxy.newProxyInstance(Player.class.getClassLoader(),
                 new Class<?>[]{Player.class}, (proxy, method, args) -> {
                     if (method.getName().equals("getName")) return "Hero";
@@ -181,7 +181,7 @@ class DialogueAndSpeechBubbleTest {
     @Test
     @DisplayName("IMechanic dialogue_prompt parses options and sends clickable prompts to target players")
     void testDialoguePromptMechanic() {
-        ActiveLunarMob mob = createDummyMob("alien_scout", "Alien Scout");
+        ActiveMob mob = createDummyMob("alien_scout", "Alien Scout");
         AtomicReference<Component> receivedMessage = new AtomicReference<>();
 
         Player mockPlayer = (Player) Proxy.newProxyInstance(Player.class.getClassLoader(),
@@ -210,7 +210,7 @@ class DialogueAndSpeechBubbleTest {
         assertTrue(receivedMessage.get().toString().contains("REPAIR_ACCEPTED"));
     }
 
-    private ActiveLunarMob createDummyMob(String id, String displayName) {
+    private ActiveMob createDummyMob(String id, String displayName) {
         UUID uuid = UUID.randomUUID();
         Location loc = new Location(mockWorld, 0, 64, 0);
 
@@ -239,6 +239,6 @@ class DialogueAndSpeechBubbleTest {
                 Set.of()
         );
 
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity(id, "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity(id, "1"));
     }
 }

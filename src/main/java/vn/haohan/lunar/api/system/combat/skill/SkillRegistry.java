@@ -6,7 +6,7 @@ import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.IMechanic;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.target.ITargeter;
-import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
+import vn.haohan.lunar.api.system.combat.skill.target.BasicTargeterRegistry;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,11 +64,11 @@ public final class SkillRegistry implements ISkillManager {
     // --- ISkillManager API Implementation ---
     private MechanicRegistry mechanicRegistry;
     private ConditionRegistry conditionRegistry;
-    private TargeterRegistry targeterRegistry;
+    private BasicTargeterRegistry targeterRegistry;
 
     public void setRegistries(MechanicRegistry mr,
                               ConditionRegistry cr,
-                              TargeterRegistry tr) {
+                              BasicTargeterRegistry tr) {
         this.mechanicRegistry = mr;
         this.conditionRegistry = cr;
         this.targeterRegistry = tr;

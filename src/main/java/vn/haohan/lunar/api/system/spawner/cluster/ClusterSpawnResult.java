@@ -1,6 +1,6 @@
 package vn.haohan.lunar.api.spawner.cluster;
 
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.List;
 

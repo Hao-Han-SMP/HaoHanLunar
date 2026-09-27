@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.system.combat.skill;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.system.variable.VariableHolder;
 
 import java.util.Collections;

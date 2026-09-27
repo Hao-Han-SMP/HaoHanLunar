@@ -17,7 +17,7 @@ import vn.haohan.lunar.api.manager.ISpawnerManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

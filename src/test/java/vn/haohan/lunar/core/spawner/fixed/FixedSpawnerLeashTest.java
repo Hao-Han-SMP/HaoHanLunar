@@ -8,7 +8,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
@@ -51,7 +51,7 @@ class FixedSpawnerLeashTest {
         MobDefinition mobDef = new MobDefinition(new MobDefinitionId("lunar_golem"), EntityType.IRON_GOLEM, "Lunar Golem", null,
                 Map.of("max_health", new MobAttributeDefinition("max_health", 100.0)),
                 Map.of(), List.of(), null, Set.of());
-        ActiveLunarMob mob = new ActiveLunarMob(entity, mobDef, new LunarMobIdentity("lunar_golem", "1.0.0"));
+        ActiveMob mob = new ActiveMob(entity, mobDef, new LunarMobIdentity("lunar_golem", "1.0.0"));
 
         // Add some threat to player
         UUID playerUuid = UUID.randomUUID();
@@ -100,7 +100,7 @@ class FixedSpawnerLeashTest {
         LivingEntity entity = mockMob(currentLoc, health, 100.0, target);
         MobDefinition mobDef = new MobDefinition(new MobDefinitionId("lunar_golem"), EntityType.IRON_GOLEM, "Lunar Golem", null,
                 Map.of(), Map.of(), List.of(), null, Set.of());
-        ActiveLunarMob mob = new ActiveLunarMob(entity, mobDef, new LunarMobIdentity("lunar_golem", "1.0.0"));
+        ActiveMob mob = new ActiveMob(entity, mobDef, new LunarMobIdentity("lunar_golem", "1.0.0"));
 
         spawner.attachTrackedMob(mob.entityId());
         LunarMobManager mobManager = new LunarMobManager(e -> {});
@@ -227,7 +227,7 @@ class FixedSpawnerLeashTest {
         MobDefinition mobDef = new MobDefinition(new MobDefinitionId("guard"), EntityType.ZOMBIE, "Guard", null,
                 Map.of("max_health", new MobAttributeDefinition("max_health", 100.0)),
                 Map.of(), List.of(), null, Set.of());
-        ActiveLunarMob mob = new ActiveLunarMob(entity, mobDef, new LunarMobIdentity("guard", "1.0.0"));
+        ActiveMob mob = new ActiveMob(entity, mobDef, new LunarMobIdentity("guard", "1.0.0"));
 
         UUID playerUuid = UUID.randomUUID();
         mob.threatTable().addThreat(playerUuid, 300.0);

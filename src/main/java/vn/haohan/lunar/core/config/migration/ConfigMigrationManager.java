@@ -15,7 +15,7 @@ import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.loot.DropTableDefinition;
 import vn.haohan.lunar.core.features.boss.warden.WardenSkillRegistry;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

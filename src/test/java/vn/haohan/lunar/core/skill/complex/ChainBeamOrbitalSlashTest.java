@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -108,7 +108,7 @@ class ChainBeamOrbitalSlashTest {
     @Test
     void mechanicRegistryComplexSkillsIntegration() {
         MechanicRegistry registry = new MechanicRegistry();
-        ActiveLunarMob mob = sampleMob();
+        ActiveMob mob = sampleMob();
         SkillCastContext context = sampleContext(mob);
         MechanicContext mechContext = new MechanicContext(context, List.of(TargetRef.entity(mob.entity())));
 
@@ -175,16 +175,16 @@ class ChainBeamOrbitalSlashTest {
                 });
     }
 
-    private static SkillCastContext sampleContext(ActiveLunarMob mob) {
+    private static SkillCastContext sampleContext(ActiveMob mob) {
         SkillDefinition skill = new SkillDefinition("cast_complex", Set.of(SkillTrigger.ON_COMBAT), 20);
         return new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100);
     }
 
-    private static ActiveLunarMob sampleMob() {
+    private static ActiveMob sampleMob() {
         World mockWorld = createMockWorld();
         LivingEntity entity = createMockEntity(mockWorld, 0, 64, 0);
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 }

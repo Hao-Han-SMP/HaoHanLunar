@@ -13,7 +13,7 @@ import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 import vn.haohan.lunar.api.system.combat.threat.IThreatTable;
-import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
+import vn.haohan.lunar.core.mob.LunarMobManager;
 
 import java.util.List;
 import java.util.Objects;

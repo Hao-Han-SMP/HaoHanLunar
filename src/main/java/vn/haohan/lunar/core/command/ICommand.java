@@ -10,9 +10,9 @@ import org.bukkit.util.StringUtil;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.system.mob.MobDefinitionRegistry;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
-import vn.haohan.lunar.core.subsystem.LunarSubSystems;
-import vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem;
+import vn.haohan.lunar.core.service.ILunarService;
+import vn.haohan.lunar.core.service.LunarServices;
+import vn.haohan.lunar.core.service.engine.MobCoreService;
 
 import java.util.*;
 
@@ -126,24 +126,24 @@ public interface ICommand extends TabCompleter, CommandExecutor {
     /**
      * Retrieves an active subsystem registered with the plugin.
      */
-    default <T extends ILunarSubSystem> T getSubSystem(Class<T> type) {
-        return LunarSubSystems.get(type);
+    default <T extends ILunarService> T getService(Class<T> type) {
+        return LunarServices.get(type);
     }
 
     /**
      * Convenience method to fetch the active MobDefinitionRegistry from MobCoreSubSystem.
      */
     default MobDefinitionRegistry defaultMobRegistry() {
-        MobCoreSubSystem subSystem = getSubSystem(MobCoreSubSystem.class);
-        return subSystem != null ? subSystem.getMobRegistry() : null;
+        MobCoreService service = getService(MobCoreService.class);
+        return service != null ? service.getMobRegistry() : null;
     }
 
     /**
      * Convenience method to fetch the active LunarMobManager from MobCoreSubSystem.
      */
     default LunarMobManager defaultMobManager() {
-        MobCoreSubSystem subSystem = getSubSystem(MobCoreSubSystem.class);
-        return subSystem != null ? subSystem.getMobManager() : null;
+        MobCoreService service = getService(MobCoreService.class);
+        return service != null ? service.getMobManager() : null;
     }
 
     /**

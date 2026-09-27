@@ -2,7 +2,7 @@ package vn.haohan.lunar.api.system.loot;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 /**
  * Contextual metadata when resolving and rolling loot from a drop table.

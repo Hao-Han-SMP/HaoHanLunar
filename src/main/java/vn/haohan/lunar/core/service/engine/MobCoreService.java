@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.engine;
+package vn.haohan.lunar.core.service.engine;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.api.LunarAPI;
@@ -15,14 +15,15 @@ import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.projectile.ProjectileTracker;
-import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
+import vn.haohan.lunar.api.system.combat.skill.target.BasicTargeterRegistry;
 import vn.haohan.lunar.api.config.ConfigValidationReport;
 import vn.haohan.lunar.api.system.loot.DropManager;
 import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
 import vn.haohan.lunar.core.config.reload.HotReloadEngine;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.ILunarSubSystem;
-import vn.haohan.lunar.core.subsystem.mob.MobSkillRuntime;
+import vn.haohan.lunar.core.service.ILunarService;
+import vn.haohan.lunar.core.mob.MobSkillRuntime;
+import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
 import vn.haohan.lunar.core.system.throttle.DynamicThrottlingEngine;
 import vn.haohan.lunar.core.system.variable.VariableManager;
 
@@ -35,7 +36,7 @@ import java.util.UUID;
  * Subsystem initializing the mob runtime, skill engine, combat pipeline,
  * auras, projectiles, and variables, then binding them to the public {@link LunarAPI} service locator.
  */
-public final class MobCoreSubSystem implements ILunarSubSystem {
+public class MobCoreService implements ILunarService {
 
     private LunarMobManager mobManager;
     private MobDefinitionRegistry mobRegistry;
@@ -43,12 +44,12 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
     private DamagePipeline damagePipeline;
     private ConditionRegistry conditionRegistry;
     private MechanicRegistry mechanicRegistry;
-    private TargeterRegistry targeterRegistry;
+    private BasicTargeterRegistry targeterRegistry;
     private DropManager dropManager;
     private FixedSpawnerManager fixedSpawnerManager;
     private ItemProviderRegistry itemProviderRegistry;
     private Path configRoot;
-    private final vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics performanceMetrics = new vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics();
+    private final PerformanceMetrics performanceMetrics = new PerformanceMetrics();
     private HotReloadEngine hotReloadEngine;
 
     private AuraRegistry auraRegistry;
@@ -79,7 +80,7 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
         damagePipeline = new DamagePipeline();
         conditionRegistry = new ConditionRegistry();
         mechanicRegistry = new MechanicRegistry();
-        targeterRegistry = new TargeterRegistry();
+        targeterRegistry = new BasicTargeterRegistry();
         skillRegistry.setRegistries(mechanicRegistry, conditionRegistry, targeterRegistry);
 
         auraRegistry = new AuraRegistry();
@@ -93,7 +94,6 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
             }
         });
 
-        // Wire dependency injection into registries
         conditionRegistry.setAuraScheduler(auraScheduler);
         conditionRegistry.setMobManagerSupplier(() -> mobManager);
         mechanicRegistry.setAuraScheduler(auraScheduler);
@@ -149,7 +149,6 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
             if (projectileTracker != null) projectileTracker.cleanupShooter(entityId);
         });
 
-        // Publish to LunarAPI
         LunarAPI.setMobManager(mobManager);
         LunarAPI.setSkillManager(skillRegistry);
         LunarAPI.setCombatManager(damagePipeline);
@@ -160,7 +159,6 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
         this.configRoot = plugin != null ? plugin.getDataFolder().toPath() : Path.of("src/main/resources");
         hotReloadEngine = new HotReloadEngine(configRoot, mobRegistry, skillRegistry, dropManager, fixedSpawnerManager, mobManager, java.util.concurrent.ForkJoinPool.commonPool());
 
-        // Register event listeners
         if (plugin != null && plugin.getServer() != null) {
             var pm = plugin.getServer().getPluginManager();
             pm.registerEvents(mobManager, plugin);
@@ -192,7 +190,6 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
     public void tick() {
         currentTick++;
 
-        // 1. Update TPS sample periodically (every 20 ticks = 1 sec)
         if (currentTick % 20L == 0L) {
             try {
                 double[] tps = org.bukkit.Bukkit.getTPS();
@@ -201,39 +198,33 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
                 }
             }
             catch (Throwable ignored) {
-                // Ignore in unit test mock environments
             }
         }
 
-        // 2. Tick in-flight projectiles
         if (projectileTracker != null && projectileTracker.size() > 0) {
             long start = System.nanoTime();
             projectileTracker.tick(currentTick);
             performanceMetrics.record("projectiles", System.nanoTime() - start);
         }
 
-        // 3. Tick active auras
         if (auraScheduler != null) {
             long start = System.nanoTime();
             auraScheduler.tick(currentTick);
             performanceMetrics.record("auras", System.nanoTime() - start);
         }
 
-        // 4. Tick delayed/repeated skill execution
         if (skillScheduler != null) {
             long start = System.nanoTime();
             skillScheduler.tick();
             performanceMetrics.record("skill_scheduler", System.nanoTime() - start);
         }
 
-        // 5. Tick fixed spawners with LOD throttling
         if (fixedSpawnerManager != null && dynamicThrottlingEngine.shouldTickSpawner(currentTick)) {
             long start = System.nanoTime();
             fixedSpawnerManager.tickAll(currentTick);
             performanceMetrics.record("spawners", System.nanoTime() - start);
         }
 
-        // 6. Cleanup and LOD tick for active mobs
         if (mobManager != null) {
             if (currentTick % 20L == 0L) {
                 mobManager.cleanupInvalidEntities();
@@ -243,19 +234,16 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
             performanceMetrics.record("mob_manager", System.nanoTime() - start);
         }
 
-        // 7. Tick mob skill triggers (ON_TIMER, ON_COMBAT)
         if (mobSkillRuntime != null) {
             long start = System.nanoTime();
             mobSkillRuntime.tick(currentTick);
             performanceMetrics.record("skill_runtime", System.nanoTime() - start);
         }
 
-        // 8. Tick dialogue speech bubbles and typewriter effects
         try {
             vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge.tickAll();
         } catch (Throwable ignored) {}
 
-        // 9. Tick volatile visual FX (client fake block cracks cleanup)
         try {
             vn.haohan.lunar.api.presentation.volatilefx.VolatileVisualEngine.tick(currentTick);
         } catch (Throwable ignored) {}
@@ -332,11 +320,11 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
         return mechanicRegistry;
     }
 
-    public TargeterRegistry targeterRegistry() {
+    public BasicTargeterRegistry targeterRegistry() {
         return targeterRegistry;
     }
 
-    public TargeterRegistry getTargeterRegistry() {
+    public BasicTargeterRegistry getTargeterRegistry() {
         return targeterRegistry;
     }
 
@@ -428,11 +416,11 @@ public final class MobCoreSubSystem implements ILunarSubSystem {
         return hotReloadEngine;
     }
 
-    public vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics performanceMetrics() {
+    public PerformanceMetrics performanceMetrics() {
         return performanceMetrics;
     }
 
-    public vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics getPerformanceMetrics() {
+    public PerformanceMetrics getPerformanceMetrics() {
         return performanceMetrics;
     }
 }

@@ -4,19 +4,17 @@ import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.targeter.impl.*;
+import vn.haohan.lunar.core.util.PatternUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Registry and parser for Entity and Location targeters.
  * Supports Mythic-style inline syntax: {@code @PlayersInRadius{r=20;limit=3}}
  */
 public final class TargeterRegistry {
-
-    private static final Pattern INLINE_TARGETER_PATTERN = Pattern.compile("^@?([a-zA-Z0-9_-]+)(?:\\{(.*)\\})?$");
 
     private final Map<String, IEntityTargeter> entityTargeters = new ConcurrentHashMap<>();
     private final Map<String, ILocationTargeter> locationTargeters = new ConcurrentHashMap<>();
@@ -99,7 +97,7 @@ public final class TargeterRegistry {
         }
 
         String trimmed = raw.trim();
-        Matcher matcher = INLINE_TARGETER_PATTERN.matcher(trimmed);
+        Matcher matcher = PatternUtil.INLINE_TARGETER.matcher(trimmed);
         if (!matcher.matches()) {
             return new ParsedTargeterCall(normalizeKey(trimmed), Map.of());
         }
@@ -237,7 +235,7 @@ public final class TargeterRegistry {
     private static Map<String, Object> parseParameters(String raw) {
         if (raw == null || raw.isBlank()) return Map.of();
         Map<String, Object> map = new LinkedHashMap<>();
-        String[] tokens = raw.split("[;,]");
+        String[] tokens = PatternUtil.COMMA_OR_SEMICOLON.split(raw);
         for (String token : tokens) {
             String trimmed = token.trim();
             if (trimmed.isEmpty()) continue;

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.debug.validator;
+package vn.haohan.lunar.api.system.debug.validator;
 
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;

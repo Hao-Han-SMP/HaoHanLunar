@@ -23,7 +23,7 @@ import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
 import vn.haohan.lunar.api.system.world.pin.PinManager;
 import vn.haohan.lunar.api.system.world.pin.SinglePin;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 
 import java.lang.reflect.Proxy;
@@ -289,7 +289,7 @@ class ExpandedTacticalMechanicsAndConditionsTest {
     private MechanicContext createMechanicContext(LivingEntity casterEntity, List<TargetRef> targets) {
         MobDefinition definition = new MobDefinition(new MobDefinitionId("boss"), org.bukkit.entity.EntityType.IRON_GOLEM,
                 "Boss", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        ActiveLunarMob mob = new ActiveLunarMob(casterEntity, definition, new LunarMobIdentity("boss", "1"));
+        ActiveMob mob = new ActiveMob(casterEntity, definition, new LunarMobIdentity("boss", "1"));
         SkillDefinition skill = new SkillDefinition("test_skill", Set.of(SkillTrigger.ON_COMBAT), 0);
         return new MechanicContext(new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 0), targets);
     }

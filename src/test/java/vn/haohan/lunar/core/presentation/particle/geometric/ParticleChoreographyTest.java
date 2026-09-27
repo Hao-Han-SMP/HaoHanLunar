@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -41,7 +41,7 @@ public class ParticleChoreographyTest {
                 });
     }
 
-    private ActiveLunarMob createDummyMob(World world) {
+    private ActiveMob createDummyMob(World world) {
         UUID uuid = UUID.randomUUID();
         Location loc = new Location(world, 0, 64, 0);
 
@@ -61,7 +61,7 @@ public class ParticleChoreographyTest {
 
         MobDefinition def = new MobDefinition(new MobDefinitionId("dummy"), EntityType.ZOMBIE,
                 "Dummy", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity("dummy", "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity("dummy", "1"));
     }
 
     @Test
@@ -149,7 +149,7 @@ public class ParticleChoreographyTest {
     @DisplayName("MechanicRegistry executes geometric particle mechanics properly")
     void testGeometricMechanicsInRegistry() {
         World world = createMockWorld();
-        ActiveLunarMob mob = createDummyMob(world);
+        ActiveMob mob = createDummyMob(world);
         MechanicRegistry registry = new MechanicRegistry();
 
         AtomicInteger particleCount = new AtomicInteger(0);

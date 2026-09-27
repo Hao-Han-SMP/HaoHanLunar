@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
- * Tracks player damage dealt to ActiveLunarMobs and generates immutable damage snapshots on death.
+ * Tracks player damage dealt to ActiveMobs and generates immutable damage snapshots on death.
  * Includes pet damage attribution, real-time leaderboard, and victory summaries.
  */
 public final class DamageTracker implements Listener {

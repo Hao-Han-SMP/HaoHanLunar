@@ -7,9 +7,9 @@ import vn.haohan.lunar.core.command.HaoHanCommand;
 import vn.haohan.lunar.core.command.commands.MetricsCommand;
 import vn.haohan.lunar.core.command.commands.TraceCommand;
 import vn.haohan.lunar.core.command.commands.ValidateCommand;
-import vn.haohan.lunar.core.system.debug.metrics.PerformanceMetrics;
-import vn.haohan.lunar.core.system.debug.trace.SkillTracer;
-import vn.haohan.lunar.core.system.debug.validator.ConfigValidationService;
+import vn.haohan.lunar.api.system.debug.metrics.PerformanceMetrics;
+import vn.haohan.lunar.api.system.debug.trace.SkillTracer;
+import vn.haohan.lunar.api.system.debug.validator.ConfigValidationService;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 
 import java.io.IOException;

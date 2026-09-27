@@ -10,8 +10,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import vn.haohan.lunar.core.subsystem.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.LunarMobManager;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.EnumSet;
 import java.util.Objects;

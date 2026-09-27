@@ -7,7 +7,7 @@ import vn.haohan.lunar.core.command.ICommand;
 import vn.haohan.lunar.core.features.boss.warden.LunarWardenMechanic;
 import vn.haohan.lunar.core.features.boss.warden.WardenSpawner;
 import vn.haohan.lunar.core.features.boss.warden.showcase.WardenShowcaseHandler;
-import vn.haohan.lunar.core.subsystem.LunarSubSystems;
+import vn.haohan.lunar.core.service.LunarServices;
 
 import java.util.Arrays;
 import java.util.List;
@@ -125,7 +125,7 @@ public class WardenCommand implements ICommand {
     }
 
     private LunarWardenMechanic getMechanic(HaoHanLunarPlugin plugin) {
-        LunarWardenMechanic wardenMechanic = LunarSubSystems.get(LunarWardenMechanic.class);
+        LunarWardenMechanic wardenMechanic = LunarServices.get(LunarWardenMechanic.class);
         if (wardenMechanic == null && plugin != null) {
             wardenMechanic = plugin.getLunarWardenMechanic();
         }

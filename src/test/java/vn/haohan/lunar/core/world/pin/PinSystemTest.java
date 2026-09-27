@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionContext;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -89,11 +89,11 @@ class PinSystemTest {
         );
     }
 
-    private ActiveLunarMob sampleMob(double x, double y, double z) {
+    private ActiveMob sampleMob(double x, double y, double z) {
         LivingEntity entity = mockLivingEntity(loc(x, y, z));
         MobDefinition definition = new MobDefinition(new MobDefinitionId("boss"),
                 EntityType.IRON_GOLEM, "Boss", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("boss", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("boss", "1"));
     }
 
     @Test
@@ -234,7 +234,7 @@ class PinSystemTest {
 
         // 3. BlocksInPinRegionTargeter
         TargeterRegistry targeterRegistry = new TargeterRegistry();
-        ActiveLunarMob mob = sampleMob(100, 64, 100);
+        ActiveMob mob = sampleMob(100, 64, 100);
         SkillCastContext castContext = new SkillCastContext(mob,
                 new SkillDefinition("pin_skill", Set.of(SkillTrigger.ON_COMBAT), 20),
                 SkillTrigger.ON_COMBAT, 0);

@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.system.debug.metrics;
+package vn.haohan.lunar.api.system.debug.metrics;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

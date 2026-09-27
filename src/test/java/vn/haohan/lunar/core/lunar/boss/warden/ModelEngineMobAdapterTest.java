@@ -5,7 +5,7 @@ import vn.haohan.lunar.core.features.boss.warden.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -29,7 +29,7 @@ class ModelEngineMobAdapterTest {
         LivingEntity entity = entity(uuid);
         FakeBridge bridge = new FakeBridge();
         ModelEngineMobAdapter adapter = new ModelEngineMobAdapter(bridge, ignored -> { });
-        ActiveLunarMob mob = mob(entity);
+        ActiveMob mob = mob(entity);
 
         assertTrue(adapter.attach(mob, "warden_model"));
         assertTrue(adapter.isAttached(uuid));
@@ -51,10 +51,10 @@ class ModelEngineMobAdapterTest {
         assertEquals(2, errors.size());
     }
 
-    private static ActiveLunarMob mob(LivingEntity entity) {
+    private static ActiveMob mob(LivingEntity entity) {
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 
     private static LivingEntity entity(UUID uuid) {

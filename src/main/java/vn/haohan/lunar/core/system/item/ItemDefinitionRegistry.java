@@ -10,12 +10,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import vn.haohan.lunar.core.util.PatternUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Registry and builder for custom MythicItems with Paper 1.21 Data Components and PDC identification.
@@ -24,10 +24,6 @@ public final class ItemDefinitionRegistry {
 
     public static final NamespacedKey KEY_ITEM_ID = new NamespacedKey("haohan", "item_id");
     public static final NamespacedKey KEY_ITEM_RARITY = new NamespacedKey("haohan", "item_rarity");
-
-    private static final Pattern SKILL_ID_PATTERN = Pattern.compile("s=([a-zA-Z0-9_-]+)");
-    private static final Pattern SKILL_CD_PATTERN = Pattern.compile("cd=([0-9]+)");
-    private static final Pattern TRIGGER_PATTERN = Pattern.compile("~([a-zA-Z0-9]+)");
 
     private final Map<String, MythicItemDefinition> registry = new ConcurrentHashMap<>();
     private BiFunction<MythicItemDefinition, Integer, ItemStack> testItemBuilder;
@@ -262,7 +258,7 @@ public final class ItemDefinitionRegistry {
         if (line == null || line.isBlank()) return null;
 
         String skillId = null;
-        Matcher mSkill = SKILL_ID_PATTERN.matcher(line);
+        Matcher mSkill = PatternUtil.ITEM_SKILL_ID.matcher(line);
         if (mSkill.find()) {
             skillId = mSkill.group(1);
         } else {
@@ -270,19 +266,19 @@ public final class ItemDefinitionRegistry {
             if (braceStart > 0) {
                 skillId = line.substring(0, braceStart).trim();
             } else {
-                String[] tokens = line.trim().split("\\s+");
-                skillId = tokens[0];
+                String[] tokens = PatternUtil.splitWhitespace(line);
+                skillId = tokens.length > 0 ? tokens[0] : "";
             }
         }
 
         long cooldownTicks = 0L;
-        Matcher mCd = SKILL_CD_PATTERN.matcher(line);
+        Matcher mCd = PatternUtil.ITEM_SKILL_COOLDOWN.matcher(line);
         if (mCd.find()) {
             cooldownTicks = Long.parseLong(mCd.group(1));
         }
 
         ItemSkillTrigger trigger = ItemSkillTrigger.ON_USE;
-        Matcher mTrigger = TRIGGER_PATTERN.matcher(line);
+        Matcher mTrigger = PatternUtil.ITEM_SKILL_TRIGGER.matcher(line);
         if (mTrigger.find()) {
             trigger = ItemSkillTrigger.fromString(mTrigger.group(1));
         }

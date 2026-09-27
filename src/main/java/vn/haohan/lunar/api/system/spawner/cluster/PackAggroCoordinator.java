@@ -2,7 +2,7 @@ package vn.haohan.lunar.api.spawner.cluster;
 
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.Collection;
 import java.util.UUID;

@@ -5,7 +5,7 @@ import vn.haohan.lunar.api.system.combat.skill.*;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -65,7 +65,7 @@ class SkillRuntimeTest {
 
     @Test
     void cancelledCastIsObservableAndDoesNotPreventCooldownCancellation() {
-        ActiveLunarMob mob = activeMob();
+        ActiveMob mob = activeMob();
         SkillDefinition skill = new SkillDefinition("signal", Set.of(SkillTrigger.ON_SIGNAL), 20);
         SkillCastContext context = new SkillCastContext(mob, skill, SkillTrigger.ON_SIGNAL, 30);
         CooldownRegistry cooldowns = new CooldownRegistry();
@@ -82,7 +82,7 @@ class SkillRuntimeTest {
                 () -> new SkillCastContext(mob, skill, SkillTrigger.ON_DEATH, 30));
     }
 
-    private static ActiveLunarMob activeMob() {
+    private static ActiveMob activeMob() {
         UUID uuid = UUID.randomUUID();
         LivingEntity entity = (LivingEntity) Proxy.newProxyInstance(LivingEntity.class.getClassLoader(),
                 new Class<?>[]{LivingEntity.class}, (proxy, method, args) -> {
@@ -91,6 +91,6 @@ class SkillRuntimeTest {
                 });
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 }

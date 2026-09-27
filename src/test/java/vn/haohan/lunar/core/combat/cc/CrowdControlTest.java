@@ -12,7 +12,7 @@ import vn.haohan.lunar.api.system.combat.DamageResult;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -136,7 +136,7 @@ class CrowdControlTest {
     void testDamagePipelineBlocksInvulnerableVictim() {
         DamagePipeline pipeline = new DamagePipeline();
         LivingEntity victimEntity = mockLiving();
-        ActiveLunarMob victimMob = mockActiveMob(victimEntity, "boss_target");
+        ActiveMob victimMob = mockActiveMob(victimEntity, "boss_target");
 
         // Apply invulnerable CC
         victimMob.crowdControl().apply(CCState.INVULNERABLE, 100, null, 1);
@@ -158,7 +158,7 @@ class CrowdControlTest {
     void testDamagePipelineBlocksStunnedAndDisarmedAttacker() {
         DamagePipeline pipeline = new DamagePipeline();
         LivingEntity attackerEntity = mockLiving();
-        ActiveLunarMob attackerMob = mockActiveMob(attackerEntity, "attacker_boss");
+        ActiveMob attackerMob = mockActiveMob(attackerEntity, "attacker_boss");
         LivingEntity victimEntity = mockLiving();
 
         // 1. Attacker is stunned -> all damage blocked
@@ -211,7 +211,7 @@ class CrowdControlTest {
     void testMechanicRegistryAppliesCC() {
         MechanicRegistry registry = new MechanicRegistry();
         LivingEntity casterEntity = mockLiving();
-        ActiveLunarMob casterMob = mockActiveMob(casterEntity, "caster_mob");
+        ActiveMob casterMob = mockActiveMob(casterEntity, "caster_mob");
 
         SkillDefinition skill = new SkillDefinition("freeze_blast", Set.of(SkillTrigger.ON_TIMER), 10, List.of());
         SkillCastContext castContext = new SkillCastContext(casterMob, skill, SkillTrigger.ON_TIMER, 1L);
@@ -246,7 +246,7 @@ class CrowdControlTest {
                 });
     }
 
-    private static ActiveLunarMob mockActiveMob(LivingEntity entity, String id) {
+    private static ActiveMob mockActiveMob(LivingEntity entity, String id) {
         MobDefinition def = new MobDefinition(
                 new MobDefinitionId(id),
                 EntityType.IRON_GOLEM,
@@ -259,6 +259,6 @@ class CrowdControlTest {
                 Set.of()
         );
         LunarMobIdentity identity = new LunarMobIdentity(id, "1.0.0");
-        return new ActiveLunarMob(entity, def, identity);
+        return new ActiveMob(entity, def, identity);
     }
 }

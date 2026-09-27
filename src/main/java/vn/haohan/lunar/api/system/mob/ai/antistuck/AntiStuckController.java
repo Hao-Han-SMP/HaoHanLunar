@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Navigation safety and anti-stuck controller for ActiveLunarMob during combat.
+ * Navigation safety and anti-stuck controller for ActiveMob during combat.
  * Detects if a mob is trapped on terrain/obstacles for 60 ticks (3s) and activates progressive un-stuck stages.
  */
 public final class AntiStuckController {

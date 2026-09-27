@@ -1,15 +1,15 @@
-package vn.haohan.lunar.core.subsystem;
+package vn.haohan.lunar.core.service;
 
 import vn.haohan.lunar.HaoHanLunarPlugin;
 
 /**
- * Represents a modular subsystem within HaoHanLunar, modeled after the LavaHack SubSystem architecture.
- * Each subsystem manages its own lifecycle (init, disable), tick loop, and event listener registration.
+ * Fundamental lifecycle contract for modular services in HaoHanLunar.
+ * Each service manages its own lifecycle (init, disable), tick loop, priority, and dependencies.
  */
-public interface ILunarSubSystem {
+public interface ILunarService {
 
     /**
-     * The unique name of this subsystem.
+     * The unique name of this service.
      */
     String name();
 
@@ -32,7 +32,7 @@ public interface ILunarSubSystem {
     default void disable(HaoHanLunarPlugin plugin) {}
 
     /**
-     * Indicates whether this subsystem requires per-tick processing.
+     * Indicates whether this service requires per-tick processing.
      */
     default boolean isTickable() {
         return false;

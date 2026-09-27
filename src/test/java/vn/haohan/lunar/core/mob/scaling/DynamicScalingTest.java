@@ -5,7 +5,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -33,7 +33,7 @@ class DynamicScalingTest {
         );
 
         MockLivingEntity mockEntity = new MockLivingEntity(100.0, 100.0);
-        ActiveLunarMob mob = createMob(mockEntity, scalingDef);
+        ActiveMob mob = createMob(mockEntity, scalingDef);
 
         // 5 players = 1 baseline + 4 additional -> +100% health = 200.0 max health
         DynamicScalingResult result = service.applyScaling(mob, 5);
@@ -59,7 +59,7 @@ class DynamicScalingTest {
 
         // Boss currently has 50/100 HP (50%)
         MockLivingEntity mockEntity = new MockLivingEntity(50.0, 100.0);
-        ActiveLunarMob mob = createMob(mockEntity, scalingDef);
+        ActiveMob mob = createMob(mockEntity, scalingDef);
 
         // Scale up to 5 players (2x max HP)
         service.applyScaling(mob, 5);
@@ -97,7 +97,7 @@ class DynamicScalingTest {
         );
 
         MockLivingEntity mockEntity = new MockLivingEntity(100.0, 100.0);
-        ActiveLunarMob mob = createMob(mockEntity, scalingDef);
+        ActiveMob mob = createMob(mockEntity, scalingDef);
 
         // 100 players enter the arena, but capped at 10
         DynamicScalingResult result = service.applyScaling(mob, 100);
@@ -108,7 +108,7 @@ class DynamicScalingTest {
         assertEquals(190.0, mockEntity.maxHealth, 1e-6);
     }
 
-    private static ActiveLunarMob createMob(MockLivingEntity mockEntity, DynamicScalingDefinition scaling) {
+    private static ActiveMob createMob(MockLivingEntity mockEntity, DynamicScalingDefinition scaling) {
         MobDefinition definition = new MobDefinition(
                 new MobDefinitionId("scaling_boss"),
                 EntityType.IRON_GOLEM,
@@ -124,7 +124,7 @@ class DynamicScalingTest {
                 List.of(),
                 scaling
         );
-        return new ActiveLunarMob(mockEntity.proxy(), definition, new LunarMobIdentity("scaling_boss", "1"));
+        return new ActiveMob(mockEntity.proxy(), definition, new LunarMobIdentity("scaling_boss", "1"));
     }
 
     private static Player mockPlayer(GameMode mode, boolean valid, boolean dead) {

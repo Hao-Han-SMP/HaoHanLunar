@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Tracks and manages multiple independent BossBars attached to an ActiveLunarMob.
+ * Tracks and manages multiple independent BossBars attached to an ActiveMob.
  */
 public final class LunarBossBarTracker {
 

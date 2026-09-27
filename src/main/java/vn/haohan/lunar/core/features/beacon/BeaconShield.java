@@ -91,8 +91,4 @@ public final class BeaconShield {
                 && world.isChunkLoaded(block.getX() >> 4, block.getZ() >> 4);
     }
 
-    @Deprecated
-    public boolean isValid(String lunarWorldKey) {
-        return isValid();
-    }
 }

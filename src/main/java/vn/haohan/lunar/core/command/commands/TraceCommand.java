@@ -7,7 +7,7 @@ import org.bukkit.util.StringUtil;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.core.command.ICommand;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.system.debug.trace.SkillTracer;
+import vn.haohan.lunar.api.system.debug.trace.SkillTracer;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,20 +1,19 @@
 package vn.haohan.lunar.api.system.mob;
 
+import vn.haohan.lunar.core.util.PatternUtil;
+
 import java.util.Locale;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 /** Stable, normalized identifier for a configured mob definition. */
 public final class MobDefinitionId {
-
-    private static final Pattern VALID_ID = Pattern.compile("[a-z0-9](?:[a-z0-9_.:-]*[a-z0-9])?");
 
     private final String value;
 
     public MobDefinitionId(String value) {
         Objects.requireNonNull(value, "Mob definition ID must not be null");
         String normalized = value.trim().toLowerCase(Locale.ROOT);
-        if (!VALID_ID.matcher(normalized).matches()) {
+        if (!PatternUtil.isValidNamespacedId(normalized)) {
             throw new IllegalArgumentException("Invalid mob definition ID: " + value);
         }
         this.value = normalized;

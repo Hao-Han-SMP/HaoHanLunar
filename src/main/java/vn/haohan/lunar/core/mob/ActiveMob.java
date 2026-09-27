@@ -1,4 +1,4 @@
-package vn.haohan.lunar.core.subsystem.mob;
+package vn.haohan.lunar.core.mob;
 
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
@@ -11,6 +11,7 @@ import vn.haohan.lunar.api.system.mob.MobOptionDefinition;
 import vn.haohan.lunar.api.system.mob.ai.antistuck.AntiStuckController;
 import vn.haohan.lunar.api.system.mob.disguise.DisguiseData;
 import vn.haohan.lunar.api.system.mob.options.MobOptions;
+import vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine;
 import vn.haohan.lunar.api.system.mob.stat.StatHolder;
 import vn.haohan.lunar.api.presentation.display.bossbar.LunarBossBarTracker;
 import vn.haohan.lunar.api.system.combat.DamageModifierTable;
@@ -53,7 +54,7 @@ public class ActiveMob implements IMob {
     private volatile DisguiseData disguise;
     private volatile String activeModelId = null;
     private volatile String activeModelState = null;
-    private volatile vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine phaseMachine;
+    private volatile MobPhaseMachine phaseMachine;
     private final StatHolder stats = new StatHolder();
 
     private volatile double baseMaxHealth = -1;
@@ -65,6 +66,7 @@ public class ActiveMob implements IMob {
     private volatile boolean softLeashed = false;
     private volatile long invulnerableUntilTick = 0L;
 
+    @Override
     public boolean isInvulnerable(long currentTick) {
         if (currentTick < invulnerableUntilTick) return true;
         if (entity != null) {
@@ -75,6 +77,7 @@ public class ActiveMob implements IMob {
         return false;
     }
 
+    @Override
     public void setInvulnerableTicks(int ticks, long currentTick) {
         this.invulnerableUntilTick = currentTick + Math.max(0, ticks);
         if (entity != null) {
@@ -109,14 +112,19 @@ public class ActiveMob implements IMob {
         initDamageModifiers(definition);
     }
 
+    @Override
     public UUID entityId() { return entityId; }
     public MobDefinitionId definitionId() { return definitionId; }
     public MobDefinition definition() { return definition; }
+    @Override
     public LivingEntity entity() { return entity; }
     public LunarMobIdentity identity() { return identity; }
+    @Override
     public AntiStuckController antiStuckController() { return antiStuckController; }
+    @Override
     public StatHolder stats() { return stats; }
 
+    @Override
     public String faction() {
         return options != null ? options.faction() : null;
     }
@@ -167,20 +175,27 @@ public class ActiveMob implements IMob {
         this.damageModifiers = DamageModifierTable.fromConfig(causeMods, entityMods);
     }
 
+    @Override
     public String stance() { return stance; }
+    @Override
     public void setStance(String stance) { this.stance = stance != null ? stance : "default"; }
 
     public boolean isUsingDamageSkill() { return usingDamageSkill; }
     public void setUsingDamageSkill(boolean usingDamageSkill) { this.usingDamageSkill = usingDamageSkill; }
 
+    @Override
     public ImmunityTable immunityTable() { return immunityTable; }
+    @Override
     public CrowdControlTracker crowdControl() { return crowdControl; }
 
+    @Override
     public DamageModifierTable damageModifiers() { return damageModifiers; }
+    @Override
     public void setDamageModifiers(DamageModifierTable damageModifiers) {
         this.damageModifiers = Objects.requireNonNull(damageModifiers, "Damage modifier table must not be null");
     }
 
+    @Override
     public ThreatTable threatTable() { return threatTable; }
 
     public MobOptions options() { return options; }
@@ -188,28 +203,49 @@ public class ActiveMob implements IMob {
         this.options = options != null ? options : MobOptions.DEFAULT;
     }
 
+    @Override
     public UUID parentUUID() { return parentUUID; }
+    @Override
     public void setParentUUID(UUID parentUUID) { this.parentUUID = parentUUID; }
 
+    @Override
     public LunarBossBarTracker bossBars() { return bossBars; }
 
+    @Override
     public UUID mountUUID() { return mountUUID; }
+    @Override
     public void setMountUUID(UUID mountUUID) { this.mountUUID = mountUUID; }
 
+    @Override
     public Set<UUID> riderUUIDs() { return riderUUIDs; }
 
+    @Override
+    public boolean isMounted() { return mountUUID != null; }
+
+    @Override
+    public boolean hasRiders() { return !riderUUIDs.isEmpty(); }
+
+    @Override
     public boolean isBerserk() { return berserk; }
+    @Override
     public void setBerserk(boolean berserk) { this.berserk = berserk; }
 
+    @Override
     public DisguiseData disguise() { return disguise; }
     public DisguiseData getDisguise() { return disguise; }
+    @Override
     public void setDisguise(DisguiseData disguise) { this.disguise = disguise; }
+    @Override
     public boolean isDisguised() { return disguise != null; }
 
+    @Override
     public String activeModelId() { return activeModelId != null ? activeModelId : (definition != null ? definition.modelId().orElse(null) : null); }
+    @Override
     public void setActiveModelId(String activeModelId) { this.activeModelId = activeModelId; }
 
+    @Override
     public String activeModelState() { return activeModelState; }
+    @Override
     public void setActiveModelState(String activeModelState) { this.activeModelState = activeModelState; }
 
     public vn.haohan.lunar.api.system.mob.phase.MobPhaseMachine phaseMachine() { return phaseMachine; }
@@ -233,9 +269,12 @@ public class ActiveMob implements IMob {
     public int lastTrackedPlayerCount() { return lastTrackedPlayerCount; }
     public void setLastTrackedPlayerCount(int lastTrackedPlayerCount) { this.lastTrackedPlayerCount = lastTrackedPlayerCount; }
 
+    @Override
     public boolean isSoftLeashed() { return softLeashed; }
+    @Override
     public void setSoftLeashed(boolean softLeashed) { this.softLeashed = softLeashed; }
 
+    @Override
     public Location spawnLocation() { return spawnLocation; }
     public void setSpawnLocation(Location spawnLocation) {
         this.spawnLocation = spawnLocation != null ? spawnLocation.clone() : null;
@@ -245,6 +284,7 @@ public class ActiveMob implements IMob {
      * Resolves the maximum health of this mob, inspecting live attributes first
      * and falling back to definition attributes if not initialized.
      */
+    @Override
     public double maxHealth() {
         try {
             var attr = entity.getAttribute(Attribute.MAX_HEALTH);
@@ -282,6 +322,7 @@ public class ActiveMob implements IMob {
      * Fully resets a boss/mob back to its spawn location, clearing threat, soft leash,
      * restoring full health, and cancelling active channeling abilities.
      */
+    @Override
     public void resetToSpawn() {
         long currentTick;
         try {
@@ -292,6 +333,7 @@ public class ActiveMob implements IMob {
         resetToSpawn(currentTick);
     }
 
+    @Override
     public void resetToSpawn(long currentTick) {
         if (spawnLocation == null || entity == null || !entity.isValid() || entity.isDead()) {
             return;
@@ -353,6 +395,7 @@ public class ActiveMob implements IMob {
         return token;
     }
 
+    @Override
     public int interruptActiveSkills(InterruptReason reason) {
         int count = 0;
         for (CancellationToken token : java.util.List.copyOf(activeTokens)) {
@@ -366,10 +409,12 @@ public class ActiveMob implements IMob {
         return count;
     }
 
+    @Override
     public boolean isChanneling() {
         return activeChannelingSkill != null && activeChannelingToken != null && !activeChannelingToken.isCancelled();
     }
 
+    @Override
     public String activeChannelingSkill() {
         return activeChannelingSkill;
     }

@@ -69,7 +69,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
 
         // Test ConditionRegistry with full moon (time = 0)
         World mockWorld = createMockWorld("lunar_world", 0L, 0L, 64, 15);
-        ActiveLunarMob mob = createMockMob("lunar_werewolf", mockWorld, new Location(mockWorld, 0, 64, 0));
+        ActiveMob mob = createMockMob("lunar_werewolf", mockWorld, new Location(mockWorld, 0, 64, 0));
 
         ConditionContext fullMoonCtx = new ConditionContext(
                 mob.entity(), null, "default", new CooldownRegistry(), Map.of(), 0L);
@@ -82,7 +82,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
 
         // Test alias THIRD_QUARTER / LAST_QUARTER at day 2 (fullTime 48000)
         World day2World = createMockWorld("lunar_world", 48000L, 0L, 64, 15);
-        ActiveLunarMob day2Mob = createMockMob("lunar_werewolf", day2World, new Location(day2World, 0, 64, 0));
+        ActiveMob day2Mob = createMockMob("lunar_werewolf", day2World, new Location(day2World, 0, 64, 0));
         ConditionContext day2Ctx = new ConditionContext(
                 day2Mob.entity(), null, "default", new CooldownRegistry(), Map.of(), 0L);
 
@@ -98,7 +98,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
         World skyWorld = createMockWorld("lunar_world", 18000L, 18000L, 64, 14);
 
         // 1. skylight condition
-        ActiveLunarMob brightMob = createMockMob("bright_mob", skyWorld, new Location(skyWorld, 0, 64, 0));
+        ActiveMob brightMob = createMockMob("bright_mob", skyWorld, new Location(skyWorld, 0, 64, 0));
         ConditionContext brightCtx = new ConditionContext(brightMob.entity(), null, "default", new CooldownRegistry(), Map.of(), 0L);
 
         ConditionResult skylightGte12 = conditionRegistry.evaluate("skylight", brightCtx, Map.of("level", 12));
@@ -111,7 +111,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
         ConditionResult openSky = conditionRegistry.evaluate("underopensky", brightCtx, Map.of("bool", true));
         assertTrue(openSky.valid() && openSky.matched(), "Mob at y=64 with highestY=64 is under open sky");
 
-        ActiveLunarMob caveMob = createMockMob("cave_mob", skyWorld, new Location(skyWorld, 0, 40, 0));
+        ActiveMob caveMob = createMockMob("cave_mob", skyWorld, new Location(skyWorld, 0, 40, 0));
         ConditionContext caveCtx = new ConditionContext(caveMob.entity(), null, "default", new CooldownRegistry(), Map.of(), 0L);
         ConditionResult blockedSky = conditionRegistry.evaluate("underopensky", caveCtx, Map.of("bool", true));
         assertTrue(blockedSky.valid() && !blockedSky.matched(), "Mob at y=40 under highestY=64 is NOT under open sky");
@@ -121,7 +121,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
         assertTrue(nightTrue.valid() && nightTrue.matched(), "Time 18000 is night");
 
         World dayWorld = createMockWorld("lunar_world", 6000L, 6000L, 64, 15);
-        ActiveLunarMob noonMob = createMockMob("noon_mob", dayWorld, new Location(dayWorld, 0, 64, 0));
+        ActiveMob noonMob = createMockMob("noon_mob", dayWorld, new Location(dayWorld, 0, 64, 0));
         ConditionContext noonCtx = new ConditionContext(noonMob.entity(), null, "default", new CooldownRegistry(), Map.of(), 0L);
         ConditionResult dayNightCheck = conditionRegistry.evaluate("nightonly", noonCtx, Map.of("bool", true));
         assertTrue(dayNightCheck.valid() && !dayNightCheck.matched(), "Time 6000 is NOT night");
@@ -133,7 +133,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
         AtomicLong worldDayTime = new AtomicLong(12000L);
 
         World dynamicWorld = createMockWorld("lunar_world", worldFullTime, worldDayTime, 64, 15);
-        ActiveLunarMob mob = createMockMob("lunar_boss", dynamicWorld, new Location(dynamicWorld, 0, 64, 0));
+        ActiveMob mob = createMockMob("lunar_boss", dynamicWorld, new Location(dynamicWorld, 0, 64, 0));
         mobManager.register(mob);
 
         List<SkillTrigger> triggered = new ArrayList<>();
@@ -193,7 +193,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
                     return null;
                 });
 
-        ActiveLunarMob mob = createMockMob("weather_boss", mockWorld, new Location(mockWorld, 0, 64, 0));
+        ActiveMob mob = createMockMob("weather_boss", mockWorld, new Location(mockWorld, 0, 64, 0));
         SkillDefinition skill = new SkillDefinition("stormSkill", Set.of(SkillTrigger.ON_COMBAT), 0);
         SkillCastContext cast = new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100L);
         MechanicContext ctx = new MechanicContext(cast, List.of(TargetRef.entity(mob.entity())));
@@ -214,7 +214,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
     @Test
     void testGravityZoneCreationTickAndSafeCleanup() {
         World world = createMockWorld("lunar_world", 0L, 0L, 64, 15);
-        ActiveLunarMob mob = createMockMob("gravity_master", world, new Location(world, 0, 64, 0));
+        ActiveMob mob = createMockMob("gravity_master", world, new Location(world, 0, 64, 0));
 
         SkillDefinition skill = new SkillDefinition("gravSkill", Set.of(SkillTrigger.ON_COMBAT), 0);
         SkillCastContext cast = new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100L);
@@ -243,7 +243,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
     @Test
     void testOxygenFieldDrainAndRestore() {
         World world = createMockWorld("lunar_world", 0L, 0L, 64, 15);
-        ActiveLunarMob mob = createMockMob("suffocator", world, new Location(world, 0, 64, 0));
+        ActiveMob mob = createMockMob("suffocator", world, new Location(world, 0, 64, 0));
 
         SkillDefinition skill = new SkillDefinition("o2Skill", Set.of(SkillTrigger.ON_COMBAT), 0);
         SkillCastContext cast = new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100L);
@@ -269,7 +269,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
 
     // --- Helpers and Dynamic Mocks ---
 
-    private ActiveLunarMob createMockMob(String id, World world, Location loc) {
+    private ActiveMob createMockMob(String id, World world, Location loc) {
         MobDefinition def = new MobDefinition(
                 new MobDefinitionId(id),
                 EntityType.ZOMBIE,
@@ -296,7 +296,7 @@ class Phase11EnvironmentAndLunarPhaseTest {
                     if (method.getName().equals("hashCode")) return uuid.hashCode();
                     return null;
                 });
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity(id, "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity(id, "1"));
     }
 
     private Player createMockPlayer(Location loc, int initialAir) {

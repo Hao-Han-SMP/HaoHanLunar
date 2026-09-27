@@ -10,7 +10,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.DamageType;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -57,7 +57,7 @@ class PublicEventApiTest {
     void testLunarMobSpawnEvent() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 10.0, 64.0, 20.0);
-        ActiveLunarMob mob = createMockMob("lunar_skeleton", loc);
+        ActiveMob mob = createMockMob("lunar_skeleton", loc);
 
         MobSpawnEvent event = new MobSpawnEvent(mob, loc, "spawner_1");
         assertEquals(mob, event.mob());
@@ -74,7 +74,7 @@ class PublicEventApiTest {
     void testLunarMobDeathEvent() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0.0, 64.0, 0.0);
-        ActiveLunarMob mob = createMockMob("lunar_boss", loc);
+        ActiveMob mob = createMockMob("lunar_boss", loc);
         Player killer = mockPlayer("PlayerKiller");
 
         ItemStack mockItem = new DummyItemStack(Material.DIAMOND, 3);
@@ -97,7 +97,7 @@ class PublicEventApiTest {
     void testLunarSkillPreAndPostCastEvent() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0.0, 64.0, 0.0);
-        ActiveLunarMob caster = createMockMob("mage", loc);
+        ActiveMob caster = createMockMob("mage", loc);
         LivingEntity target1 = mockLiving(loc);
         LivingEntity target2 = mockLiving(loc);
 
@@ -130,7 +130,7 @@ class PublicEventApiTest {
     void testLunarMobDamageEvent() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0.0, 64.0, 0.0);
-        ActiveLunarMob victim = createMockMob("boss", loc);
+        ActiveMob victim = createMockMob("boss", loc);
         Player attacker = mockPlayer("Attacker1");
 
         MobDamageEvent event = new MobDamageEvent(victim, attacker, DamageType.MAGICAL, DamageCause.ENTITY_ATTACK, 150.0);
@@ -151,7 +151,7 @@ class PublicEventApiTest {
     void testLunarMobPhaseChangeEvent() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0.0, 64.0, 0.0);
-        ActiveLunarMob mob = createMockMob("phase_boss", loc);
+        ActiveMob mob = createMockMob("phase_boss", loc);
 
         MobPhaseChangeEvent event = new MobPhaseChangeEvent(mob, 1, 2);
         assertEquals(mob, event.mob());
@@ -167,7 +167,7 @@ class PublicEventApiTest {
     void testLunarLootGenerateEvent() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0.0, 64.0, 0.0);
-        ActiveLunarMob mob = createMockMob("loot_boss", loc);
+        ActiveMob mob = createMockMob("loot_boss", loc);
         Player recipient = mockPlayer("LuckyPlayer");
 
         List<ItemStack> drops = new ArrayList<>();
@@ -223,10 +223,10 @@ class PublicEventApiTest {
                 });
     }
 
-    private static ActiveLunarMob createMockMob(String mobId, Location loc) {
+    private static ActiveMob createMockMob(String mobId, Location loc) {
         LivingEntity entity = mockLiving(loc);
         MobDefinition def = new MobDefinition(new MobDefinitionId(mobId), EntityType.ZOMBIE, mobId, null,
                 Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity(mobId, "1.0.0"));
+        return new ActiveMob(entity, def, new LunarMobIdentity(mobId, "1.0.0"));
     }
 }

@@ -21,7 +21,7 @@ import vn.haohan.lunar.api.system.mob.equipment.ItemProviderRegistry;
 import vn.haohan.lunar.api.system.combat.skill.SkillRegistry;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
-import vn.haohan.lunar.api.system.combat.skill.target.TargeterRegistry;
+import vn.haohan.lunar.api.system.combat.skill.target.BasicTargeterRegistry;
 import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
 
 import java.lang.reflect.Proxy;
@@ -48,7 +48,7 @@ class LunarApiContractTest {
         coreDamagePipeline = new DamagePipeline();
         var conditionRegistry = new ConditionRegistry();
         var mechanicRegistry = new MechanicRegistry();
-        var targeterRegistry = new TargeterRegistry();
+        var targeterRegistry = new BasicTargeterRegistry();
         coreSkillRegistry.setRegistries(mechanicRegistry, conditionRegistry, targeterRegistry);
 
         coreDropManager = new DropManager(
@@ -171,5 +171,69 @@ class LunarApiContractTest {
         DamageResult result = combatManager.execute(ctx);
         assertTrue(result.executed());
         assertEquals(100.0, result.appliedDamage());
+    }
+
+@Test
+    @DisplayName("IMob API contract exposes domain systems without casting to ActiveMob")
+    void testIMobDomainApiContract() {
+        LivingEntity dummyEntity = (LivingEntity) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class<?>[]{LivingEntity.class},
+                (proxy, method, args) -> {
+                    if ("isValid".equals(method.getName())) return true;
+                    if ("isDead".equals(method.getName())) return false;
+                    if ("isInvulnerable".equals(method.getName())) return false;
+                    if ("getUniqueId".equals(method.getName())) return UUID.randomUUID();
+                    if ("getHealth".equals(method.getName())) return 100.0;
+                    return null;
+                }
+        );
+
+        vn.haohan.lunar.api.system.mob.MobDefinition definition = new vn.haohan.lunar.api.system.mob.MobDefinition(
+                new vn.haohan.lunar.api.system.mob.MobDefinitionId("test_mob"),
+                org.bukkit.entity.EntityType.ZOMBIE,
+                "Test Mob",
+                null,
+                java.util.Map.of(),
+                java.util.Map.of(),
+                java.util.List.of(),
+                null,
+                java.util.Set.of()
+        );
+        vn.haohan.lunar.core.mob.LunarMobIdentity identity = new vn.haohan.lunar.core.mob.LunarMobIdentity("test_mob", "inst-1");
+
+        vn.haohan.lunar.api.system.mob.IMob mob = new vn.haohan.lunar.core.mob.ActiveMob(dummyEntity, definition, identity);
+
+        // Verify API contracts
+        assertNotNull(mob.stats());
+        assertNotNull(mob.immunityTable());
+        assertNotNull(mob.crowdControl());
+        assertNotNull(mob.antiStuckController());
+        assertNotNull(mob.damageModifiers());
+        assertNotNull(mob.bossBars());
+
+        assertFalse(mob.isInvulnerable(10L));
+        mob.setInvulnerableTicks(20, 10L);
+        assertTrue(mob.isInvulnerable(15L));
+        assertFalse(mob.isInvulnerable(35L));
+
+        assertFalse(mob.isBerserk());
+        mob.setBerserk(true);
+        assertTrue(mob.isBerserk());
+
+        assertFalse(mob.isSoftLeashed());
+        mob.setSoftLeashed(true);
+        assertTrue(mob.isSoftLeashed());
+
+        assertFalse(mob.isMounted());
+        UUID mountId = UUID.randomUUID();
+        mob.setMountUUID(mountId);
+        assertTrue(mob.isMounted());
+        assertEquals(mountId, mob.mountUUID());
+
+        assertFalse(mob.hasRiders());
+        assertFalse(mob.isChanneling());
+        assertNull(mob.activeChannelingSkill());
+        assertEquals(0, mob.interruptActiveSkills(vn.haohan.lunar.api.system.combat.skill.interrupt.InterruptReason.STUNNED));
     }
 }

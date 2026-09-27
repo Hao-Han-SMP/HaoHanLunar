@@ -16,7 +16,7 @@ import vn.haohan.lunar.api.presentation.display.dialogue.HaoHanDisplayUIBridge;
 import vn.haohan.lunar.api.presentation.display.nameplate.LunarNameplate;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -79,7 +79,7 @@ class Phase8BossPresentationTest {
         LunarMobManager manager = new LunarMobManager(e -> {});
         World mockWorld = mockWorld("lunar");
         Location mobLoc = new Location(mockWorld, 0, 64, 0);
-        ActiveLunarMob mob = createMockMob("lunar_boss", mobLoc);
+        ActiveMob mob = createMockMob("lunar_boss", mobLoc);
 
         mob.bossBars().create("boss_hp", Component.text("Boss HP"), 1.0f,
                 BossBar.Color.RED, BossBar.Overlay.PROGRESS, 32.0);
@@ -98,7 +98,7 @@ class Phase8BossPresentationTest {
     void testLunarNameplateFormatting() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0, 64, 0);
-        ActiveLunarMob mob = createMockMob("solar_beast", loc);
+        ActiveMob mob = createMockMob("solar_beast", loc);
         mob.setStance("enraged");
 
         String template = "<yellow><name></yellow> <gray>[<green><health>/<max_health></green>]</gray> (<health_percent>)";
@@ -114,7 +114,7 @@ class Phase8BossPresentationTest {
     void testHaoHanDisplayUIBridgeFallbackAndTypewriter() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0, 64, 0);
-        ActiveLunarMob mob = createMockMob("dialogue_boss", loc);
+        ActiveMob mob = createMockMob("dialogue_boss", loc);
 
         HaoHanDisplayUIBridge.clearAll();
         assertFalse(HaoHanDisplayUIBridge.hasActiveBubble(mob.entityId()));
@@ -140,7 +140,7 @@ class Phase8BossPresentationTest {
         AtomicBoolean providerCalled = new AtomicBoolean(false);
         HaoHanDisplayUIBridge.IDisplayUIProvider mockProvider = new HaoHanDisplayUIBridge.IDisplayUIProvider() {
             @Override
-            public boolean showSpeechBubble(vn.haohan.lunar.core.subsystem.mob.ActiveMob mob, HaoHanDisplayUIBridge.BubbleOptions options) {
+            public boolean showSpeechBubble(vn.haohan.lunar.core.mob.ActiveMob mob, HaoHanDisplayUIBridge.BubbleOptions options) {
                 providerCalled.set(true);
                 return true;
             }
@@ -153,7 +153,7 @@ class Phase8BossPresentationTest {
         try {
             assertTrue(HaoHanDisplayUIBridge.isHaoHanDisplayUIAvailable());
             World mockWorld = mockWorld("lunar");
-            ActiveLunarMob mob = createMockMob("custom_provider_mob", new Location(mockWorld, 0, 64, 0));
+            ActiveMob mob = createMockMob("custom_provider_mob", new Location(mockWorld, 0, 64, 0));
 
             HaoHanDisplayUIBridge.displayBubble(mob, new HaoHanDisplayUIBridge.BubbleOptions(
                     "Hello world", 20, 0.5, false, "default", 20.0));
@@ -214,7 +214,7 @@ class Phase8BossPresentationTest {
         MechanicRegistry registry = new MechanicRegistry();
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0, 64, 0);
-        ActiveLunarMob mob = createMockMob("mechanic_boss", loc);
+        ActiveMob mob = createMockMob("mechanic_boss", loc);
 
         SkillDefinition skill = new SkillDefinition("test_skill", Set.of(SkillTrigger.ON_TIMER), 0);
         SkillCastContext cast = new SkillCastContext(mob, skill, SkillTrigger.ON_TIMER, 100L);
@@ -309,10 +309,10 @@ class Phase8BossPresentationTest {
                 });
     }
 
-    private static ActiveLunarMob createMockMob(String mobId, Location loc) {
+    private static ActiveMob createMockMob(String mobId, Location loc) {
         LivingEntity entity = mockLiving(loc);
         MobDefinition def = new MobDefinition(new MobDefinitionId(mobId), EntityType.ZOMBIE, mobId, null,
                 Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity(mobId, "1.0.0"));
+        return new ActiveMob(entity, def, new LunarMobIdentity(mobId, "1.0.0"));
     }
 }

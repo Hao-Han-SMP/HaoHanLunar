@@ -6,7 +6,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.mob.persistence.MobPersistenceManager;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -77,7 +77,7 @@ class MobPersistenceTest {
                 Set.of()
         );
 
-        ActiveLunarMob mob = new ActiveLunarMob(mockEntity, def, new LunarMobIdentity("boss_golem", "1.0"));
+        ActiveMob mob = new ActiveMob(mockEntity, def, new LunarMobIdentity("boss_golem", "1.0"));
         mob.setStance("enraged");
 
         // 1. Save state
@@ -86,7 +86,7 @@ class MobPersistenceTest {
 
         // 2. Simulate entity reload with reset state
         healthHolder[0] = 100.0;
-        ActiveLunarMob reloadedMob = new ActiveLunarMob(mockEntity, def, new LunarMobIdentity("boss_golem", "1.0"));
+        ActiveMob reloadedMob = new ActiveMob(mockEntity, def, new LunarMobIdentity("boss_golem", "1.0"));
         assertEquals("default", reloadedMob.stance());
 
         // 3. Restore state

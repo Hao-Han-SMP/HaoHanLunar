@@ -8,7 +8,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobAttributeDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -62,13 +62,13 @@ class PackAndClusterSpawnerTest {
         World mockWorld = mockWorld("lunar_world");
         Location center = new Location(mockWorld, 100.0, 64.0, 100.0);
 
-        List<ActiveLunarMob> allSpawned = new ArrayList<>();
+        List<ActiveMob> allSpawned = new ArrayList<>();
         ClusterSpawnResult result = generator.generate(def, center, 50, 0, (mobId, loc) -> {
             LivingEntity entity = mockMobEntity(loc);
             MobDefinition mDef = new MobDefinition(new MobDefinitionId(mobId), EntityType.ZOMBIE, mobId, null,
                     Map.of("max_health", new MobAttributeDefinition("max_health", 100.0)),
                     Map.of(), List.of(), null, Set.of());
-            ActiveLunarMob mob = new ActiveLunarMob(entity, mDef, new LunarMobIdentity(mobId, "1.0.0"));
+            ActiveMob mob = new ActiveMob(entity, mDef, new LunarMobIdentity(mobId, "1.0.0"));
             allSpawned.add(mob);
             return mob;
         });
@@ -82,7 +82,7 @@ class PackAndClusterSpawnerTest {
         UUID leaderId = result.leader().entityId();
         assertNull(result.leader().parentUUID());
 
-        for (vn.haohan.lunar.core.subsystem.mob.ActiveMob minion : result.minions()) {
+        for (vn.haohan.lunar.core.mob.ActiveMob minion : result.minions()) {
             assertEquals("goblin_grunt", minion.definitionId().value());
             assertEquals(leaderId, minion.parentUUID(), "Minion must reference leader UUID as parent");
         }
@@ -103,7 +103,7 @@ class PackAndClusterSpawnerTest {
         // Scenario 1: Cap reached completely (current = 10, cap = 10)
         ClusterSpawnResult failResult = generator.generate(def, center, 10, 10, (mobId, loc) -> {
             LivingEntity entity = mockMobEntity(loc);
-            return new ActiveLunarMob(entity, new MobDefinition(new MobDefinitionId(mobId), EntityType.ZOMBIE, mobId, null,
+            return new ActiveMob(entity, new MobDefinition(new MobDefinitionId(mobId), EntityType.ZOMBIE, mobId, null,
                     Map.of(), Map.of(), List.of(), null, Set.of()), new LunarMobIdentity(mobId, "1.0.0"));
         });
         assertFalse(failResult.success());
@@ -112,7 +112,7 @@ class PackAndClusterSpawnerTest {
         // Scenario 2: Trims minions to fit remaining capacity (cap = 10, current = 7 -> room for leader + 2 minions)
         ClusterSpawnResult trimResult = generator.generate(def, center, 10, 7, (mobId, loc) -> {
             LivingEntity entity = mockMobEntity(loc);
-            return new ActiveLunarMob(entity, new MobDefinition(new MobDefinitionId(mobId), EntityType.ZOMBIE, mobId, null,
+            return new ActiveMob(entity, new MobDefinition(new MobDefinitionId(mobId), EntityType.ZOMBIE, mobId, null,
                     Map.of(), Map.of(), List.of(), null, Set.of()), new LunarMobIdentity(mobId, "1.0.0"));
         });
         assertTrue(trimResult.success());
@@ -128,29 +128,29 @@ class PackAndClusterSpawnerTest {
         // Create leader
         AtomicReference<LivingEntity> leaderTarget = new AtomicReference<>();
         LivingEntity leaderEntity = mockMobWithTarget(loc, leaderTarget);
-        ActiveLunarMob leader = new ActiveLunarMob(leaderEntity, new MobDefinition(new MobDefinitionId("alpha"), EntityType.WOLF, "Alpha", null,
+        ActiveMob leader = new ActiveMob(leaderEntity, new MobDefinition(new MobDefinitionId("alpha"), EntityType.WOLF, "Alpha", null,
                 Map.of(), Map.of(), List.of(), null, Set.of()), new LunarMobIdentity("alpha", "1.0.0"));
 
         // Create 2 minions
         AtomicReference<LivingEntity> minion1Target = new AtomicReference<>();
         LivingEntity minion1Entity = mockMobWithTarget(loc, minion1Target);
-        ActiveLunarMob minion1 = new ActiveLunarMob(minion1Entity, new MobDefinition(new MobDefinitionId("minion"), EntityType.WOLF, "Minion1", null,
+        ActiveMob minion1 = new ActiveMob(minion1Entity, new MobDefinition(new MobDefinitionId("minion"), EntityType.WOLF, "Minion1", null,
                 Map.of(), Map.of(), List.of(), null, Set.of()), new LunarMobIdentity("minion", "1.0.0"));
         minion1.setParentUUID(leader.entityId());
 
         AtomicReference<LivingEntity> minion2Target = new AtomicReference<>();
         LivingEntity minion2Entity = mockMobWithTarget(loc, minion2Target);
-        ActiveLunarMob minion2 = new ActiveLunarMob(minion2Entity, new MobDefinition(new MobDefinitionId("minion"), EntityType.WOLF, "Minion2", null,
+        ActiveMob minion2 = new ActiveMob(minion2Entity, new MobDefinition(new MobDefinitionId("minion"), EntityType.WOLF, "Minion2", null,
                 Map.of(), Map.of(), List.of(), null, Set.of()), new LunarMobIdentity("minion", "1.0.0"));
         minion2.setParentUUID(leader.entityId());
 
         // Create unrelated mob
         AtomicReference<LivingEntity> strangerTarget = new AtomicReference<>();
         LivingEntity strangerEntity = mockMobWithTarget(loc, strangerTarget);
-        ActiveLunarMob stranger = new ActiveLunarMob(strangerEntity, new MobDefinition(new MobDefinitionId("stranger"), EntityType.SHEEP, "Stranger", null,
+        ActiveMob stranger = new ActiveMob(strangerEntity, new MobDefinition(new MobDefinitionId("stranger"), EntityType.SHEEP, "Stranger", null,
                 Map.of(), Map.of(), List.of(), null, Set.of()), new LunarMobIdentity("stranger", "1.0.0"));
 
-        List<ActiveLunarMob> candidates = List.of(leader, minion1, minion2, stranger);
+        List<ActiveMob> candidates = List.of(leader, minion1, minion2, stranger);
 
         // Hostile attacker attacks minion 1
         LivingEntity attacker = mockMobEntity(loc);

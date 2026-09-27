@@ -18,7 +18,7 @@ import vn.haohan.lunar.api.system.spawner.fixed.FixedSpawnerManager;
 import vn.haohan.lunar.core.config.reload.HotReloadEngine;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.system.validator.ContentLintTool;
 import vn.haohan.lunar.core.system.validator.ContentLintTool.LintReport;
 

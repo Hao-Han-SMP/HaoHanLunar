@@ -12,7 +12,7 @@ import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
 import vn.haohan.lunar.api.system.mob.disguise.DisguiseData;
 import vn.haohan.lunar.api.system.mob.disguise.DisguiseManager;
 import vn.haohan.lunar.api.system.mob.disguise.DisguiseType;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -41,7 +41,7 @@ public class DisguiseSystemTest {
                 });
     }
 
-    private ActiveLunarMob createDummyMob() {
+    private ActiveMob createDummyMob() {
         World world = createMockWorld();
         UUID uuid = UUID.randomUUID();
         Location loc = new Location(world, 0, 64, 0);
@@ -63,13 +63,13 @@ public class DisguiseSystemTest {
         MobDefinition def = new MobDefinition(new MobDefinitionId("abyssal_stalker"), EntityType.ZOMBIE,
                 "Abyssal Stalker", null, Map.of(), Map.of(), List.of(), null, Set.of());
 
-        return new ActiveLunarMob(entity, def, new LunarMobIdentity("abyssal_stalker", "1"));
+        return new ActiveMob(entity, def, new LunarMobIdentity("abyssal_stalker", "1"));
     }
 
     @Test
-    @DisplayName("DisguiseManager applies PLAYER disguise and preserves ActiveLunarMob state")
+    @DisplayName("DisguiseManager applies PLAYER disguise and preserves ActiveMob state")
     void testPlayerDisguisePreservation() {
-        ActiveLunarMob mob = createDummyMob();
+        ActiveMob mob = createDummyMob();
         mob.setStance("AGGRESSIVE");
         UUID originalUuid = mob.entityId();
         MobDefinitionId originalDefId = mob.definitionId();
@@ -99,7 +99,7 @@ public class DisguiseSystemTest {
     @Test
     @DisplayName("DisguiseManager undisguises mob and triggers remover callback")
     void testUndisguise() {
-        ActiveLunarMob mob = createDummyMob();
+        ActiveMob mob = createDummyMob();
         DisguiseManager manager = new DisguiseManager();
         AtomicBoolean removed = new AtomicBoolean(false);
         manager.setDisguiseRemover((m, d) -> removed.set(true));
@@ -117,7 +117,7 @@ public class DisguiseSystemTest {
     @Test
     @DisplayName("MechanicRegistry executes disguise and undisguise mechanics properly")
     void testDisguiseMechanicExecution() {
-        ActiveLunarMob mob = createDummyMob();
+        ActiveMob mob = createDummyMob();
         MechanicRegistry registry = new MechanicRegistry();
 
         SkillDefinition skill = new SkillDefinition("stealth_form", Set.of(SkillTrigger.ON_COMBAT), 20);
@@ -151,7 +151,7 @@ public class DisguiseSystemTest {
     @Test
     @DisplayName("MechanicRegistry executes changeskin and changemodel mechanics properly")
     void testDynamicSkinAndModelSwapping() {
-        ActiveLunarMob mob = createDummyMob();
+        ActiveMob mob = createDummyMob();
         DisguiseManager manager = new DisguiseManager();
         MechanicRegistry registry = new MechanicRegistry();
         registry.setDisguiseManager(manager);

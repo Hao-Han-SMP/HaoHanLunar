@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -141,7 +141,7 @@ class ProjectileTest {
             return true;
         });
 
-        ActiveLunarMob mob = sampleMob();
+        ActiveMob mob = sampleMob();
         SkillCastContext context = sampleContext(mob);
         MechanicContext mechContext = new MechanicContext(context, List.of(TargetRef.location(new Location(mob.entity().getWorld(), 10, 50, 10))));
 
@@ -165,12 +165,12 @@ class ProjectileTest {
                 });
     }
 
-    private static SkillCastContext sampleContext(ActiveLunarMob mob) {
+    private static SkillCastContext sampleContext(ActiveMob mob) {
         SkillDefinition skill = new SkillDefinition("shoot_fireball", Set.of(SkillTrigger.ON_COMBAT), 20);
         return new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100);
     }
 
-    private static ActiveLunarMob sampleMob() {
+    private static ActiveMob sampleMob() {
         UUID uuid = UUID.randomUUID();
         World mockWorld = createMockWorld();
         Location loc = new Location(mockWorld, 0, 50, 0);
@@ -188,6 +188,6 @@ class ProjectileTest {
                 });
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 }

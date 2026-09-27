@@ -1,15 +1,14 @@
 package vn.haohan.lunar.api.system.combat.skill;
 
+import vn.haohan.lunar.core.util.PatternUtil;
+
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 /** Immutable metadata for one skill; execution details are supplied by later runtime tasks. */
 public final class SkillDefinition {
-
-    private static final Pattern VALID_ID = Pattern.compile("[a-z0-9](?:[a-z0-9_.:-]*[a-z0-9])?");
 
     private final String id;
     private final Set<SkillTrigger> triggers;
@@ -56,7 +55,7 @@ public final class SkillDefinition {
     private static String normalizeId(String value) {
         Objects.requireNonNull(value, "Skill ID must not be null");
         String normalized = value.trim().toLowerCase(Locale.ROOT);
-        if (!VALID_ID.matcher(normalized).matches()) {
+        if (!PatternUtil.isValidNamespacedId(normalized)) {
             throw new IllegalArgumentException("Invalid skill ID: " + value);
         }
         return normalized;

@@ -3,7 +3,7 @@ package vn.haohan.lunar.api.presentation.display.nameplate;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.LivingEntity;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 /**
  * Utility for formatting and applying rich MiniMessage dynamic nameplates to Lunar mobs.

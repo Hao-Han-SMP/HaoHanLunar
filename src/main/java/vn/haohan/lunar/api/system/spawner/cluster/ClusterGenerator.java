@@ -1,7 +1,7 @@
 package vn.haohan.lunar.api.spawner.cluster;
 
 import org.bukkit.Location;
-import vn.haohan.lunar.core.subsystem.mob.ActiveMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 
 import java.util.ArrayList;
 import java.util.List;

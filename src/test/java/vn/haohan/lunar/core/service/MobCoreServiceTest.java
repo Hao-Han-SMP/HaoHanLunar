@@ -1,10 +1,10 @@
-package vn.haohan.lunar.core.subsystem;
+package vn.haohan.lunar.core.service;
 
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.LunarAPI;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -12,10 +12,10 @@ import vn.haohan.lunar.api.system.combat.skill.SkillCastContext;
 import vn.haohan.lunar.api.system.combat.skill.SkillDefinition;
 import vn.haohan.lunar.api.system.combat.skill.SkillTrigger;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
-import vn.haohan.lunar.core.subsystem.engine.ItemCoreSubSystem;
-import vn.haohan.lunar.core.subsystem.engine.MobCoreSubSystem;
-import vn.haohan.lunar.core.subsystem.engine.PinSubSystem;
-import vn.haohan.lunar.core.subsystem.engine.PlayerDataSubSystem;
+import vn.haohan.lunar.core.service.engine.ItemCoreService;
+import vn.haohan.lunar.core.service.engine.MobCoreService;
+import vn.haohan.lunar.core.service.engine.PinService;
+import vn.haohan.lunar.core.service.engine.PlayerDataService;
 import vn.haohan.lunar.core.util.SafeExpressionEvaluator;
 import vn.haohan.lunar.core.system.variable.VariableValue;
 
@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MobCoreSubSystemTest {
+class MobCoreServiceTest {
 
     private static MechanicContext createTestContext() {
         UUID uuid = UUID.randomUUID();
@@ -40,14 +40,14 @@ class MobCoreSubSystemTest {
                 });
         MobDefinition definition = new MobDefinition(new MobDefinitionId("test_mob"), EntityType.IRON_GOLEM,
                 "TestMob", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        ActiveLunarMob mob = new ActiveLunarMob(entity, definition, new LunarMobIdentity("test_mob", "1"));
+        ActiveMob mob = new ActiveMob(entity, definition, new LunarMobIdentity("test_mob", "1"));
         SkillDefinition skill = new SkillDefinition("test", Set.of(SkillTrigger.ON_COMBAT), 0);
         return new MechanicContext(new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 0), List.of());
     }
 
     @Test
-    void testSubsystemInitializationAndDependencyInjection() {
-        MobCoreSubSystem subSystem = new MobCoreSubSystem();
+    void testServiceInitializationAndDependencyInjection() {
+        MobCoreService subSystem = new MobCoreService();
         subSystem.init(null);
 
         assertNotNull(subSystem.getMobManager(), "IMobManager must be initialized");
@@ -95,7 +95,7 @@ class MobCoreSubSystemTest {
 
     @Test
     void testTickLoopWithThrottlingAndSchedulers() {
-        MobCoreSubSystem subSystem = new MobCoreSubSystem();
+        MobCoreService subSystem = new MobCoreService();
         subSystem.init(null);
 
         assertTrue(subSystem.isTickable());
@@ -128,11 +128,11 @@ class MobCoreSubSystemTest {
     }
 
     @Test
-    void testSubsystemPriorityOrdering() {
-        MobCoreSubSystem mob = new MobCoreSubSystem();
-        ItemCoreSubSystem item = new ItemCoreSubSystem();
-        PlayerDataSubSystem player = new PlayerDataSubSystem();
-        PinSubSystem pin = new PinSubSystem();
+    void testServicePriorityOrdering() {
+        MobCoreService mob = new MobCoreService();
+        ItemCoreService item = new ItemCoreService();
+        PlayerDataService player = new PlayerDataService();
+        PinService pin = new PinService();
 
         assertEquals(100, mob.priority());
         assertEquals(95, item.priority());

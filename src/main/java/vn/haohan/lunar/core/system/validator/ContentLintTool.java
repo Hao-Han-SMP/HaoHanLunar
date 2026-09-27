@@ -1,6 +1,7 @@
 package vn.haohan.lunar.core.system.validator;
 
 import org.yaml.snakeyaml.Yaml;
+import vn.haohan.lunar.core.util.PatternUtil;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -9,7 +10,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -17,10 +17,6 @@ import java.util.stream.Stream;
  * Verifies YAML configuration schemas, data integrity, and cross-references (orphan & cycle detection).
  */
 public final class ContentLintTool {
-
-    private static final Pattern VALID_ID = Pattern.compile("^[a-z0-9_.-]+$");
-
-    // Pre-registered system built-in skills
     private static final Set<String> BUILTIN_SKILLS = Set.of(
             "aerial_slash_combo", "ground_slam", "celestial_summon",
             "shield_block", "shield_block_push", "shield_charge",
@@ -291,7 +287,7 @@ public final class ContentLintTool {
             return null;
         }
         String id = val.toString().trim().toLowerCase(Locale.ROOT);
-        if (!VALID_ID.matcher(id).matches()) {
+        if (!PatternUtil.isValidLintId(id)) {
             issues.add(new LintIssue(file, field, "Invalid identifier format '" + id + "'. Must match ^[a-z0-9_.-]+$", true));
             return null;
         }

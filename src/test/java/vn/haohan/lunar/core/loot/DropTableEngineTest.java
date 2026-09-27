@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.integration.itemcore.HaoHanItemBridge;
 import vn.haohan.lunar.api.system.combat.skill.condition.ConditionRegistry;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -90,7 +90,7 @@ class DropTableEngineTest {
         LivingEntity killerWithoutTag = mockLivingEntity(world, 0, 64, 0, Set.of("normal"));
         LivingEntity killerWithTag = mockLivingEntity(world, 0, 64, 0, Set.of("killer_vip"));
 
-        ActiveLunarMob mob = activeMob(caster, "lunar_warden");
+        ActiveMob mob = activeMob(caster, "lunar_warden");
         DropMetadata metaWithout = DropMetadata.of(mob, killerWithoutTag, caster.getLocation());
         DropMetadata metaWith = DropMetadata.of(mob, killerWithTag, caster.getLocation());
 
@@ -107,7 +107,7 @@ class DropTableEngineTest {
 
         World world = mockWorld("world");
         LivingEntity caster = mockLivingEntity(world, 0, 64, 0, Set.of());
-        ActiveLunarMob mob = activeMob(caster, "boss");
+        ActiveMob mob = activeMob(caster, "boss");
         DropMetadata metadata = DropMetadata.of(mob, null, caster.getLocation());
 
         List<ItemStack> items = table.roll(metadata, new Random(1), itemBridge, null);
@@ -125,7 +125,7 @@ class DropTableEngineTest {
 
         World world = mockWorld("world");
         LivingEntity caster = mockLivingEntity(world, 0, 64, 0, Set.of());
-        ActiveLunarMob mob = activeMob(caster, "box");
+        ActiveMob mob = activeMob(caster, "box");
         DropMetadata metadata = DropMetadata.of(mob, null, caster.getLocation());
 
         List<ItemStack> items = table.roll(metadata, new Random(100), itemBridge, null);
@@ -143,7 +143,7 @@ class DropTableEngineTest {
         List<ItemStack> spawnedInWorld = new ArrayList<>();
         World world = mockWorldWithDrops("lunar", spawnedInWorld);
         LivingEntity entity = mockLivingEntity(world, 10, 64, -10, Set.of());
-        ActiveLunarMob activeMob = new ActiveLunarMob(entity, mobDef, new LunarMobIdentity("warden", "1"));
+        ActiveMob activeMob = new ActiveMob(entity, mobDef, new LunarMobIdentity("warden", "1"));
         mobManager.register(activeMob);
 
         DropManager dropManager = new DropManager(definitions, mobManager, itemBridge, new ConditionRegistry());
@@ -208,10 +208,10 @@ class DropTableEngineTest {
         }
     }
 
-    private static ActiveLunarMob activeMob(LivingEntity entity, String id) {
+    private static ActiveMob activeMob(LivingEntity entity, String id) {
         MobDefinition definition = new MobDefinition(new MobDefinitionId(id), EntityType.IRON_GOLEM,
                 "Mob", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity(id, "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity(id, "1"));
     }
 
     private static World mockWorld(String name) {

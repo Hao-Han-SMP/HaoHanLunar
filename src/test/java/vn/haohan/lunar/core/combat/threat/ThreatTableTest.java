@@ -10,7 +10,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.core.mob.LunarMobManager;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
@@ -127,7 +127,7 @@ class ThreatTableTest {
         LivingEntity mobEntity = mockEntity(mobUuid);
         MobDefinition mobDef = new MobDefinition(new MobDefinitionId("boss"), EntityType.IRON_GOLEM, "Boss", null,
                 Map.of(), Map.of(), List.of(), null, Set.of());
-        mobManager.register(new ActiveLunarMob(mobEntity, mobDef, new LunarMobIdentity("boss", "1.0")));
+        mobManager.register(new ActiveMob(mobEntity, mobDef, new LunarMobIdentity("boss", "1.0")));
 
         UUID shooterUuid = UUID.randomUUID();
         LivingEntity shooter = mockEntity(shooterUuid);

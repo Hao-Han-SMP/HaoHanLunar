@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicContext;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicRegistry;
 import vn.haohan.lunar.api.system.combat.skill.mechanic.MechanicResult;
-import vn.haohan.lunar.core.mob.ActiveLunarMob;
+import vn.haohan.lunar.core.mob.ActiveMob;
 import vn.haohan.lunar.core.mob.LunarMobIdentity;
 import vn.haohan.lunar.api.system.mob.MobDefinition;
 import vn.haohan.lunar.api.system.mob.MobDefinitionId;
@@ -211,7 +211,7 @@ class CompositeSkillTest {
             return true;
         });
 
-        ActiveLunarMob mob = sampleMob();
+        ActiveMob mob = sampleMob();
         SkillCastContext context = sampleContext();
         MechanicContext mechContext = new MechanicContext(context, List.of(TargetRef.entity(mob.entity())));
 
@@ -237,12 +237,12 @@ class CompositeSkillTest {
     }
 
     private static SkillCastContext sampleContext() {
-        ActiveLunarMob mob = sampleMob();
+        ActiveMob mob = sampleMob();
         SkillDefinition skill = new SkillDefinition("meta_skill", Set.of(SkillTrigger.ON_COMBAT), 20);
         return new SkillCastContext(mob, skill, SkillTrigger.ON_COMBAT, 100);
     }
 
-    private static ActiveLunarMob sampleMob() {
+    private static ActiveMob sampleMob() {
         UUID uuid = UUID.randomUUID();
         LivingEntity entity = (LivingEntity) Proxy.newProxyInstance(LivingEntity.class.getClassLoader(),
                 new Class<?>[]{LivingEntity.class}, (proxy, method, args) -> {
@@ -253,6 +253,6 @@ class CompositeSkillTest {
                 });
         MobDefinition definition = new MobDefinition(new MobDefinitionId("warden"), EntityType.IRON_GOLEM,
                 "Warden", null, Map.of(), Map.of(), List.of(), null, Set.of());
-        return new ActiveLunarMob(entity, definition, new LunarMobIdentity("warden", "1"));
+        return new ActiveMob(entity, definition, new LunarMobIdentity("warden", "1"));
     }
 }

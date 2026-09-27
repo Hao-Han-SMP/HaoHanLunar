@@ -56,7 +56,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.register('compileValidator', JavaCompile) {
-    source = fileTree('src/main/java/vn/haohan/lunar/core/system/validator')
+    source = files(fileTree('src/main/java/vn/haohan/lunar/core/system/validator'), 'src/main/java/vn/haohan/lunar/core/util/PatternUtil.java')
     classpath = configurations.validatorClasspath
     destinationDirectory = layout.buildDirectory.dir('classes/validator')
 }
