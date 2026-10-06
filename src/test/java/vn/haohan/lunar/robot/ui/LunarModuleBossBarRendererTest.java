@@ -1,0 +1,92 @@
+package vn.haohan.lunar.robot.ui;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class LunarModuleBossBarRendererTest {
+
+    @Test
+    @DisplayName("Test negative space sequence generator correctly sums to target pixels")
+    void testNegativeSpaceSequenceSum() {
+        int target = -216;
+        String seq = LunarModuleBossBarRenderer.buildSpaceSequence(target);
+        assertNotNull(seq);
+        assertEquals(LunarModuleBossBarRenderer.SPACE_NEG_216, seq);
+
+        // Test combined negative space calculation
+        int customNeg = -55; // -32, -16, -4, -2, -1
+        String customSeq = LunarModuleBossBarRenderer.buildSpaceSequence(customNeg);
+        assertTrue(customSeq.contains(LunarModuleBossBarRenderer.SPACE_NEG_32));
+        assertTrue(customSeq.contains(LunarModuleBossBarRenderer.SPACE_NEG_16));
+    }
+
+    @Test
+    @DisplayName("Test positive space sequence generator")
+    void testPositiveSpaceSequence() {
+        int target = 45; // 32, 8, 4, 1
+        String seq = LunarModuleBossBarRenderer.buildSpaceSequence(target);
+        assertNotNull(seq);
+        assertFalse(seq.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Test Minecraft text width calculation stripping color codes")
+    void testTextWidthCalculation() {
+        // Plain string "ROBOT" -> 5 chars * 6px approx = ~30px
+        int widthPlain = LunarModuleBossBarRenderer.calculateTextWidth("ROBOT");
+        assertTrue(widthPlain > 20 && widthPlain < 40, "Width should be around 30px, was " + widthPlain);
+
+        // Color coded string "§b§lROBOT" should have color codes stripped, plus bold bonus
+        int widthColored = LunarModuleBossBarRenderer.calculateTextWidth("§b§lROBOT");
+        assertTrue(widthColored >= widthPlain, "Bold colored text should be >= plain text");
+    }
+
+    @Test
+    @DisplayName("Test text truncation within max width")
+    void testTruncate() {
+        String longText = "Mục tiêu siêu dài vượt quá kích thước hiển thị của bossbar card 216px";
+        String truncated = LunarModuleBossBarRenderer.truncate(longText, 100);
+        assertTrue(truncated.endsWith("..."));
+        assertTrue(LunarModuleBossBarRenderer.calculateTextWidth(truncated) <= 100);
+    }
+
+    @Test
+    @DisplayName("Test renderCard produces valid Adventure Component with background and text")
+    void testRenderCardComponent() {
+        Component card = LunarModuleBossBarRenderer.renderCard(
+                "MODULE TỐC HÀNH",
+                "BỨT TỐC TỐI ĐA (BOOST)",
+                "«««« NHIỆT ĐỘ: 68% • PIN: 2,450 EU »»»»",
+                "§b",
+                "§f§l",
+                "§e"
+        );
+
+        assertNotNull(card);
+        String plain = PlainTextComponentSerializer.plainText().serialize(card);
+        assertTrue(plain.contains("MODULE TỐC HÀNH") || plain.contains("BỨT TỐC TỐI ĐA"));
+        assertTrue(plain.contains(LunarModuleBossBarRenderer.CARD_BG_CHAR));
+    }
+
+    @Test
+    @DisplayName("Test renderCardLegacyString for Bukkit setTitle support")
+    void testRenderCardLegacyString() {
+        String legacy = LunarModuleBossBarRenderer.renderCardLegacyString(
+                "TỐC HÀNH",
+                "BỨT TỐC",
+                "«««« 68% »»»»",
+                "§b",
+                "§f§l",
+                "§e"
+        );
+
+        assertNotNull(legacy);
+        assertTrue(legacy.contains(LunarModuleBossBarRenderer.CARD_BG_CHAR));
+        assertTrue(legacy.contains("TỐC HÀNH"));
+        assertTrue(legacy.contains("BỨT TỐC"));
+    }
+}
