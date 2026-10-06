@@ -226,10 +226,10 @@ public final class LunarModuleBossBarRenderer {
         }
 
         String content = contentBuilder.toString();
-        // Giới hạn trong kích thước lọt lòng của card (198px / 216px để chừa lề 9px mỗi bên)
-        int maxInnerWidth = CARD_WIDTH - 18;
-        if (calculateTextWidth(content) > maxInnerWidth) {
-            content = truncate(content, maxInnerWidth);
+        // Giới hạn an toàn để văn bản không tràn quá mép màn hình
+        int maxSafeWidth = 320;
+        if (calculateTextWidth(content) > maxSafeWidth) {
+            content = truncate(content, maxSafeWidth);
         }
 
         int contentWidth = calculateTextWidth(content);

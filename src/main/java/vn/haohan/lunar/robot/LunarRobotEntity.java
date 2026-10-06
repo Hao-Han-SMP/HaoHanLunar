@@ -22,11 +22,13 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import vn.haohan.lunar.HaoHanLunarPlugin;
+import vn.haohan.lunar.robot.ui.LunarModuleBossBarRenderer;
 
 import java.util.*;
 
@@ -46,16 +48,20 @@ public class LunarRobotEntity {
     private boolean isThrustFlying = false;
     private long lastThrustSoundTime = 0;
     private long lastSpeedWarningTime = 0;
-    private int speedBoostTicksRemaining = 100;
-    private int maxSpeedBoostTicks = 100;
+    private int engineHeatTicks = 0;
+    private int maxEngineHeatTicks = 100;
     private boolean isSpeedBoosting = false;
-    private int speedRecoveryCooldown = 0;
-    private int speedRecoveryDelayTicks = 0;
+    private boolean isOverheated = false;
+    private int heatCoolingCooldown = 0;
+    private int heatCoolingDelayTicks = 0;
+    private boolean isDriverMoving = false;
     private long lastBoostSoundTime = 0;
     private long lastSpeedStepSoundTime = 0;
-    private boolean lastRechargeSoundPlayed = false;
+    private boolean lastEngineCoolSoundPlayed = false;
     private boolean wasBoostingPreviousTick = false;
     private String currentAnimation = "idle";
+    private int airborneTicks = 0;
+    private boolean isLandingPrepared = false;
     private LivingEntity combatTarget = null;
     private boolean customAttacking = false;
     private boolean frozen = false;
@@ -91,8 +97,8 @@ public class LunarRobotEntity {
         this.data = data;
         updateMaxThrustFlightTicks();
         this.thrustFlightTicksRemaining = this.maxThrustFlightTicks;
-        updateMaxSpeedBoostTicks();
-        this.speedBoostTicksRemaining = this.maxSpeedBoostTicks;
+        updateMaxEngineHeatTicks();
+        this.engineHeatTicks = 0;
         setupEntityAttributes();
         setupModelEngine();
     }
@@ -133,15 +139,18 @@ public class LunarRobotEntity {
 
     private void setupModelEngine() {
         try {
-            activeModel = ModelEngineAPI.createActiveModel("lunar_robot");
+            activeModel = ModelEngineAPI.createActiveModel("robot_dog");
+            if (activeModel == null) {
+                activeModel = ModelEngineAPI.createActiveModel("lunar_robot");
+            }
             if (activeModel != null) {
                 modeledEntity = ModelEngineAPI.createModeledEntity(entity);
                 modeledEntity.addModel(activeModel, true);
                 modeledEntity.setBaseEntityVisible(false);
                 modeledEntity.setModelRotationLocked(false);
                 activeModel.setInvisUpdate(true);
-                activeModel.setScale(1.0f);
-                activeModel.setHitboxScale(1.0f);
+                activeModel.setScale(1.5f);
+                activeModel.setHitboxScale(1.5f);
                 playAnimation("idle", 0.2, 0.2, 1.0, true);
 
                 Optional<?> optMm = activeModel.getMountManager();
@@ -149,9 +158,19 @@ public class LunarRobotEntity {
                     mm.setCanDrive(true);
                     mm.setCanRide(true);
                 }
+
+                // Prevent ModelEngine state machine from playing "jump" automatically on dismount / airborne
+                AnimationHandler handler = activeModel.getAnimationHandler();
+                if (handler != null) {
+                    try {
+                        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(com.ticxo.modelengine.api.animation.ModelState.JUMP, "", 0.0, 0.0, 1.0));
+                        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(com.ticxo.modelengine.api.animation.ModelState.JUMP_START, "", 0.0, 0.0, 1.0));
+                        handler.setDefaultProperty(new AnimationHandler.DefaultProperty(com.ticxo.modelengine.api.animation.ModelState.JUMP_END, "", 0.0, 0.0, 1.0));
+                    } catch (Throwable ignored) {}
+                }
             }
         } catch (Throwable t) {
-            plugin.getLogger().warning("ModelEngine lunar_robot model failed to load: " + t.getMessage());
+            plugin.getLogger().warning("ModelEngine robot_dog model failed to load: " + t.getMessage());
         }
     }
 
@@ -161,8 +180,21 @@ public class LunarRobotEntity {
         if (handler == null) return;
         if (anim.equals(currentAnimation) && handler.isPlayingAnimation(anim)) return;
 
+        stopCompetingAnimations(handler, anim);
         handler.playAnimation(anim, lerpIn, lerpOut, speed, loop);
         this.currentAnimation = anim;
+    }
+
+    private void stopCompetingAnimations(AnimationHandler handler, String newAnim) {
+        String[] locomotionAnims = {
+            "idle", "walk", "run", "speed_boost", "jump", "thrust", "offline", "sit",
+            "air_leap", "air_leap_start", "air_leap_land", "air_leap_end"
+        };
+        for (String a : locomotionAnims) {
+            if (!a.equals(newAnim) && handler.isPlayingAnimation(a)) {
+                handler.stopAnimation(a);
+            }
+        }
     }
 
     public void stopAnimation(String anim) {
@@ -177,6 +209,69 @@ public class LunarRobotEntity {
         if (activeModel == null) return false;
         AnimationHandler handler = activeModel.getAnimationHandler();
         return handler != null && handler.isPlayingAnimation(anim);
+    }
+
+    public boolean isAttackAnimationPlaying() {
+        return isAnimationPlaying("attack")
+            || isAnimationPlaying("attack_slash")
+            || isAnimationPlaying("attack_pounce")
+            || isAnimationPlaying("attack_spin");
+    }
+
+    public double getDistanceToGround() {
+        Location loc = entity.getLocation();
+        World world = loc.getWorld();
+        if (world == null) return Double.MAX_VALUE;
+        RayTraceResult hit = world.rayTraceBlocks(loc, new Vector(0, -1, 0), 4.0, FluidCollisionMode.NEVER, true);
+        if (hit != null && hit.getHitPosition() != null) {
+            return loc.getY() - hit.getHitPosition().getY();
+        }
+        return 4.0;
+    }
+
+    public boolean handleAirborneAnimation() {
+        if (isAttackAnimationPlaying() || data.getEnergy() <= 0 || frozen) {
+            airborneTicks = 0;
+            isLandingPrepared = false;
+            return false;
+        }
+
+        boolean onGround = entity.isOnGround() || entity.isInWater() || entity.getLocation().getBlock().isLiquid();
+        if (onGround) {
+            airborneTicks = 0;
+            isLandingPrepared = false;
+            return false;
+        }
+
+        // Robot is airborne!
+        airborneTicks++;
+        double distToGround = getDistanceToGround();
+        double vy = entity.getVelocity().getY();
+
+        // Check if nearing ground while descending (distance 1.5 - 2.5 blocks)
+        if (airborneTicks >= 3 && vy <= 0.20 && distToGround <= 2.5) {
+            if (!isLandingPrepared) {
+                isLandingPrepared = true;
+                playAnimation("air_leap_land", 0.08, 0.08, 1.2, false);
+            }
+            return true;
+        }
+
+        // Just launched into the air: play air_leap_start (0.5s = 10 ticks)
+        if (airborneTicks < 10) {
+            if (!"air_leap_start".equals(currentAnimation) && !isLandingPrepared) {
+                playAnimation("air_leap_start", 0.08, 0.08, 1.3, false);
+            }
+            return true;
+        }
+
+        // Full mid-air glide / leap loop
+        if (!isLandingPrepared) {
+            if (!"air_leap".equals(currentAnimation)) {
+                playAnimation("air_leap", 0.15, 0.15, 1.0, true);
+            }
+        }
+        return true;
     }
 
     public void updateCustomName() {
@@ -209,22 +304,28 @@ public class LunarRobotEntity {
                 mob.getPathfinder().stopPathfinding();
                 mob.setVelocity(new Vector(0, mob.getVelocity().getY() < 0 ? mob.getVelocity().getY() : 0, 0));
             }
-            if (!"idle".equals(currentAnimation) && !isAnimationPlaying("attack")) {
+            if (!"idle".equals(currentAnimation) && !isAttackAnimationPlaying()) {
                 playAnimation("idle", 0.2, 0.2, 1.0, true);
             }
             return;
         }
 
         // 1. Check Energy & Offline State
+        Player rider = getRider();
         if (data.getEnergy() <= 0) {
-            if (!"offline".equals(currentAnimation)) {
-                playAnimation("offline", 0.3, 0.3, 1.0, true);
-            }
-            if (entity instanceof Wolf wolf && !wolf.isSitting()) {
-                wolf.setSitting(true);
+            combatTarget = null;
+            if (rider != null) {
+                handleRiderControl(rider);
+            } else {
+                if (!"offline".equals(currentAnimation)) {
+                    playAnimation("offline", 0.3, 0.3, 1.0, true);
+                }
+                if (entity instanceof Wolf wolf && !wolf.isSitting()) {
+                    wolf.setSitting(true);
+                }
+                cleanupStatusBossBar();
             }
             updateCustomName();
-            cleanupStatusBossBar();
             return;
         }
 
@@ -234,7 +335,6 @@ public class LunarRobotEntity {
         }
 
         // 2. Rider & Movement Handling (SPEED task)
-        Player rider = getRider();
         if (rider != null) {
             handleRiderControl(rider);
         } else {
@@ -300,7 +400,9 @@ public class LunarRobotEntity {
                         if (entity instanceof Mob mob) {
                             mob.getPathfinder().moveTo(combatTarget, 1.45);
                         }
-                        playAnimation("run", 0.1, 0.1, 1.3, true);
+                        if (!handleAirborneAnimation()) {
+                            playAnimation("run", 0.1, 0.1, 1.3, true);
+                        }
                     } else {
                         // In melee attack range
                         if (entity instanceof Mob mob) {
@@ -312,7 +414,7 @@ public class LunarRobotEntity {
                             curLoc.setDirection(dir);
                             entity.setRotation(curLoc.getYaw(), curLoc.getPitch());
                         }
-                        if (!isAnimationPlaying("attack")) {
+                        if (!isAttackAnimationPlaying()) {
                             playAnimation("idle", 0.1, 0.1, 1.0, true);
                         }
                     }
@@ -321,10 +423,16 @@ public class LunarRobotEntity {
             }
         }
 
+        if (handleAirborneAnimation()) {
+            return;
+        }
+
         Player owner = getOnlineOwner();
+        Vector vel = entity.getVelocity();
+        double horizVelSq = vel.getX() * vel.getX() + vel.getZ() * vel.getZ();
         if (owner == null || !data.isFollowOwner() || data.isSitting()) {
-            if (entity.getVelocity().lengthSquared() < 0.01) {
-                if (!isAnimationPlaying("attack")) {
+            if (horizVelSq < 0.005) {
+                if (!isAttackAnimationPlaying()) {
                     playAnimation("idle", 0.2, 0.2, 1.0, true);
                 }
             } else {
@@ -348,7 +456,7 @@ public class LunarRobotEntity {
             }
             playAnimation("walk", 0.2, 0.2, 1.2, true);
         } else {
-            if (!isAnimationPlaying("attack")) {
+            if (!isAttackAnimationPlaying()) {
                 playAnimation("idle", 0.2, 0.2, 1.0, true);
             }
         }
@@ -357,18 +465,47 @@ public class LunarRobotEntity {
     private void handleRiderControl(Player rider) {
         if (!data.hasModule("speed") && !data.hasModule("thrust")) return;
 
-        // Auto-dismount if robot is out of power
-        if (data.getEnergy() <= 0) {
-            setBossBarNotification("§c§l[ROBOT] §cCạn pin! Tự động đẩy người lái ra.", BarColor.RED, 60);
-            rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.8f, 1.0f);
-            dismountRider();
-            return;
-        }
-
         Input input = null;
         try {
             input = rider.getCurrentInput();
         } catch (Throwable ignored) {}
+
+        // Halt movement and flight if robot is out of power (keep rider mounted safely)
+        if (data.getEnergy() <= 0) {
+            this.isDriverMoving = false;
+            this.isSpeedBoosting = false;
+            this.isThrustFlying = false;
+            this.wasBoostingPreviousTick = false;
+            entity.setFallDistance(0.0f);
+            rider.setFallDistance(0.0f);
+
+            // Nullify horizontal velocity for fallback seat if active
+            if (fallbackSeat != null && fallbackSeat.isValid()) {
+                if (input != null && input.isSneak()) {
+                    fallbackSeat.eject();
+                    return;
+                }
+                Location seatLoc = entity.getLocation().clone().add(0, 0.65, 0);
+                seatLoc.setYaw(rider.getLocation().getYaw());
+                seatLoc.setPitch(0);
+                fallbackSeat.teleport(seatLoc);
+                Vector vel = entity.getVelocity();
+                entity.setVelocity(new Vector(0, vel.getY(), 0));
+            }
+
+            long now = System.currentTimeMillis();
+            if (now - lastSpeedWarningTime >= 2000) {
+                lastSpeedWarningTime = now;
+                setBossBarNotification("§c§l[ROBOT] §cCạn pin! Mọi module đã ngắt. Nhấn [Shift] để xuống.", BarColor.RED, 40);
+                rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.6f, 1.0f);
+            }
+            playAnimation("idle", 0.2, 0.2, 1.0, true);
+            return;
+        }
+
+        if (input != null) {
+            this.isDriverMoving = input.isForward() || input.isBackward() || input.isLeft() || input.isRight();
+        }
 
         // In SPEED mode: if in fallback seat, input is handled here.
         // For ModelEngine native mount, input is passed via LunarRobotMountController,
@@ -418,6 +555,7 @@ public class LunarRobotEntity {
                     float forward = (input.isForward() ? 1f : 0f) - (input.isBackward() ? 1f : 0f);
                     float side = (input.isLeft() ? 1f : 0f) - (input.isRight() ? 1f : 0f);
                     boolean hasMoveInput = (forward != 0 || side != 0);
+                    this.isDriverMoving = hasMoveInput;
 
                     Location rLoc = rider.getLocation();
                     entity.setRotation(rLoc.getYaw(), 0);
@@ -456,25 +594,39 @@ public class LunarRobotEntity {
         }
 
         // Animations and energy consumption while moving / thrusting
-        if (isThrustFlying) {
+        Vector vel = entity.getVelocity();
+        double horizVelSq = vel.getX() * vel.getX() + vel.getZ() * vel.getZ();
+        boolean isMoving = input != null ? isDriverMoving : (isDriverMoving || horizVelSq > 0.05);
+
+        if (handleAirborneAnimation()) {
+            // Handled airborne leap / landing
+        } else if (isThrustFlying) {
             playAnimation("thrust", 0.1, 0.1, 1.2, true);
-        } else if (entity.getVelocity().lengthSquared() > 0.01) {
-            playAnimation("run", 0.1, 0.1, 1.4, true);
-            if (data.getActiveTask() == RobotTask.SPEED && data.hasModule("speed") && !isSpeedBoosting) {
-                long now = System.currentTimeMillis();
-                if (now - lastSpeedStepSoundTime >= 320) {
-                    lastSpeedStepSoundTime = now;
-                    entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_IRON_GOLEM_STEP, 0.35f, 1.6f);
+        } else if (!isMoving) {
+            playAnimation("idle", 0.2, 0.2, 1.0, true);
+        } else {
+            // Mounted and moving
+            if (data.getActiveTask() == RobotTask.SPEED && data.hasModule("speed")) {
+                if (isSpeedBoosting) {
+                    playAnimation("speed_boost", 0.1, 0.1, 1.5, true);
+                } else {
+                    playAnimation("run", 0.1, 0.1, 1.4, true);
+                    long now = System.currentTimeMillis();
+                    if (now - lastSpeedStepSoundTime >= 320) {
+                        lastSpeedStepSoundTime = now;
+                        entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_IRON_GOLEM_STEP, 0.35f, 1.6f);
+                    }
                 }
+            } else {
+                playAnimation("walk", 0.2, 0.2, 1.2, true);
             }
+
             if (energyTickCooldown % 20 == 0) {
                 data.consumeEnergy(8);
                 if (data.getActiveTask() == RobotTask.SPEED && data.hasModule("speed")) {
                     data.degradeModule("speed", 0.05);
                 }
             }
-        } else {
-            playAnimation("idle", 0.2, 0.2, 1.0, true);
         }
 
         // Lunar low gravity riding feel: cancel fall damage & smooth gallop
@@ -616,9 +768,18 @@ public class LunarRobotEntity {
                 double eff = data.getModuleEfficiency("combat");
                 double damage = 8.0 + (eff / 100.0) * 12.0; // 8 to 20 damage
 
-                playAnimation("attack", 0.05, 0.1, 1.5, false);
+                String[] combatAnims = {"attack", "attack_slash", "attack_pounce", "attack_spin"};
+                String chosenAnim = combatAnims[java.util.concurrent.ThreadLocalRandom.current().nextInt(combatAnims.length)];
+                playAnimation(chosenAnim, 0.05, 0.1, 1.3, false);
                 entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.2f);
-                entity.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 1.0, 0), 2, 0.2, 0.2, 0.2, 0.0);
+                if ("attack_spin".equals(chosenAnim)) {
+                    entity.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 0.8, 0), 4, 0.4, 0.1, 0.4, 0.0);
+                    entity.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, target.getLocation().add(0, 0.8, 0), 8, 0.3, 0.3, 0.3, 0.1);
+                } else if ("attack_pounce".equals(chosenAnim)) {
+                    entity.getWorld().spawnParticle(Particle.EXPLOSION, target.getLocation().add(0, 0.5, 0), 1, 0.0, 0.0, 0.0, 0.0);
+                } else {
+                    entity.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 1.0, 0), 2, 0.2, 0.2, 0.2, 0.0);
+                }
                 entity.getWorld().spawnParticle(Particle.CRIT, target.getLocation().add(0, 1.0, 0), 8, 0.25, 0.25, 0.25, 0.1);
 
                 customAttacking = true;
@@ -735,12 +896,36 @@ public class LunarRobotEntity {
         }
     }
 
+    public boolean isDriverMoving() {
+        return isDriverMoving;
+    }
+
+    public void setDriverMoving(boolean moving) {
+        this.isDriverMoving = moving;
+    }
+
+    public int getEngineHeatTicks() {
+        return engineHeatTicks;
+    }
+
+    public int getMaxEngineHeatTicks() {
+        return maxEngineHeatTicks;
+    }
+
+    public boolean isOverheated() {
+        return isOverheated;
+    }
+
+    public void setEngineHeatTicks(int ticks) {
+        this.engineHeatTicks = Math.max(0, Math.min(maxEngineHeatTicks, ticks));
+    }
+
     public int getSpeedBoostTicksRemaining() {
-        return speedBoostTicksRemaining;
+        return Math.max(0, maxEngineHeatTicks - engineHeatTicks);
     }
 
     public int getMaxSpeedBoostTicks() {
-        return maxSpeedBoostTicks;
+        return maxEngineHeatTicks;
     }
 
     public boolean isSpeedBoosting() {
@@ -748,29 +933,36 @@ public class LunarRobotEntity {
     }
 
     public void setSpeedBoostTicksRemaining(int ticks) {
-        this.speedBoostTicksRemaining = Math.max(0, Math.min(maxSpeedBoostTicks, ticks));
+        this.engineHeatTicks = Math.max(0, Math.min(maxEngineHeatTicks, maxEngineHeatTicks - ticks));
     }
 
-    public void updateMaxSpeedBoostTicks() {
+    public void updateMaxEngineHeatTicks() {
         double eff = data.hasModule("speed") ? data.getModuleEfficiency("speed") : 0.0;
-        this.maxSpeedBoostTicks = (int) Math.round(80 + (eff / 100.0) * 40); // 80 to 120 ticks (4.0s to 6.0s)
-        if (speedBoostTicksRemaining > maxSpeedBoostTicks) {
-            speedBoostTicksRemaining = maxSpeedBoostTicks;
+        this.maxEngineHeatTicks = (int) Math.round(80 + (eff / 100.0) * 40); // 80 to 120 ticks (4.0s to 6.0s)
+        if (engineHeatTicks > maxEngineHeatTicks) {
+            engineHeatTicks = maxEngineHeatTicks;
         }
     }
 
+    public void updateMaxSpeedBoostTicks() {
+        updateMaxEngineHeatTicks();
+    }
+
     public void handleSpeedBoost(boolean isJump, Player rider) {
-        updateMaxSpeedBoostTicks();
+        updateMaxEngineHeatTicks();
+
+        double eff = data.hasModule("speed") ? data.getModuleEfficiency("speed") : 0.0;
+        int boostEnergyCost = (int) Math.round(34 - (eff / 100.0) * 16); // 18 to 34 EU/tick -> 360 to 680 EU/s
 
         if (isJump) {
             // Player is holding Space to boost speed
-            if (data.getEnergy() < 2) {
+            if (data.getEnergy() < boostEnergyCost) {
                 isSpeedBoosting = false;
                 wasBoostingPreviousTick = false;
                 long now = System.currentTimeMillis();
                 if (now - lastSpeedWarningTime >= 1000) {
                     lastSpeedWarningTime = now;
-                    setBossBarNotification("§c§l[TỐC HÀNH] §cKhông đủ năng lượng để bứt tốc! (Cần ≥ 2 EU)", BarColor.RED, 40);
+                    setBossBarNotification("§c§l[TỐC HÀNH] §cKhông đủ năng lượng để bứt tốc! (Cần ≥ " + boostEnergyCost + " EU)", BarColor.RED, 40);
                     if (rider != null) {
                         rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.4f, 1.4f);
                     }
@@ -778,23 +970,26 @@ public class LunarRobotEntity {
                 return;
             }
 
-            if (speedBoostTicksRemaining <= 0) {
+            if (isOverheated || engineHeatTicks >= maxEngineHeatTicks) {
                 if (isSpeedBoosting || wasBoostingPreviousTick) {
-                    // SFX when boost stamina suddenly exhausts
+                    // SFX when engine overheats and cuts off
                     Location loc = entity.getLocation();
                     World w = entity.getWorld();
-                    w.playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 0.6f, 1.6f);
-                    w.playSound(loc, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 0.7f, 1.3f);
+                    w.playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 0.8f, 1.4f);
+                    w.playSound(loc, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 0.8f, 1.2f);
                     w.playSound(loc, Sound.BLOCK_COPPER_GRATE_HIT, 0.7f, 0.9f);
-                    w.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc.clone().add(0, 0.3, 0), 8, 0.15, 0.1, 0.15, 0.03);
+                    w.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc.clone().add(0, 0.3, 0), 12, 0.2, 0.15, 0.2, 0.04);
+                    w.spawnParticle(Particle.LAVA, loc.clone().add(0, 0.4, 0), 4, 0.1, 0.1, 0.1, 0.02);
                 }
                 isSpeedBoosting = false;
                 wasBoostingPreviousTick = false;
-                speedRecoveryDelayTicks = 15; // Holding space prevents recovery completely
+                isOverheated = true;
+                engineHeatTicks = maxEngineHeatTicks;
+                heatCoolingDelayTicks = 15; // Holding space prevents cooling
                 long now = System.currentTimeMillis();
                 if (now - lastSpeedWarningTime >= 1000) {
                     lastSpeedWarningTime = now;
-                    setBossBarNotification("§c§l[TỐC HÀNH] §cHết thể lực tăng tốc! Hãy thả Space để hồi.", BarColor.RED, 40);
+                    setBossBarNotification("§c§l[QUÁ NHIỆT] §cĐộng cơ quá nóng (100%)! Hãy thả Space để làm mát.", BarColor.RED, 40);
                     if (rider != null) {
                         rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.45f, 1.5f);
                     }
@@ -819,41 +1014,61 @@ public class LunarRobotEntity {
                 w.playSound(loc, Sound.BLOCK_RESPAWN_ANCHOR_AMBIENT, 0.25f, 2.0f);
             }
 
-            // Consume stamina tick
+            // Accumulate heat
             isSpeedBoosting = true;
             wasBoostingPreviousTick = true;
-            lastRechargeSoundPlayed = false;
-            speedBoostTicksRemaining--;
-            speedRecoveryCooldown = 0;
-            speedRecoveryDelayTicks = 15; // Holding space resets recovery delay
+            lastEngineCoolSoundPlayed = false;
+            engineHeatTicks++;
+            heatCoolingCooldown = 0;
+            heatCoolingDelayTicks = 15; // Holding space resets cooling delay
 
-            // Extra energy drain & degradation while boosting
-            data.consumeEnergy(1); // 1 extra EU per tick
+            // Extra energy drain & degradation while boosting (~350-680 EU/s)
+            data.consumeEnergy(boostEnergyCost);
             data.degradeModule("speed", 0.002);
 
             // Particles for sprint boost
             w.spawnParticle(Particle.CLOUD, loc.clone().add(0, 0.2, 0), 2, 0.2, 0.05, 0.2, 0.02);
             w.spawnParticle(Particle.CRIT, loc.clone().add(0, 0.4, 0), 1, 0.15, 0.1, 0.15, 0.05);
+
+            // If reached 100% heat on this tick, shut off immediately
+            if (engineHeatTicks >= maxEngineHeatTicks) {
+                isOverheated = true;
+                isSpeedBoosting = false;
+                wasBoostingPreviousTick = false;
+                w.playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 0.8f, 1.4f);
+                w.playSound(loc, Sound.BLOCK_REDSTONE_TORCH_BURNOUT, 0.8f, 1.2f);
+                w.playSound(loc, Sound.BLOCK_COPPER_GRATE_HIT, 0.7f, 0.9f);
+                w.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc.clone().add(0, 0.3, 0), 12, 0.2, 0.15, 0.2, 0.04);
+                w.spawnParticle(Particle.LAVA, loc.clone().add(0, 0.4, 0), 4, 0.1, 0.1, 0.1, 0.02);
+                setBossBarNotification("§c§l[QUÁ NHIỆT] §cĐộng cơ đạt 100% nhiệt độ! Tự động ngắt bứt tốc.", BarColor.RED, 40);
+                if (rider != null) {
+                    rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.45f, 1.5f);
+                }
+            }
         } else {
-            // Released Space: must wait 15 ticks delay before recovery starts
+            // Released Space: must wait 15 ticks delay before cooling begins
             isSpeedBoosting = false;
             wasBoostingPreviousTick = false;
-            if (speedRecoveryDelayTicks > 0) {
-                speedRecoveryDelayTicks--;
+            if (heatCoolingDelayTicks > 0) {
+                heatCoolingDelayTicks--;
             } else {
-                // Delay ended -> Recharge stamina slower than consumption (1 tick per 2 ticks)
-                speedRecoveryCooldown++;
-                if (speedRecoveryCooldown >= 2) {
-                    speedRecoveryCooldown = 0;
-                    if (speedBoostTicksRemaining < maxSpeedBoostTicks) {
-                        speedBoostTicksRemaining = Math.min(maxSpeedBoostTicks, speedBoostTicksRemaining + 1);
-                        if (speedBoostTicksRemaining >= maxSpeedBoostTicks && !lastRechargeSoundPlayed) {
-                            lastRechargeSoundPlayed = true;
-                            Location loc = entity.getLocation();
-                            World w = entity.getWorld();
-                            w.playSound(loc, Sound.BLOCK_BEACON_POWER_SELECT, 0.6f, 1.8f);
-                            w.playSound(loc, Sound.BLOCK_NOTE_BLOCK_CHIME, 0.6f, 2.0f);
-                            w.playSound(loc, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.7f, 1.9f);
+                // Delay ended -> Cool down engine (1 tick per 2 game ticks)
+                heatCoolingCooldown++;
+                if (heatCoolingCooldown >= 2) {
+                    heatCoolingCooldown = 0;
+                    if (engineHeatTicks > 0) {
+                        engineHeatTicks--;
+                        if (engineHeatTicks <= 0) {
+                            engineHeatTicks = 0;
+                            isOverheated = false; // Lockout cleared!
+                            if (!lastEngineCoolSoundPlayed) {
+                                lastEngineCoolSoundPlayed = true;
+                                Location loc = entity.getLocation();
+                                World w = entity.getWorld();
+                                w.playSound(loc, Sound.BLOCK_BEACON_POWER_SELECT, 0.6f, 1.8f);
+                                w.playSound(loc, Sound.BLOCK_NOTE_BLOCK_CHIME, 0.6f, 2.0f);
+                                w.playSound(loc, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.7f, 1.9f);
+                            }
                         }
                     }
                 }
@@ -1194,6 +1409,7 @@ public class LunarRobotEntity {
     }
 
     public void dismountRider() {
+        isDriverMoving = false;
         isThrustFlying = false;
         isSpeedBoosting = false;
         wasBoostingPreviousTick = false;
@@ -1205,11 +1421,20 @@ public class LunarRobotEntity {
                     mm.dismountDriver();
                 }
             } catch (Throwable ignored) {}
+            try {
+                AnimationHandler handler = activeModel.getAnimationHandler();
+                if (handler != null) {
+                    handler.stopAnimation("run");
+                    handler.stopAnimation("speed_boost");
+                    handler.stopAnimation("jump");
+                }
+            } catch (Throwable ignored) {}
         }
         cleanupFallbackSeat();
         try {
             entity.eject();
         } catch (Throwable ignored) {}
+        playAnimation("idle", 0.2, 0.2, 1.0, true);
     }
 
     public void onRiderDismounted(Player rider) {
@@ -1218,10 +1443,21 @@ public class LunarRobotEntity {
                 entity.getAttribute(Attribute.MOVEMENT_SPEED).setBaseValue(0.35);
             }
         } catch (Throwable ignored) {}
+        isDriverMoving = false;
         isThrustFlying = false;
         isSpeedBoosting = false;
         wasBoostingPreviousTick = false;
         cleanupStatusBossBar();
+        if (activeModel != null) {
+            try {
+                AnimationHandler handler = activeModel.getAnimationHandler();
+                if (handler != null) {
+                    handler.stopAnimation("run");
+                    handler.stopAnimation("speed_boost");
+                    handler.stopAnimation("jump");
+                }
+            } catch (Throwable ignored) {}
+        }
         playAnimation("idle", 0.2, 0.2, 1.0, true);
         cleanupFallbackSeat();
     }
@@ -1375,7 +1611,7 @@ public class LunarRobotEntity {
         }
 
         if (statusBossBar == null) {
-            statusBossBar = Bukkit.createBossBar("§b§l[ROBOT 4 CHÂN]", BarColor.BLUE, BarStyle.SEGMENTED_10);
+            statusBossBar = Bukkit.createBossBar("§b§l[ROBOT 4 CHÂN]", BarColor.WHITE, BarStyle.SOLID);
             statusBossBar.setVisible(true);
         }
 
@@ -1395,72 +1631,119 @@ public class LunarRobotEntity {
         int energy = data.getEnergy();
         int maxEnergy = Math.max(1, data.getMaxEnergy());
         int integrity = (int) Math.round(data.getIntegrityPercentage());
-        double health = data.getHealth();
-        double maxHealth = data.getMaxHealth();
-
-        String title;
-        double progress;
-        BarColor color;
-        BarStyle style = BarStyle.SEGMENTED_10;
 
         String integrityColor = integrity > 50 ? "§a" : (integrity > 25 ? "§e" : "§c");
         String healthStr = integrityColor + "❤ " + integrity + "%";
 
+        String category = "ROBOT 4 CHÂN";
+        String categoryColor = "§7";
+        String actionTitle = "THEO DÕI / NGHỈ";
+        String actionColor = "§f§l";
+        String indicatorText;
+        String indicatorColor = "§e";
+
         RobotTask task = data.getActiveTask();
         if (task == RobotTask.THRUST) {
+            category = "MODULE ĐẨY PHẢN LỰC";
+            categoryColor = "§e";
             int currentTicks = thrustFlightTicksRemaining;
             int maxTicks = Math.max(1, maxThrustFlightTicks);
-            progress = Math.max(0.0, Math.min(1.0, (double) currentTicks / maxTicks));
-            int pct = (int) Math.round(progress * 100.0);
+            int pct = (int) Math.round(Math.max(0.0, Math.min(1.0, (double) currentTicks / maxTicks)) * 100.0);
 
             if (isThrustFlying) {
-                title = "§e§l[ĐẨY PHẢN LỰC] §fBay: §a" + pct + "% §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
+                actionTitle = "BAY PHẢN LỰC";
+                actionColor = "§a§l";
             } else if (currentTicks <= 0) {
-                title = "§c§l[ĐẨY PHẢN LỰC] §cHết nhiên liệu bay! (Tiếp đất để nạp) §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
+                actionTitle = "CẠN NHIÊN LIỆU";
+                actionColor = "§c§l";
             } else if (currentTicks >= maxTicks) {
-                title = "§e§l[ĐẨY PHẢN LỰC] §aSẵn sàng (100%) §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
+                actionTitle = "SẴN SÀNG BAY";
+                actionColor = "§e§l";
             } else {
-                title = "§e§l[ĐẨY PHẢN LỰC] §fNạp nhiên liệu: §e" + pct + "% §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
+                actionTitle = "NẠP NHIÊN LIỆU";
+                actionColor = "§e§l";
             }
-
-            color = pct > 50 ? BarColor.GREEN : (pct > 20 ? BarColor.YELLOW : BarColor.RED);
+            indicatorText = "«««« NHIÊN LIỆU: " + pct + "% • " + String.format("%,d", energy) + " EU »»»»";
+            indicatorColor = pct > 50 ? "§a" : (pct > 20 ? "§e" : "§c");
         } else if (task == RobotTask.SPEED) {
-            int currentTicks = speedBoostTicksRemaining;
-            int maxTicks = Math.max(1, maxSpeedBoostTicks);
-            progress = Math.max(0.0, Math.min(1.0, (double) currentTicks / maxTicks));
-            int pct = (int) Math.round(progress * 100.0);
+            category = "MODULE TỐC HÀNH";
+            categoryColor = "§b";
+            int currentHeat = engineHeatTicks;
+            int maxHeat = Math.max(1, maxEngineHeatTicks);
+            int pct = (int) Math.round(Math.max(0.0, Math.min(1.0, (double) currentHeat / maxHeat)) * 100.0);
 
-            if (isSpeedBoosting) {
-                title = "§b§l[TĂNG TỐC] §fThể lực: §b" + pct + "% §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
-            } else if (currentTicks <= 0) {
-                title = "§c§l[TỐC HÀNH] §cHết thể lực! (Đang hồi phục...) §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
-            } else if (currentTicks >= maxTicks) {
-                title = "§b§l[TỐC HÀNH] §aSẵn sàng bứt tốc (Space) §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
+            if (isOverheated || pct >= 100) {
+                actionTitle = "QUÁ NHIỆT (100%)";
+                actionColor = "§c§l";
+                indicatorText = "«««« HẠ NHIỆT: " + pct + "% • THẢ SPACE »»»»";
+                indicatorColor = "§c";
+            } else if (isSpeedBoosting) {
+                actionTitle = "BỨT TỐC TỐI ĐA";
+                actionColor = "§e§l";
+                indicatorText = "«««« NHIỆT ĐỘ: " + pct + "% • " + String.format("%,d", energy) + " EU »»»»";
+                indicatorColor = pct > 60 ? "§c" : "§e";
+            } else if (currentHeat > 0) {
+                actionTitle = "HẠ NHIỆT ĐỘNG CƠ";
+                actionColor = "§b§l";
+                indicatorText = "«««« NHIỆT ĐỘ: " + pct + "% • " + String.format("%,d", energy) + " EU »»»»";
+                indicatorColor = "§e";
             } else {
-                title = "§b§l[TỐC HÀNH] §fHồi thể lực: §e" + pct + "% §8| §e⚡ " + String.format("%,d", energy) + " EU §8| " + healthStr;
+                actionTitle = "SẴN SÀNG [SPACE]";
+                actionColor = "§a§l";
+                indicatorText = "«««« ỔN ĐỊNH (0%) • " + String.format("%,d", energy) + " EU »»»»";
+                indicatorColor = "§b";
             }
-
-            color = pct > 50 ? BarColor.BLUE : (pct > 20 ? BarColor.YELLOW : BarColor.RED);
+        } else if (task == RobotTask.COMBAT) {
+            category = "MODULE CHIẾN ĐẤU";
+            categoryColor = "§c";
+            LivingEntity target = getCombatTarget();
+            if (target != null && target.isValid()) {
+                String targetName = target.getCustomName() != null ? target.getCustomName() : target.getName();
+                actionTitle = "TẤN CÔNG: " + targetName;
+                actionColor = "§c§l";
+                double dist = Math.round(target.getLocation().distance(entity.getLocation()) * 10.0) / 10.0;
+                indicatorText = "«««« CÁCH: " + dist + "m • " + String.format("%,d", energy) + " EU »»»»";
+            } else {
+                actionTitle = "TUẦN TRA TỰ DO";
+                actionColor = "§e§l";
+                indicatorText = "«««« " + String.format("%,d", energy) + " EU • " + healthStr + " »»»»";
+            }
+            indicatorColor = energy > 200 ? "§a" : "§c";
+        } else if (task == RobotTask.ORE_SCAN) {
+            category = "MODULE ĐỊA CHẤT";
+            categoryColor = "§6";
+            actionTitle = "DÒ QUẶNG TỰ ĐỘNG";
+            actionColor = "§e§l";
+            indicatorText = "«««« QUÉT ĐỊA TẦNG • " + String.format("%,d", energy) + " EU »»»»";
+            indicatorColor = "§e";
         } else {
-            progress = Math.max(0.0, Math.min(1.0, (double) energy / maxEnergy));
-            String taskFormatted = task.getFormattedName();
-            title = "§b§l[ROBOT] " + taskFormatted + " §8| §e⚡ " + String.format("%,d", energy) + "/" + String.format("%,d", maxEnergy) + " EU §8| " + healthStr;
-            color = progress > 0.3 ? BarColor.GREEN : (progress > 0.15 ? BarColor.YELLOW : BarColor.RED);
+            category = "ROBOT 4 CHÂN";
+            categoryColor = "§7";
+            actionTitle = "THEO DÕI / NGHỈ";
+            actionColor = "§f§l";
+            indicatorText = "«««« " + String.format("%,d", energy) + "/" + String.format("%,d", maxEnergy) + " EU • " + healthStr + " »»»»";
+            indicatorColor = energy > maxEnergy * 0.3 ? "§a" : "§c";
         }
 
         // Transient event notification takes highest priority on BossBar
         if (notificationTicksRemaining > 0 && notificationTitle != null) {
             notificationTicksRemaining--;
-            title = notificationTitle;
-            if (notificationColor != null) {
-                color = notificationColor;
-            }
+            category = "CẢNH BÁO ROBOT";
+            categoryColor = "§c";
+            actionTitle = notificationTitle.replace("§l", "");
+            actionColor = "§e§l";
+            indicatorText = "«««« " + healthStr + " • " + String.format("%,d", energy) + " EU »»»»";
+            indicatorColor = "§c";
         }
 
-        statusBossBar.setTitle(title);
-        statusBossBar.setProgress(progress);
-        statusBossBar.setColor(color);
-        statusBossBar.setStyle(style);
+        String cardTitle = LunarModuleBossBarRenderer.renderCardLegacyString(
+                category, actionTitle, indicatorText, categoryColor, actionColor, indicatorColor
+        );
+
+        statusBossBar.setTitle(cardTitle);
+        statusBossBar.setProgress(0.0);
+        statusBossBar.setColor(BarColor.WHITE);
+        statusBossBar.setStyle(BarStyle.SOLID);
     }
 
     public void setBossBarNotification(String message, BarColor barColor, int durationTicks) {
