@@ -93,57 +93,102 @@ public class LunarRobotThrustTest {
     }
 
     @Test
-    public void testSpeedBoostStaminaConsumptionAndSlowRecovery() {
-        // Test consumption (1 tick per tick) vs slow recovery (1 tick per 2 ticks)
-        int maxTicks = 100;
-        int currentTicks = maxTicks;
+    public void testSpeedBoostEngineHeatAndCooling() {
+        // Test heat accumulation (0 -> max) and overheat lockout (>= 100%)
+        int maxHeatTicks = 100;
+        int currentHeat = 0;
+        boolean isOverheated = false;
 
-        // Holding Space for 20 ticks consumes 20 ticks
+        // Holding Space for 20 ticks increases heat by 20 ticks
         for (int i = 0; i < 20; i++) {
-            currentTicks--;
+            currentHeat++;
         }
-        assertEquals(80, currentTicks);
+        assertEquals(20, currentHeat);
 
-        // When stamina is exhausted to 0 and space is still held:
-        // Stamina remains 0 and does NOT recharge at all
-        currentTicks = 0;
-        int recoveryDelay = 15;
+        // Heat accumulation up to max -> triggers overheat
+        for (int i = 20; i < maxHeatTicks; i++) {
+            currentHeat++;
+        }
+        assertEquals(maxHeatTicks, currentHeat);
+        if (currentHeat >= maxHeatTicks) {
+            isOverheated = true;
+        }
+        assertTrue(isOverheated, "Should trigger overheat lockout at 100% heat");
+
+        // While overheated, boosting is locked out even if Space is held
         boolean holdingSpace = true;
-        if (holdingSpace) {
-            recoveryDelay = 15; // Holding space suppresses recovery
+        int coolingDelay = 15;
+        if (holdingSpace && isOverheated) {
+            // Cannot boost when overheated
+            coolingDelay = 15;
         }
-        assertEquals(0, currentTicks, "Should not recover while space is held");
+        assertEquals(100, currentHeat);
 
-        // When releasing space: 15 ticks delay must elapse before recovery begins
+        // When releasing Space: cooling delay elapses first
         holdingSpace = false;
-        int recoveryCooldown = 0;
+        int coolingCooldown = 0;
         for (int gameTick = 0; gameTick < 15; gameTick++) {
-            if (recoveryDelay > 0) {
-                recoveryDelay--;
+            if (coolingDelay > 0) {
+                coolingDelay--;
             } else {
-                recoveryCooldown++;
-                if (recoveryCooldown >= 2) {
-                    recoveryCooldown = 0;
-                    currentTicks = Math.min(maxTicks, currentTicks + 1);
+                coolingCooldown++;
+                if (coolingCooldown >= 2) {
+                    coolingCooldown = 0;
+                    currentHeat = Math.max(0, currentHeat - 1);
                 }
             }
         }
-        assertEquals(0, currentTicks, "During first 15 ticks of release, stamina must still be 0");
+        assertEquals(100, currentHeat, "During first 15 ticks of release, heat must remain 100");
 
-        // After 15 ticks delay: stamina recovers 1 tick every 2 game ticks
-        for (int gameTick = 0; gameTick < 20; gameTick++) {
-            if (recoveryDelay > 0) {
-                recoveryDelay--;
+        // After delay: cools down 1 tick every 2 game ticks
+        for (int gameTick = 0; gameTick < 200; gameTick++) {
+            if (coolingDelay > 0) {
+                coolingDelay--;
             } else {
-                recoveryCooldown++;
-                if (recoveryCooldown >= 2) {
-                    recoveryCooldown = 0;
-                    currentTicks = Math.min(maxTicks, currentTicks + 1);
+                coolingCooldown++;
+                if (coolingCooldown >= 2) {
+                    coolingCooldown = 0;
+                    currentHeat = Math.max(0, currentHeat - 1);
+                    if (currentHeat <= 0) {
+                        isOverheated = false;
+                    }
                 }
             }
         }
-        // In 20 game ticks, recovers 10 stamina ticks
-        assertEquals(10, currentTicks);
+        assertEquals(0, currentHeat, "Heat must return to 0 after sufficient cooling");
+        assertFalse(isOverheated, "Overheat flag must clear when heat reaches 0");
+    }
+
+    @Test
+    public void testSpeedBoostEnergyConsumption350To680EUS() {
+        LunarRobotData data = new LunarRobotData(UUID.randomUUID());
+        data.setEnergy(5000);
+        data.setModule1Id("haohan:robot_module_speed");
+
+        // 100% efficiency: 34 - (100/100)*16 = 18 EU/tick (360 EU/s)
+        data.setModule1Efficiency(100.0);
+        double eff100 = data.getModuleEfficiency("speed");
+        int cost100 = (int) Math.round(34 - (eff100 / 100.0) * 16);
+        assertEquals(18, cost100);
+        assertEquals(360, cost100 * 20, "100% efficiency should consume ~360 EU/s");
+
+        // 0% efficiency: 34 - 0 = 34 EU/tick (680 EU/s)
+        data.setModule1Efficiency(0.0);
+        double eff0 = data.getModuleEfficiency("speed");
+        int cost0 = (int) Math.round(34 - (eff0 / 100.0) * 16);
+        assertEquals(34, cost0);
+        assertEquals(680, cost0 * 20, "0% efficiency should consume ~680 EU/s");
+
+        // 50% efficiency: 34 - 8 = 26 EU/tick (520 EU/s)
+        data.setModule1Efficiency(50.0);
+        double eff50 = data.getModuleEfficiency("speed");
+        int cost50 = (int) Math.round(34 - (eff50 / 100.0) * 16);
+        assertEquals(26, cost50);
+        assertEquals(520, cost50 * 20, "50% efficiency should consume ~520 EU/s");
+
+        // Consumption tick simulation
+        data.consumeEnergy(cost50);
+        assertEquals(5000 - 26, data.getEnergy());
     }
 
     @Test
@@ -165,5 +210,29 @@ public class LunarRobotThrustTest {
         // Empty energy check
         data.setEnergy(2);
         assertFalse(data.getEnergy() >= 3, "Flight should shut off when energy is below 3 EU");
+    }
+
+    @Test
+    public void testThrustLaunchEnergyCost720To1240EU() {
+        LunarRobotData data = new LunarRobotData(UUID.randomUUID());
+        data.setModule1Id("haohan:robot_module_thrust");
+
+        // 0% efficiency: 1240 EU
+        data.setModule1Efficiency(0.0);
+        double eff0 = data.getModuleEfficiency("thrust");
+        int cost0 = (int) Math.round(1240.0 - (eff0 / 100.0) * (1240.0 - 720.0));
+        assertEquals(1240, cost0, "0% efficiency should cost 1240 EU");
+
+        // 100% efficiency: 720 EU
+        data.setModule1Efficiency(100.0);
+        double eff100 = data.getModuleEfficiency("thrust");
+        int cost100 = (int) Math.round(1240.0 - (eff100 / 100.0) * (1240.0 - 720.0));
+        assertEquals(720, cost100, "100% efficiency should cost 720 EU");
+
+        // 50% efficiency: 1240 - 260 = 980 EU
+        data.setModule1Efficiency(50.0);
+        double eff50 = data.getModuleEfficiency("thrust");
+        int cost50 = (int) Math.round(1240.0 - (eff50 / 100.0) * (1240.0 - 720.0));
+        assertEquals(980, cost50, "50% efficiency should cost 980 EU");
     }
 }
