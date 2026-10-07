@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.EntityTeleportEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -130,6 +131,17 @@ public class GravityMechanic implements Listener, LunarSubSystem {
 
     @EventHandler
     public void onEntityPortal(EntityPortalEvent event) {
+        if (event.getEntity() instanceof LivingEntity living) {
+            if (event.getTo() != null && HaoHanLunarPlugin.isLunarWorld(event.getTo().getWorld())) {
+                applyLunarAttributes(living);
+            } else if (event.getTo() != null) {
+                removeLunarAttributes(living);
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityTeleport(EntityTeleportEvent event) {
         if (event.getEntity() instanceof LivingEntity living) {
             if (event.getTo() != null && HaoHanLunarPlugin.isLunarWorld(event.getTo().getWorld())) {
                 applyLunarAttributes(living);
