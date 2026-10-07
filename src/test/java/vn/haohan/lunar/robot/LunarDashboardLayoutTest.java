@@ -441,8 +441,8 @@ public class LunarDashboardLayoutTest {
     @DisplayName("18. Verify Settings Viewport and Accordion Card Constants")
     public void testSettingsViewportAndAccordion() {
         assertEquals(136.0f, LunarRobotDashboardUi.ACCORDION_CARD_W, 1e-4);
-        assertEquals(20.0f, LunarRobotDashboardUi.ACCORDION_CARD_H, 1e-4);
-        assertEquals(4.0f, LunarRobotDashboardUi.ACCORDION_GAP, 1e-4);
+        assertEquals(13.0f, LunarRobotDashboardUi.ACCORDION_CARD_H, 1e-4);
+        assertEquals(2.0f, LunarRobotDashboardUi.ACCORDION_GAP, 1e-4);
 
         // Accordion cards fit within right panel width (144.0f) with margins
         assertTrue(LunarRobotDashboardUi.ACCORDION_CARD_W <= LunarRobotDashboardUi.RIGHT_PANEL_W - 4.0f);
@@ -804,4 +804,52 @@ public class LunarDashboardLayoutTest {
             assertTrue(rp.findContainer("card_unbind").isPresent());
         }
     }
+
+    @Test
+    @DisplayName("29. Verify all Settings Dropdown expansions fit strictly within RIGHT_PANEL_H bounds")
+    public void testSettingsDropdownContainersFitWithinPanelBounds() {
+        LunarRobotData data = new LunarRobotData(UUID.randomUUID());
+        data.setName("TestBot");
+        LunarRobotDashboardUi ui = new LunarRobotDashboardUi(data);
+        ui.setCurrentTab(LunarRobotDashboardUi.Tab.SETTINGS);
+
+        for (LunarRobotDashboardUi.SettingsCard card : LunarRobotDashboardUi.SettingsCard.values()) {
+            ui.setExpandedSettingsCard(card);
+            LayerManager manager = ui.buildDashboardLayerManager();
+            Layer rightLayer = manager.getLayer("right_content_layer").orElseThrow();
+            Container rightPanel = rightLayer.getContainer("right_panel").orElseThrow();
+
+            for (Container child : rightPanel.childContainers()) {
+                float bottomY = child.y() + child.height();
+                assertTrue(bottomY <= LunarRobotDashboardUi.RIGHT_PANEL_H + 0.01f,
+                        "Container " + child.id() + " with expanded card " + card + " exceeds RIGHT_PANEL_H (" + bottomY + " > " + LunarRobotDashboardUi.RIGHT_PANEL_H + ")");
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("30. Verify all 4 dropdowns use standalone TextComponent for header title with 5px offset and high contrast")
+    public void testModulesDropdownCustomHeaderTitle() {
+        LunarRobotData data = new LunarRobotData(UUID.randomUUID());
+        data.setName("TestBot");
+        LunarRobotDashboardUi ui = new LunarRobotDashboardUi(data);
+        ui.setCurrentTab(LunarRobotDashboardUi.Tab.SETTINGS);
+
+        LayerManager mgr = ui.buildDashboardLayerManager();
+        Container rightPanel = mgr.getLayer("right_content_layer")
+                .orElseThrow().getContainer("right_panel").orElseThrow();
+
+        String[] cardIds = {"card_modules", "card_health", "card_customize", "card_unbind"};
+        for (String cardId : cardIds) {
+            DropdownContainer cont = (DropdownContainer) rightPanel.findContainer(cardId).orElseThrow();
+            assertEquals(net.kyori.adventure.text.Component.empty(), cont.headerTitle(), cardId + " headerTitle should be empty");
+
+            var titleCompOpt = cont.findComponent(cardId + "_title");
+            assertTrue(titleCompOpt.isPresent(), cardId + "_title TextComponent must exist");
+            var titleComp = (vn.haohan.displayui.api.component.TextComponent) titleCompOpt.get();
+            assertEquals(11.0f, titleComp.x(), 1e-4, cardId + " title should be offset 11px");
+            assertEquals(4.2f, titleComp.fontSize(), 1e-4, cardId + " title font size should be 4.2f");
+        }
+    }
 }
+

@@ -138,10 +138,10 @@ public class LunarRobotDashboardUi {
     public static final float MODE_BTN_H = 36.0f;
 
     public static final float ACCORDION_CARD_W = 136.0f;
-    public static final float ACCORDION_CARD_H = 20.0f;
+    public static final float ACCORDION_CARD_H = 13.0f;
 
     public static final float MODULE_SLOT_W = 38.0f;
-    public static final float MODULE_SLOT_H = 34.0f;
+    public static final float MODULE_SLOT_H = 26.0f;
 
     public static final float UNBIND_BTN_W = 54.0f;
     public static final float UNBIND_BTN_H = 18.0f;
@@ -155,8 +155,8 @@ public class LunarRobotDashboardUi {
     public static final float MASTER_FRAME_W = 216.0f;
     public static final float MASTER_FRAME_H = 124.0f;
 
-    public static final float ACCORDION_HEADER_H = 18.0f;
-    public static final float ACCORDION_GAP = 4.0f;
+    public static final float ACCORDION_HEADER_H = 13.0f;
+    public static final float ACCORDION_GAP = 2.0f;
 
     public enum UiState {
         SPLASH,
@@ -200,6 +200,7 @@ public class LunarRobotDashboardUi {
     private Listener renameListener;
     private BukkitTask renameTimeoutTask;
     private BukkitTask splashTask;
+    private long lastClickTime = 0L;
 
     public LunarRobotDashboardUi(Plugin plugin, DisplayUiService uiService, LunarRobotMechanic mechanic,
                                  Player player, LunarRobotEntity robot) {
@@ -403,6 +404,14 @@ public class LunarRobotDashboardUi {
 
         if (state == UiState.SPLASH) {
             return;
+        }
+
+        if (player != null) {
+            long now = System.currentTimeMillis();
+            if (now - lastClickTime < 50L) {
+                return;
+            }
+            lastClickTime = now;
         }
 
         switch (btnId) {
@@ -828,7 +837,17 @@ public class LunarRobotDashboardUi {
         return currentDocument;
     }
 
+    private int refreshTickCounter = 0;
+
     public void tick() {
+        if (state != UiState.DASHBOARD || handle == null || !handle.isValid()) {
+            return;
+        }
+        refreshTickCounter++;
+        if (refreshTickCounter >= 10) { // Every 10 ticks (0.5s) refresh UI to keep stats/battery/modules realtime
+            refreshTickCounter = 0;
+            updateUi();
+        }
     }
 
     public void closeWithAnimation() {
@@ -1560,10 +1579,10 @@ public class LunarRobotDashboardUi {
         parent.addComponent(TextComponent.builder("settings_header")
                 .anchor(UiAnchorPoint.CENTER_TOP)
                 .origin(UiAnchorPoint.CENTER_TOP)
-                .offset(0.0f, 4.0f)
-                .size(RIGHT_PANEL_W, 10.0f)
+                .offset(0.0f, 3.0f)
+                .size(RIGHT_PANEL_W, 9.0f)
                 .text(settingsHeader.color(NamedTextColor.DARK_GRAY).decorate(TextDecoration.BOLD))
-                .fontSize(6.5f)
+                .fontSize(5.5f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -1576,7 +1595,7 @@ public class LunarRobotDashboardUi {
         boolean isCustExpanded = (expandedSettingsCard == SettingsCard.CUSTOMIZE);
         boolean isUnbindExpanded = (expandedSettingsCard == SettingsCard.UNBIND);
 
-        float currentY = 16.0f;
+        float currentY = 14.0f;
 
         // 1. Modules Dropdown
         DropdownContainer modDropdown = buildModulesDropdown(cardX, currentY, cardW, cardBg, accent, btnBg, isModExpanded);
@@ -1605,11 +1624,11 @@ public class LunarRobotDashboardUi {
                 .offset(x, y)
                 .width(w)
                 .headerHeight(ACCORDION_CARD_H)
-                .headerTitle(Component.text("Thiết lập Robot", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
+                .headerTitle(Component.empty())
                 .headerBackgroundColor(cardBg)
                 .headerExpandedBackgroundColor(btnBg)
                 .headerBorderRound(BUTTON_CORNER_RADIUS)
-                .headerTitleFontSize(4.5f)
+                .headerTitleFontSize(3.8f)
                 .indicatorCollapsed("▶")
                 .indicatorExpanded("▼")
                 .indicatorColor(TextColor.color(accent.asRGB()))
@@ -1636,12 +1655,23 @@ public class LunarRobotDashboardUi {
                         .build())
                 .build());
 
+        dropdown.addComponent(TextComponent.builder("card_modules_title")
+                .anchor(UiAnchorPoint.TOP_LEFT)
+                .origin(UiAnchorPoint.TOP_LEFT)
+                .offset(11.0f, 0.0f)
+                .size(w - 30.0f, ACCORDION_CARD_H)
+                .text(Component.text("Thiết lập Robot", NamedTextColor.WHITE, TextDecoration.BOLD))
+                .fontSize(4.2f)
+                .alignment(UiTextAlignment.LEFT)
+                .shadow(true)
+                .build());
+
         dropdown.addDropdownItem(buildAccordionModuleBodyContainer(w, cardBg, accent, btnBg));
         return dropdown;
     }
 
     private Container buildAccordionModuleBodyContainer(float cardW, Color cardBg, Color accent, Color buttonBg) {
-        float bodyH = 54.0f;
+        float bodyH = 36.0f;
         Container body = Container.builder("card_modules_body")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -1662,7 +1692,7 @@ public class LunarRobotDashboardUi {
                         .build())
                 .build());
 
-        float slotY = 4.0f;
+        float slotY = 2.0f;
         float slotW = MODULE_SLOT_W;
         float slotH = MODULE_SLOT_H;
         float startX = 8.0f;
@@ -1689,19 +1719,19 @@ public class LunarRobotDashboardUi {
             body.addComponent(CustomNodeComponent.builder("slot_" + i + "_icon")
                     .anchor(UiAnchorPoint.TOP_LEFT)
                     .origin(UiAnchorPoint.TOP_LEFT)
-                    .offset(sx + (slotW - 18.0f) / 2.0f, slotY + 2.0f)
-                    .size(18.0f, 18.0f)
+                    .offset(sx + (slotW - 14.0f) / 2.0f, slotY + 2.0f)
+                    .size(14.0f, 14.0f)
                     .factory((ix, iy, iw, ih, depth, scale) -> slotItem != null ? new UiIconNode(
-                            slotItem, ix, iy, depth, iw, ih, 16.0f, 16.0f, ItemDisplay.ItemDisplayTransform.FIXED, false) : null)
+                            slotItem, ix, iy, depth, iw, ih, 14.0f, 14.0f, ItemDisplay.ItemDisplayTransform.FIXED, false) : null)
                     .build());
 
             body.addComponent(TextComponent.builder("slot_" + i + "_l1")
                     .anchor(UiAnchorPoint.TOP_LEFT)
                     .origin(UiAnchorPoint.TOP_LEFT)
-                    .offset(sx, slotY + 20.0f)
-                    .size(slotW, 6.0f)
+                    .offset(sx, slotY + 15.0f)
+                    .size(slotW, 4.5f)
                     .text(Component.text("Module " + (i + 1), NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                    .fontSize(3.5f)
+                    .fontSize(3.1f)
                     .alignment(UiTextAlignment.CENTER)
                     .shadow(false)
                     .build());
@@ -1709,10 +1739,10 @@ public class LunarRobotDashboardUi {
             body.addComponent(TextComponent.builder("slot_" + i + "_l2")
                     .anchor(UiAnchorPoint.TOP_LEFT)
                     .origin(UiAnchorPoint.TOP_LEFT)
-                    .offset(sx, slotY + 25.0f)
-                    .size(slotW, 6.0f)
+                    .offset(sx, slotY + 19.0f)
+                    .size(slotW, 4.5f)
                     .text(Component.text(modName, modId != null ? NamedTextColor.WHITE : NamedTextColor.GRAY, TextDecoration.BOLD))
-                    .fontSize(3.4f)
+                    .fontSize(3.0f)
                     .alignment(UiTextAlignment.CENTER)
                     .shadow(false)
                     .build());
@@ -1723,10 +1753,10 @@ public class LunarRobotDashboardUi {
             body.addComponent(TextComponent.builder("slot_" + i + "_l3")
                     .anchor(UiAnchorPoint.TOP_LEFT)
                     .origin(UiAnchorPoint.TOP_LEFT)
-                    .offset(sx, slotY + 30.0f)
-                    .size(slotW, 5.0f)
+                    .offset(sx, slotY + 22.5f)
+                    .size(slotW, 3.5f)
                     .text(effText)
-                    .fontSize(3.0f)
+                    .fontSize(2.7f)
                     .alignment(UiTextAlignment.CENTER)
                     .shadow(false)
                     .build());
@@ -1761,19 +1791,19 @@ public class LunarRobotDashboardUi {
         body.addComponent(CustomNodeComponent.builder("slot_2_icon")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(s3x + (slotW - 18.0f) / 2.0f, slotY + 2.0f)
-                .size(18.0f, 18.0f)
+                .offset(s3x + (slotW - 14.0f) / 2.0f, slotY + 2.0f)
+                .size(14.0f, 14.0f)
                 .factory((ix, iy, iw, ih, depth, scale) -> finalBatItem != null ? new UiIconNode(
-                        finalBatItem, ix, iy, depth, iw, ih, 16.0f, 16.0f, ItemDisplay.ItemDisplayTransform.FIXED, false) : null)
+                        finalBatItem, ix, iy, depth, iw, ih, 14.0f, 14.0f, ItemDisplay.ItemDisplayTransform.FIXED, false) : null)
                 .build());
 
         body.addComponent(TextComponent.builder("slot_2_l1")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(s3x, slotY + 20.0f)
-                .size(slotW, 6.0f)
-                .text(Component.text("Pin (Năng lượng)", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(3.3f)
+                .offset(s3x, slotY + 15.0f)
+                .size(slotW, 4.5f)
+                .text(Component.text("Pin Năng Lượng", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
+                .fontSize(3.0f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -1781,10 +1811,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("slot_2_l2")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(s3x, slotY + 25.0f)
-                .size(slotW, 6.0f)
+                .offset(s3x, slotY + 19.0f)
+                .size(slotW, 4.5f)
                 .text(Component.text(bName, hasBattery ? NamedTextColor.WHITE : NamedTextColor.GRAY, TextDecoration.BOLD))
-                .fontSize(3.4f)
+                .fontSize(3.0f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -1798,10 +1828,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("slot_2_l3")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(s3x, slotY + 30.0f)
-                .size(slotW, 5.0f)
+                .offset(s3x, slotY + 22.5f)
+                .size(slotW, 3.5f)
                 .text(energyText)
-                .fontSize(3.0f)
+                .fontSize(2.7f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -1809,10 +1839,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("accordion_mod_hint")
                 .anchor(UiAnchorPoint.CENTER_TOP)
                 .origin(UiAnchorPoint.CENTER_TOP)
-                .offset(0.0f, 41.0f)
-                .size(cardW - 16.0f, 8.0f)
+                .offset(0.0f, 29.5f)
+                .size(cardW - 16.0f, 6.0f)
                 .text(Component.text("Cần module hoặc pin trên tay và bấm vào ô để lắp đặt / tháo gỡ", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(3.3f)
+                .fontSize(2.9f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -1827,11 +1857,11 @@ public class LunarRobotDashboardUi {
                 .offset(x, y)
                 .width(w)
                 .headerHeight(ACCORDION_CARD_H)
-                .headerTitle(Component.text("Trạng thái sức khỏe", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
+                .headerTitle(Component.empty())
                 .headerBackgroundColor(cardBg)
                 .headerExpandedBackgroundColor(btnBg)
                 .headerBorderRound(BUTTON_CORNER_RADIUS)
-                .headerTitleFontSize(4.5f)
+                .headerTitleFontSize(4.2f)
                 .indicatorCollapsed("▶")
                 .indicatorExpanded("▼")
                 .indicatorColor(TextColor.color(accent.asRGB()))
@@ -1858,12 +1888,23 @@ public class LunarRobotDashboardUi {
                         .build())
                 .build());
 
+        dropdown.addComponent(TextComponent.builder("card_health_title")
+                .anchor(UiAnchorPoint.TOP_LEFT)
+                .origin(UiAnchorPoint.TOP_LEFT)
+                .offset(11.0f, 0.0f)
+                .size(w - 30.0f, ACCORDION_CARD_H)
+                .text(Component.text("Trạng thái sức khỏe", NamedTextColor.WHITE, TextDecoration.BOLD))
+                .fontSize(4.2f)
+                .alignment(UiTextAlignment.LEFT)
+                .shadow(true)
+                .build());
+
         dropdown.addDropdownItem(buildAccordionHealthBodyContainer(w, cardBg, accent, btnBg));
         return dropdown;
     }
 
     private Container buildAccordionHealthBodyContainer(float cardW, Color cardBg, Color accent, Color buttonBg) {
-        float bodyH = 54.0f;
+        float bodyH = 44.0f;
         Container body = Container.builder("card_health_body")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -1886,16 +1927,17 @@ public class LunarRobotDashboardUi {
 
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         String linkedDate = sdf.format(new Date(data.getLinkedTimestamp()));
-        long hours = Math.max(0, (System.currentTimeMillis() - data.getLinkedTimestamp()) / 3600000L);
+        long totalMinutes = Math.max(0, (System.currentTimeMillis() - data.getLinkedTimestamp()) / 60000L);
+        String activeTimeStr = totalMinutes < 60 ? (totalMinutes + " phút") : ((totalMinutes / 60) + "h " + (totalMinutes % 60) + "m");
         String owner = data.getOwnerName() != null ? data.getOwnerName() : (player != null ? player.getName() : "Owner");
 
         body.addComponent(TextComponent.builder("health_detail_title")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(8.0f, 4.0f)
-                .size(cardW - 16.0f, 7.0f)
+                .offset(8.0f, 2.5f)
+                .size(cardW - 16.0f, 5.5f)
                 .text(Component.text("THÔNG TIN HOẠT ĐỘNG CHI TIẾT", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(4.0f)
+                .fontSize(3.5f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
@@ -1904,10 +1946,10 @@ public class LunarRobotDashboardUi {
         float col1X = 8.0f;
         float col2X = 8.0f + colW + 4.0f;
 
-        float row1Y = 13.0f;
-        float row2Y = 23.0f;
-        float row3Y = 33.0f;
-        float row4Y = 43.0f;
+        float row1Y = 9.0f;
+        float row2Y = 17.5f;
+        float row3Y = 26.0f;
+        float row4Y = 34.5f;
 
         buildStatItemContainer(body, "stat_owner", col1X, row1Y, colW, "Chủ sở hữu:", owner, buttonBg);
         buildStatItemContainer(body, "stat_espent", col2X, row1Y, colW, "Năng lượng tiêu hao:", data.getEnergySpent() + " EU", buttonBg);
@@ -1915,7 +1957,7 @@ public class LunarRobotDashboardUi {
         buildStatItemContainer(body, "stat_date", col1X, row2Y, colW, "Ngày liên kết:", linkedDate, buttonBg);
         buildStatItemContainer(body, "stat_dmg_dealt", col2X, row2Y, colW, "Sát thương đã gây:", String.format("%.1f", data.getDamageDealt()), buttonBg);
 
-        buildStatItemContainer(body, "stat_hours", col1X, row3Y, colW, "Thời gian HĐ:", hours + " giờ", buttonBg);
+        buildStatItemContainer(body, "stat_hours", col1X, row3Y, colW, "Thời gian HĐ:", activeTimeStr, buttonBg);
         buildStatItemContainer(body, "stat_dmg_taken", col2X, row3Y, colW, "Sát thương nhận vào:", String.format("%.1f", data.getDamageTaken()), buttonBg);
 
         buildStatItemContainer(body, "stat_steps", col1X, row4Y, colW, "Số bước chạy:", String.valueOf(data.getTotalSteps()), buttonBg);
@@ -1929,7 +1971,7 @@ public class LunarRobotDashboardUi {
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
                 .offset(x, y)
-                .size(w, 8.5f)
+                .size(w, 7.5f)
                 .factory((bx, by, bw, bh, depth, scale) -> UiShapeNode.builder("rounded_rect", bx, by, bw, bh)
                         .color(pillBg)
                         .cornerRadius(2.0f * scale)
@@ -1940,10 +1982,10 @@ public class LunarRobotDashboardUi {
         parent.addComponent(TextComponent.builder(id + "_lbl")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(x + 3.0f, y + 1.2f)
-                .size(w * 0.60f, 6.0f)
+                .offset(x + 3.0f, y + 1.0f)
+                .size(w * 0.60f, 5.5f)
                 .text(Component.text(label, NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(3.1f)
+                .fontSize(2.9f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
@@ -1951,10 +1993,10 @@ public class LunarRobotDashboardUi {
         parent.addComponent(TextComponent.builder(id + "_val")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(x + w * 0.45f, y + 1.2f)
-                .size(w * 0.55f - 3.0f, 6.0f)
+                .offset(x + w * 0.45f, y + 1.0f)
+                .size(w * 0.55f - 3.0f, 5.5f)
                 .text(Component.text(value, NamedTextColor.DARK_BLUE, TextDecoration.BOLD))
-                .fontSize(3.1f)
+                .fontSize(2.9f)
                 .alignment(UiTextAlignment.RIGHT)
                 .shadow(false)
                 .build());
@@ -1967,11 +2009,11 @@ public class LunarRobotDashboardUi {
                 .offset(x, y)
                 .width(w)
                 .headerHeight(ACCORDION_CARD_H)
-                .headerTitle(Component.text("Tùy chỉnh cá nhân", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
+                .headerTitle(Component.empty())
                 .headerBackgroundColor(cardBg)
                 .headerExpandedBackgroundColor(btnBg)
                 .headerBorderRound(BUTTON_CORNER_RADIUS)
-                .headerTitleFontSize(4.5f)
+                .headerTitleFontSize(4.2f)
                 .indicatorCollapsed("▶")
                 .indicatorExpanded("▼")
                 .indicatorColor(TextColor.color(accent.asRGB()))
@@ -1998,12 +2040,23 @@ public class LunarRobotDashboardUi {
                         .build())
                 .build());
 
+        dropdown.addComponent(TextComponent.builder("card_customize_title")
+                .anchor(UiAnchorPoint.TOP_LEFT)
+                .origin(UiAnchorPoint.TOP_LEFT)
+                .offset(11.0f, 0.0f)
+                .size(w - 30.0f, ACCORDION_CARD_H)
+                .text(Component.text("Tùy chỉnh cá nhân", NamedTextColor.WHITE, TextDecoration.BOLD))
+                .fontSize(4.2f)
+                .alignment(UiTextAlignment.LEFT)
+                .shadow(true)
+                .build());
+
         dropdown.addDropdownItem(buildAccordionCustomizeBodyContainer(w, cardBg, accent, btnBg));
         return dropdown;
     }
 
     private Container buildAccordionCustomizeBodyContainer(float cardW, Color cardBg, Color accent, Color buttonBg) {
-        float bodyH = 54.0f;
+        float bodyH = 38.0f;
         Container body = Container.builder("card_customize_body")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -2027,22 +2080,22 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("cust_detail_title")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(8.0f, 4.0f)
-                .size(cardW - 16.0f, 7.0f)
+                .offset(8.0f, 2.0f)
+                .size(cardW - 16.0f, 5.5f)
                 .text(Component.text("TÙY CHỈNH GIAO DIỆN & TÊN ROBOT", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(4.0f)
+                .fontSize(3.5f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
 
         float rowW = cardW - 16.0f;
         float rowX = 8.0f;
-        float rowH = 17.0f;
-        float btnW = 36.0f;
-        float btnH = 13.0f;
+        float rowH = 13.0f;
+        float btnW = 34.0f;
+        float btnH = 10.0f;
 
         // Row 1: Đổi màu giao diện
-        float r1Y = 13.0f;
+        float r1Y = 8.5f;
         body.addComponent(CustomNodeComponent.builder("row1_bg")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -2058,10 +2111,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("row1_t1")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(rowX + 5.0f, r1Y + 2.0f)
-                .size(rowW - btnW - 8.0f, 6.0f)
+                .offset(rowX + 4.0f, r1Y + 1.5f)
+                .size(rowW - btnW - 6.0f, 5.0f)
                 .text(Component.text("Màu sắc giao diện", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(3.6f)
+                .fontSize(3.3f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
@@ -2069,16 +2122,16 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("row1_t2")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(rowX + 5.0f, r1Y + 8.5f)
-                .size(rowW - btnW - 8.0f, 6.0f)
+                .offset(rowX + 4.0f, r1Y + 6.5f)
+                .size(rowW - btnW - 6.0f, 5.0f)
                 .text(Component.text("Hiện tại: " + data.getColorTheme().getDisplayName(), NamedTextColor.DARK_BLUE))
-                .fontSize(3.3f)
+                .fontSize(3.0f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
 
         float b1X = rowX + rowW - btnW - 2.0f;
-        float b1Y = r1Y + 2.0f;
+        float b1Y = r1Y + 1.5f;
         body.addComponent(ButtonComponent.builder("action_change_theme")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -2093,16 +2146,16 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("btn_change_theme_txt")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(b1X, b1Y + 2.5f)
-                .size(btnW, 8.0f)
+                .offset(b1X, b1Y + 2.0f)
+                .size(btnW, 6.0f)
                 .text(Component.text("ĐỔI MÀU", NamedTextColor.WHITE, TextDecoration.BOLD))
-                .fontSize(3.4f)
+                .fontSize(3.2f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
 
         // Row 2: Đổi tên robot
-        float r2Y = 32.0f;
+        float r2Y = 23.0f;
         body.addComponent(CustomNodeComponent.builder("row2_bg")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -2118,28 +2171,28 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("row2_t1")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(rowX + 5.0f, r2Y + 2.0f)
-                .size(rowW - btnW - 8.0f, 6.0f)
+                .offset(rowX + 4.0f, r2Y + 1.5f)
+                .size(rowW - btnW - 6.0f, 5.0f)
                 .text(Component.text("Tên của robot", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(3.6f)
-                .alignment(UiTextAlignment.LEFT)
-                .shadow(false)
-                .build());
-
-        String nameHint = isAwaitingRename ? "§cNhập tên mới vào chat..." : ("Hiện tại: " + data.getName());
-        body.addComponent(TextComponent.builder("row2_t2")
-                .anchor(UiAnchorPoint.TOP_LEFT)
-                .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(rowX + 5.0f, r2Y + 8.5f)
-                .size(rowW - btnW - 8.0f, 6.0f)
-                .text(Component.text(nameHint, isAwaitingRename ? NamedTextColor.RED : NamedTextColor.DARK_BLUE))
                 .fontSize(3.3f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
 
+        String nameHint = isAwaitingRename ? "§cNhập tên vào chat..." : ("Hiện tại: " + data.getName());
+        body.addComponent(TextComponent.builder("row2_t2")
+                .anchor(UiAnchorPoint.TOP_LEFT)
+                .origin(UiAnchorPoint.TOP_LEFT)
+                .offset(rowX + 4.0f, r2Y + 6.5f)
+                .size(rowW - btnW - 6.0f, 5.0f)
+                .text(Component.text(nameHint, isAwaitingRename ? NamedTextColor.RED : NamedTextColor.DARK_BLUE))
+                .fontSize(3.0f)
+                .alignment(UiTextAlignment.LEFT)
+                .shadow(false)
+                .build());
+
         float b2X = rowX + rowW - btnW - 2.0f;
-        float b2Y = r2Y + 2.0f;
+        float b2Y = r2Y + 1.5f;
         body.addComponent(ButtonComponent.builder("action_rename_robot")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -2154,10 +2207,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("btn_rename_txt")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(b2X, b2Y + 2.5f)
-                .size(btnW, 8.0f)
+                .offset(b2X, b2Y + 2.0f)
+                .size(btnW, 6.0f)
                 .text(Component.text(isAwaitingRename ? "HỦY" : "ĐỔI TÊN", NamedTextColor.WHITE, TextDecoration.BOLD))
-                .fontSize(3.4f)
+                .fontSize(3.2f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -2172,11 +2225,11 @@ public class LunarRobotDashboardUi {
                 .offset(x, y)
                 .width(w)
                 .headerHeight(ACCORDION_CARD_H)
-                .headerTitle(Component.text("Ngắt kết nối", NamedTextColor.DARK_RED, TextDecoration.BOLD))
+                .headerTitle(Component.empty())
                 .headerBackgroundColor(LunarDashboardTheme.DANGER_BUTTON)
                 .headerExpandedBackgroundColor(LunarDashboardTheme.DANGER_BG)
                 .headerBorderRound(BUTTON_CORNER_RADIUS)
-                .headerTitleFontSize(4.5f)
+                .headerTitleFontSize(4.2f)
                 .indicatorCollapsed("▶")
                 .indicatorExpanded("▼")
                 .indicatorColor(NamedTextColor.WHITE)
@@ -2203,12 +2256,23 @@ public class LunarRobotDashboardUi {
                         .build())
                 .build());
 
+        dropdown.addComponent(TextComponent.builder("card_unbind_title")
+                .anchor(UiAnchorPoint.TOP_LEFT)
+                .origin(UiAnchorPoint.TOP_LEFT)
+                .offset(11.0f, 0.0f)
+                .size(w - 30.0f, ACCORDION_CARD_H)
+                .text(Component.text("Ngắt kết nối", NamedTextColor.WHITE, TextDecoration.BOLD))
+                .fontSize(4.2f)
+                .alignment(UiTextAlignment.LEFT)
+                .shadow(true)
+                .build());
+
         dropdown.addDropdownItem(buildAccordionUnbindBodyContainer(w));
         return dropdown;
     }
 
     private Container buildAccordionUnbindBodyContainer(float cardW) {
-        float bodyH = 54.0f;
+        float bodyH = 36.0f;
         Container body = Container.builder("card_unbind_body")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -2232,10 +2296,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("unbind_warn_title")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(8.0f, 4.0f)
-                .size(cardW - 16.0f, 7.0f)
+                .offset(8.0f, 2.0f)
+                .size(cardW - 16.0f, 5.5f)
                 .text(Component.text("CẢNH BÁO: HỦY LIÊN KẾT ROBOT", NamedTextColor.DARK_RED, TextDecoration.BOLD))
-                .fontSize(4.0f)
+                .fontSize(3.5f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
@@ -2243,17 +2307,17 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("unbind_warn_sub")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(8.0f, 14.0f)
-                .size(cardW - 16.0f, 7.0f)
+                .offset(8.0f, 8.5f)
+                .size(cardW - 16.0f, 5.5f)
                 .text(Component.text("Bạn có chắc chắn muốn hủy liên kết với robot này không?", NamedTextColor.DARK_GRAY))
-                .fontSize(3.4f)
+                .fontSize(3.0f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
 
-        float btnY = 26.0f;
+        float btnY = 17.0f;
         float btnW = 56.0f;
-        float btnH = 18.0f;
+        float btnH = 15.0f;
         float btn1X = 10.0f;
         float btn2X = cardW - btnW - 10.0f;
 
@@ -2271,10 +2335,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("btn_confirm_unbind_txt")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(btn1X, btnY + 4.5f)
-                .size(btnW, btnH - 8.0f)
+                .offset(btn1X, btnY + 3.5f)
+                .size(btnW, btnH - 6.0f)
                 .text(Component.text("XÁC NHẬN HỦY", NamedTextColor.WHITE, TextDecoration.BOLD))
-                .fontSize(3.6f)
+                .fontSize(3.3f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -2293,15 +2357,29 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("btn_cancel_unbind_txt")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(btn2X, btnY + 4.5f)
-                .size(btnW, btnH - 8.0f)
+                .offset(btn2X, btnY + 3.5f)
+                .size(btnW, btnH - 6.0f)
                 .text(Component.text("HỦY BỎ", NamedTextColor.WHITE, TextDecoration.BOLD))
-                .fontSize(3.6f)
+                .fontSize(3.3f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
 
         return body;
+    }
+
+    public boolean handleClickAtCursor(Player player) {
+        if (state != UiState.DASHBOARD || handle == null || !handle.isValid() || currentDocument == null) {
+            return false;
+        }
+        if (handle instanceof vn.haohan.displayui.runtime.scene.UiScene scene) {
+            vn.haohan.displayui.api.UiHit hit = scene.hit(player);
+            if (hit != null && hit.button() != null) {
+                handleButtonClick(hit.button().id());
+                return true;
+            }
+        }
+        return false;
     }
 
     public UiDocument renderSplashDocument() {
@@ -2334,13 +2412,9 @@ public class LunarRobotDashboardUi {
 
     public void forceUpdate() {
         if (handle != null && handle.isValid()) {
-            if (state == UiState.SPLASH) {
-                currentDocument = renderSplashDocument();
-                handle.update(currentDocument);
-            } else if (state == UiState.DASHBOARD) {
-                currentDocument = renderDocument();
-                handle.update(currentDocument);
-            }
+            LayerManager manager = getCurrentLayerManager();
+            this.currentDocument = UiDocumentBridge.compile(manager);
+            handle.update(manager);
         }
     }
 

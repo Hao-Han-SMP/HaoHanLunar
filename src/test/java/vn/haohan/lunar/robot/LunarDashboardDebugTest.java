@@ -379,4 +379,23 @@ public class LunarDashboardDebugTest {
         assertEquals(LunarRobotDashboardUi.Tab.MODES, ui.getCurrentTab(),
                 "Clicking in normal mode must change tab to MODES");
     }
+
+    @Test
+    @DisplayName("13. Verify Animation Overrides on Components and Containers compile with animations")
+    public void testAnimationApplicationOnComponentAndContainer() {
+        LunarRobotData data = new LunarRobotData(UUID.randomUUID());
+        LunarRobotDashboardUi ui = new LunarRobotDashboardUi(data);
+
+        var anim = vn.haohan.displayui.api.animation.UiAnimation.builder().scale(0.8f, 1.0f).durationTicks(15).build();
+        ui.getDebugState().setComponentAnimation("btn_nav_modes", anim);
+        ui.getDebugState().setContainerAnimation("pill_robot_name", anim);
+
+        LayerManager lm = ui.getCurrentLayerManager();
+        var compiled = vn.haohan.displayui.api.bridge.UiDocumentBridge.compileWithAnimations(lm);
+
+        assertTrue(compiled.hasAnimations(), "Compiled UI must contain active animations");
+        assertFalse(compiled.nodeAnimations().isEmpty());
+        assertTrue(compiled.nodeAnimations().stream().anyMatch(a -> a != null && a.durationTicks() == 15),
+                "Nodes of animated component and container must inherit durationTicks=15");
+    }
 }
