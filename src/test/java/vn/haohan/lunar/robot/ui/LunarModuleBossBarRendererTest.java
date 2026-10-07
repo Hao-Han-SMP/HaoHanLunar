@@ -89,4 +89,73 @@ class LunarModuleBossBarRendererTest {
         assertTrue(legacy.contains("TỐC HÀNH"));
         assertTrue(legacy.contains("BỨT TỐC"));
     }
+
+    @Test
+    @DisplayName("Test render3LineCard produces Component with 3 font layers and cursor rewinds")
+    void testRender3LineCard() {
+        Component card = LunarModuleBossBarRenderer.render3LineCard(
+                "MODULE TỐC HÀNH",
+                "SẴN SÀNG [SPACE]",
+                "«««« ỔN ĐỊNH (0%) • 2,450 EU »»»»",
+                "§b",
+                "§a§l",
+                "§e"
+        );
+
+        assertNotNull(card);
+        String plain = PlainTextComponentSerializer.plainText().serialize(card);
+        assertTrue(plain.contains("MODULE TỐC HÀNH"));
+        assertTrue(plain.contains("SẴN SÀNG [SPACE]"));
+        assertTrue(plain.contains("ỔN ĐỊNH"));
+        assertTrue(plain.contains(LunarModuleBossBarRenderer.CARD_BG_CHAR));
+    }
+
+    @Test
+    @DisplayName("Test render3LineCard does not truncate long indicator fuel text")
+    void testRender3LineCardFuelNotTruncated() {
+        Component card = LunarModuleBossBarRenderer.render3LineCard(
+                "MODULE ĐẨY PHẢN LỰC",
+                "SẴN SÀNG BAY [SPACE]",
+                "«««« NHIÊN LIỆU: 100% • 20,286 EU »»»»",
+                "§b",
+                "§f",
+                "§e"
+        );
+
+        assertNotNull(card);
+        String plain = PlainTextComponentSerializer.plainText().serialize(card);
+        assertTrue(plain.contains("«««« NHIÊN LIỆU: 100% • 20,286 EU »»»»"), "Full indicator text must be preserved without ellipsis");
+        assertFalse(plain.contains("..."), "No ellipsis should be present when text fits");
+    }
+
+    @Test
+    @DisplayName("Test toUpperCasePreservingColors converts text while keeping section codes lowercase")
+    void testToUpperCasePreservingColors() {
+        String input = "§a§l[Chiến đấu] §eĐã tiêu diệt: §cNhện hang§a!";
+        String result = LunarModuleBossBarRenderer.toUpperCasePreservingColors(input);
+        assertEquals("§a§l[CHIẾN ĐẤU] §eĐÃ TIÊU DIỆT: §cNHỆN HANG§a!", result);
+    }
+
+    @Test
+    @DisplayName("Test render3LineCard with legacy colors and special icons strips raw section characters from text nodes")
+    void testRender3LineCardWithLegacyColorsAndIcons() {
+        Component card = LunarModuleBossBarRenderer.render3LineCard(
+                "THÔNG BÁO ROBOT",
+                "§a§l[CHIẾN ĐẤU] §aĐã tiêu diệt: §eNhện hang§a!",
+                "«««« §a♥ 100% • 10,000 EU »»»»",
+                "§c",
+                "§e§l",
+                "§c"
+        );
+
+        assertNotNull(card);
+        String plain = PlainTextComponentSerializer.plainText().serialize(card);
+        // Plain text serialized from Component should NOT contain raw '§' characters
+        assertFalse(plain.contains("§"), "Adventure Component text nodes must not contain raw § characters");
+        assertTrue(plain.contains("THÔNG BÁO ROBOT"));
+        assertTrue(plain.contains("ĐÃ TIÊU DIỆT"));
+        assertTrue(plain.contains("♥ 100%"));
+        assertTrue(plain.contains("10,000 EU"));
+    }
 }
+
