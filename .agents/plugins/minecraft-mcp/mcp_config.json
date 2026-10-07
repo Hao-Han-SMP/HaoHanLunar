@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "minecraft": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "github:yuniko-software/minecraft-mcp-server",
+        "--host",
+        "localhost",
+        "--port",
+        "25565",
+        "--username",
+        "AntigravityBot"
+      ]
+    }
+  }
+}

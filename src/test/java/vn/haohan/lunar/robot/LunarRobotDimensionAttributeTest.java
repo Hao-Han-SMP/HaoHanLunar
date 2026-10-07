@@ -7,7 +7,7 @@ import org.bukkit.entity.LivingEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import vn.haohan.lunar.HaoHanLunarPlugin;
-import vn.haohan.lunar.core.features.GravityMechanic;
+import vn.haohan.lunar.features.GravityMechanic;
 
 import static org.mockito.Mockito.*;
 
