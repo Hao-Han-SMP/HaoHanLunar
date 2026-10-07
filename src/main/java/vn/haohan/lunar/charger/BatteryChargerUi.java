@@ -22,6 +22,7 @@ import vn.haohan.lunar.robot.battery.RobotBatteryUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class BatteryChargerUi implements InventoryHolder, Listener {
 
@@ -64,13 +65,14 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
                 inventory.setItem(i, createGuiItem(Material.ORANGE_STAINED_GLASS_PANE, "§6⬅ Tiếp Năng Lượng", List.of("§7Nguồn nhiên liệu xúc tác.")));
             } else if (i == 16) {
                 inventory.setItem(i, createGuiItem(Material.BLAST_FURNACE, "§6§l[Khoang Nhiên Liệu]", List.of(
-                        "§7Đặt nguyên liệu để nạp nhanh siêu tốc:",
+                        "§7Đặt nguyên liệu để tạo năng lượng sạc:",
                         "§c▪ Đá đỏ: §f+500 EU",
                         "§c▪ Khối Đá đỏ: §f+4,500 EU",
                         "§e▪ Bột Kreep: §f+2,000 EU",
                         "§b▪ Quặng Ilmenite: §f+3,000 EU",
                         "§8▪ Than/Than củi: §f+200 EU",
-                        "§a▪ Quang năng: §fTự nạp chậm ngoài trời (+25 EU/s)"
+                        "§c⚠ Bắt buộc có nhiên liệu trạm mới hoạt động!",
+                        "§e⚡ Tốc độ nạp tối ưu dựa theo địa hình xung quanh."
                 )));
             } else {
                 inventory.setItem(i, grayBorder);
@@ -80,6 +82,11 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
         // Populate existing battery in station if any
         if (station.getBatteryItem() != null && station.getBatteryItem().getType() != Material.AIR) {
             inventory.setItem(SLOT_BATTERY, station.getBatteryItem());
+        }
+
+        // Populate existing fuel in station if any
+        if (station.getFuelItem() != null && station.getFuelItem().getType() != Material.AIR) {
+            inventory.setItem(SLOT_FUEL, station.getFuelItem());
         }
 
         updateStatusCore();
@@ -127,36 +134,46 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
         ItemStack bat = inventory.getItem(SLOT_BATTERY);
         boolean isCharging = false;
 
+        // Auto-consume fuel from slot 15 if station buffer is running low
+        if (station.getFuelBuffer() < 5000) {
+            processFuel();
+        }
+
+        double multiplier = station.getCachedMultiplier();
+        int chargeRate = station.getCachedChargeRate();
+        if (chargeRate <= 0) {
+            multiplier = BatteryChargerMechanic.calculateConditionMultiplier(station.getLocation());
+            chargeRate = BatteryChargerMechanic.calculateChargeRate(multiplier);
+            station.setCachedMultiplier(multiplier);
+            station.setCachedChargeRate(chargeRate);
+        }
+
         if (bat != null && bat.getType() != Material.AIR && RobotBatteryUtil.isBatteryItem(bat)) {
             String type = RobotBatteryUtil.getBatteryType(bat);
             int cap = RobotBatteryUtil.getCapacity(type);
             int current = RobotBatteryUtil.getBatteryEnergy(bat);
 
-            if (current < cap) {
-                // Auto-consume fuel from slot 15 if station buffer is running low
-                if (station.getFuelBuffer() < 5000) {
-                    processFuel();
-                }
+            // STRICT: Must have fuelBuffer > 0 to charge! No free energy.
+            if (current < cap && station.getFuelBuffer() > 0) {
+                int cycleCharge = Math.max(1, chargeRate / 4); // 4 cycles per sec
+                int needed = cap - current;
+                int actualCharge = Math.min(cycleCharge, Math.min(needed, station.getFuelBuffer()));
 
-                int chargeAmount = 15; // Base passive ambient charge (+60 EU/s)
-                if (station.getFuelBuffer() > 0) {
-                    int bonus = Math.min(35, station.getFuelBuffer());
-                    chargeAmount += bonus;
-                    station.setFuelBuffer(station.getFuelBuffer() - bonus);
-                }
+                if (actualCharge > 0) {
+                    station.setFuelBuffer(station.getFuelBuffer() - actualCharge);
+                    int nextEnergy = current + actualCharge;
+                    RobotBatteryUtil.setBatteryEnergy(bat, nextEnergy);
+                    // Send slot update packet to player so durability bar & lore advance in real-time
+                    inventory.setItem(SLOT_BATTERY, bat);
+                    station.setBatteryItem(bat.clone());
+                    isCharging = true;
 
-                int nextEnergy = Math.min(cap, current + chargeAmount);
-                RobotBatteryUtil.setBatteryEnergy(bat, nextEnergy);
-                // Send slot update packet to player so durability bar & lore advance in real-time
-                inventory.setItem(SLOT_BATTERY, bat);
-                station.setBatteryItem(bat.clone());
-                isCharging = true;
-
-                if (nextEnergy >= cap) {
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.8f);
-                    player.sendMessage("§e§l[Trạm Sạc] §a✔ Pin Robot đã được nạp đầy 100%!");
-                } else {
-                    player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.2f, 1.9f);
+                    if (nextEnergy >= cap) {
+                        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.8f);
+                        player.sendMessage("§e§l[Trạm Sạc] §a✔ Pin Robot đã được nạp đầy 100%!");
+                    } else {
+                        player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.2f, 1.9f);
+                    }
                 }
             } else {
                 station.setBatteryItem(bat.clone());
@@ -185,27 +202,34 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
                 )));
             }
         } else {
+            String reason = station.getFuelBuffer() <= 0
+                    ? "§cTrạm sạc đang hết nhiên liệu!"
+                    : "§7Không có pin hoặc pin đã đầy 100%.";
             inventory.setItem(12, createGuiItem(Material.GRAY_STAINED_GLASS_PANE, "§7⚡ Dòng Điện Tạm Dừng ➔", List.of(
-                    "§7Không có pin hoặc pin đã đầy 100%."
+                    reason
             )));
         }
 
         if (station.getFuelBuffer() > 0) {
             inventory.setItem(14, createGuiItem(Material.ORANGE_STAINED_GLASS_PANE, "§6⬅ Tiếp Năng Lượng (Kích Hoạt)", List.of(
                     "§7Dự trữ: §f" + String.format("%,d", station.getFuelBuffer()) + " EU",
-                    "§eTốc độ nạp siêu tốc đang hoạt động!"
+                    "§eTrạm đang có nhiên liệu để phát điện!"
             )));
         } else {
             inventory.setItem(14, createGuiItem(Material.GRAY_STAINED_GLASS_PANE, "§8⬅ Tiếp Năng Lượng (Trống)", List.of(
+                    "§cChưa có nhiên liệu!",
                     "§7Đặt nguyên liệu vào ô bên phải",
-                    "§7để tăng tốc độ nạp pin!"
+                    "§7để kích hoạt trạm sạc."
             )));
         }
     }
 
     private void processFuel() {
         ItemStack fuelItem = inventory.getItem(SLOT_FUEL);
-        if (fuelItem == null || fuelItem.getType() == Material.AIR) return;
+        if (fuelItem == null || fuelItem.getType() == Material.AIR) {
+            station.setFuelItem(null);
+            return;
+        }
 
         int value = getFuelValue(fuelItem);
         if (value > 0) {
@@ -213,36 +237,30 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
             fuelItem.subtract(1);
             if (fuelItem.getAmount() <= 0) {
                 inventory.setItem(SLOT_FUEL, null);
+                station.setFuelItem(null);
+            } else {
+                station.setFuelItem(fuelItem.clone());
             }
             player.playSound(player.getLocation(), Sound.BLOCK_BLASTFURNACE_FIRE_CRACKLE, 0.8f, 1.4f);
         }
     }
 
-    private int getFuelValue(ItemStack item) {
-        if (item == null) return 0;
-        Material mat = item.getType();
-        if (mat == Material.REDSTONE) return 500;
-        if (mat == Material.REDSTONE_BLOCK) return 4500;
-        if (mat == Material.COAL || mat == Material.CHARCOAL) return 200;
-        if (mat == Material.COAL_BLOCK) return 1800;
-        if (mat == Material.GLOWSTONE_DUST) return 600;
-
-        String id = getCustomItemId(item);
-        if (id != null) {
-            if (id.equals("haohan:kreep_dust")) return 2000;
-            if (id.equals("haohan:raw_ilmenite") || id.equals("haohan:ilmenite_ingot")) return 3000;
-            if (id.equals("haohan:aero_compound")) return 5000;
-        }
-        return 0;
+    public static int getFuelValue(ItemStack item) {
+        return BatteryChargerMechanic.getFuelValue(item);
     }
 
     private void updateStatusCore() {
+        double mult = station.getCachedMultiplier();
+        int rate = station.getCachedChargeRate();
         ItemStack bat = inventory.getItem(SLOT_BATTERY);
+
         if (bat == null || bat.getType() == Material.AIR || !RobotBatteryUtil.isBatteryItem(bat)) {
             inventory.setItem(SLOT_STATUS, createGuiItem(Material.RED_STAINED_GLASS_PANE, "§c§l[CHƯA CÓ PIN]", List.of(
                     "§7Hãy đặt Pin Robot vào khoang bên trái để nạp.",
                     "§7Hỗ trợ Pin Nhỏ (5k), Vừa (15k), Lớn (30k).",
                     "",
+                    "§6⚙ Hệ số địa hình: §e" + String.format(Locale.ROOT, "x%.2f", mult),
+                    "§e⚡ Công suất tối ưu: §f" + String.format("%,d", rate) + " EU/s",
                     "§b⚡ Dự trữ nhiên liệu trạm: §f" + String.format("%,d", station.getFuelBuffer()) + " EU"
             )));
             return;
@@ -261,19 +279,31 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
                     "§a▪ Dung lượng: §f" + String.format("%,d", cap) + " / " + String.format("%,d", cap) + " EU",
                     "§8" + bar,
                     "",
+                    "§6⚙ Hệ số địa hình: §e" + String.format(Locale.ROOT, "x%.2f", mult),
                     "§7Pin đã đạt công suất tối đa!",
                     "§eNhấp vào pin bên trái để lấy ra sử dụng."
             )));
+        } else if (station.getFuelBuffer() <= 0) {
+            inventory.setItem(SLOT_STATUS, createGuiItem(Material.RED_STAINED_GLASS_PANE, "§c§l⚡ TẠM DỪNG: HẾT NHIÊN LIỆU", List.of(
+                    "§a▪ Loại Pin: §f" + type.toUpperCase(),
+                    "§e▪ Tiến trình: §f" + String.format("%,d", energy) + " §7/ §f" + String.format("%,d", cap) + " EU §e(" + pct + "%)",
+                    "§8" + bar,
+                    "",
+                    "§c▪ Trạm sạc đã cạn kiệt nhiên liệu!",
+                    "§7Hãy đặt Đá đỏ / Than / Quặng vào khoang bên phải.",
+                    "§6⚙ Hệ số địa hình: §e" + String.format(Locale.ROOT, "x%.2f", mult),
+                    "§c⚡ Tốc độ nạp: §c0 EU/s (Cần nhiên liệu)"
+            )));
         } else {
-            int ratePerSec = station.getFuelBuffer() > 0 ? 200 : 60;
             inventory.setItem(SLOT_STATUS, createGuiItem(Material.DAYLIGHT_DETECTOR, "§e§l⚡ ĐANG NẠP NĂNG LƯỢNG...", List.of(
                     "§a▪ Loại Pin: §f" + type.toUpperCase(),
                     "§e▪ Tiến trình: §f" + String.format("%,d", energy) + " §7/ §f" + String.format("%,d", cap) + " EU §e(" + pct + "%)",
                     "§8" + bar,
                     "",
-                    "§b⚡ Dự trữ nạp nhanh: §f" + String.format("%,d", station.getFuelBuffer()) + " EU",
-                    "§7Tốc độ nạp: §a+" + ratePerSec + " EU / giây",
-                    "§8(Cập nhật thời gian thực)"
+                    "§6⚙ Hệ số địa hình: §e" + String.format(Locale.ROOT, "x%.2f", mult),
+                    "§a⚡ Tốc độ nạp: §f+" + String.format("%,d", rate) + " EU/s",
+                    "§b⚡ Dự trữ nhiên liệu: §f" + String.format("%,d", station.getFuelBuffer()) + " EU",
+                    "§7(Sạc trực tiếp trong trạm nhanh gấp 5x so với sạc robot)"
             )));
         }
     }
@@ -390,6 +420,12 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
             } else {
                 station.setBatteryItem(null);
             }
+            ItemStack curFuel = inventory.getItem(SLOT_FUEL);
+            if (curFuel != null && curFuel.getType() != Material.AIR && getFuelValue(curFuel) > 0) {
+                station.setFuelItem(curFuel.clone());
+            } else {
+                station.setFuelItem(null);
+            }
             updateUi();
         });
     }
@@ -420,6 +456,12 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
             } else {
                 station.setBatteryItem(null);
             }
+            ItemStack curFuel = inventory.getItem(SLOT_FUEL);
+            if (curFuel != null && curFuel.getType() != Material.AIR && getFuelValue(curFuel) > 0) {
+                station.setFuelItem(curFuel.clone());
+            } else {
+                station.setFuelItem(null);
+            }
             updateUi();
         });
     }
@@ -436,14 +478,12 @@ public class BatteryChargerUi implements InventoryHolder, Listener {
             station.setBatteryItem(null);
         }
 
-        // 2. Return unconsumed fuel to player to avoid loss
+        // 2. Keep fuel item inside station so it stays stored and auto-fuels in background
         ItemStack fuel = inventory.getItem(SLOT_FUEL);
-        if (fuel != null && fuel.getType() != Material.AIR) {
-            var leftover = player.getInventory().addItem(fuel);
-            for (ItemStack drop : leftover.values()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), drop);
-            }
-            inventory.setItem(SLOT_FUEL, null);
+        if (fuel != null && fuel.getType() != Material.AIR && getFuelValue(fuel) > 0) {
+            station.setFuelItem(fuel.clone());
+        } else {
+            station.setFuelItem(null);
         }
 
         mechanic.unregisterOpenUi(this);

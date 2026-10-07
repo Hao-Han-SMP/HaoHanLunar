@@ -10,8 +10,11 @@ public class BatteryChargerStation {
     private UUID displayEntityUuid;
     private UUID ownerUuid;
     private ItemStack batteryItem;
+    private ItemStack fuelItem;
     private int fuelBuffer;
     private float yaw;
+    private double cachedMultiplier = 1.0;
+    private int cachedChargeRate = 450;
 
     public BatteryChargerStation(Location location, UUID displayEntityUuid, UUID ownerUuid, float yaw) {
         this.location = location;
@@ -19,7 +22,10 @@ public class BatteryChargerStation {
         this.ownerUuid = ownerUuid;
         this.yaw = yaw;
         this.batteryItem = null;
+        this.fuelItem = null;
         this.fuelBuffer = 0;
+        this.cachedMultiplier = 1.0;
+        this.cachedChargeRate = 450;
     }
 
     public Location getLocation() {
@@ -50,6 +56,14 @@ public class BatteryChargerStation {
         this.batteryItem = batteryItem;
     }
 
+    public ItemStack getFuelItem() {
+        return fuelItem;
+    }
+
+    public void setFuelItem(ItemStack fuelItem) {
+        this.fuelItem = fuelItem;
+    }
+
     public int getFuelBuffer() {
         return fuelBuffer;
     }
@@ -70,6 +84,22 @@ public class BatteryChargerStation {
 
     public void setYaw(float yaw) {
         this.yaw = yaw;
+    }
+
+    public double getCachedMultiplier() {
+        return cachedMultiplier;
+    }
+
+    public void setCachedMultiplier(double cachedMultiplier) {
+        this.cachedMultiplier = cachedMultiplier;
+    }
+
+    public int getCachedChargeRate() {
+        return cachedChargeRate;
+    }
+
+    public void setCachedChargeRate(int cachedChargeRate) {
+        this.cachedChargeRate = cachedChargeRate;
     }
 
     public String getKey() {

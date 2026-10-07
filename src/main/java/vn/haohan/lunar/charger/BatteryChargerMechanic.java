@@ -116,6 +116,31 @@ public class BatteryChargerMechanic implements Listener {
                         return;
                     }
 
+                    if (player.isSneaking() && getFuelValue(handItem) > 0) {
+                        ItemStack currentFuel = station.getFuelItem();
+                        if (currentFuel == null || currentFuel.getType() == Material.AIR) {
+                            station.setFuelItem(handItem.clone());
+                            if (player.getGameMode() != GameMode.CREATIVE) {
+                                handItem.setAmount(0);
+                            }
+                            player.playSound(clickedBlock.getLocation(), Sound.BLOCK_BLASTFURNACE_FIRE_CRACKLE, 0.8f, 1.4f);
+                            player.sendMessage("§e§l[Trạm Sạc] §aĐã đặt nguyên liệu vào trạm sạc!");
+                            return;
+                        } else if (currentFuel.isSimilar(handItem)) {
+                            int space = currentFuel.getMaxStackSize() - currentFuel.getAmount();
+                            int move = Math.min(space, handItem.getAmount());
+                            if (move > 0) {
+                                currentFuel.setAmount(currentFuel.getAmount() + move);
+                                if (player.getGameMode() != GameMode.CREATIVE) {
+                                    handItem.subtract(move);
+                                }
+                                player.playSound(clickedBlock.getLocation(), Sound.BLOCK_BLASTFURNACE_FIRE_CRACKLE, 0.8f, 1.4f);
+                                player.sendMessage("§e§l[Trạm Sạc] §aĐã thêm nguyên liệu vào trạm sạc!");
+                                return;
+                            }
+                        }
+                    }
+
                     openChargerUi(player, station);
                     return;
                 }
@@ -213,6 +238,10 @@ public class BatteryChargerMechanic implements Listener {
             loc.getWorld().dropItemNaturally(loc.clone().add(0.5, 0.5, 0.5), station.getBatteryItem());
         }
 
+        if (station.getFuelItem() != null && station.getFuelItem().getType() != Material.AIR) {
+            loc.getWorld().dropItemNaturally(loc.clone().add(0.5, 0.5, 0.5), station.getFuelItem());
+        }
+
         // 5. Close any open UIs for this station
         for (BatteryChargerUi ui : new ArrayList<>(activeUis)) {
             if (ui.getStation() == station) {
@@ -243,6 +272,12 @@ public class BatteryChargerMechanic implements Listener {
             // Ensure ItemDisplay is alive
             ensureDisplayEntity(station);
 
+            // Update cached condition and rate for this station
+            double conditionMultiplier = calculateConditionMultiplier(loc);
+            int chargeRate = calculateChargeRate(conditionMultiplier);
+            station.setCachedMultiplier(conditionMultiplier);
+            station.setCachedChargeRate(chargeRate);
+
             boolean hasChargingActivity = false;
 
             // 1. Check if station currently has an open UI
@@ -254,31 +289,36 @@ public class BatteryChargerMechanic implements Listener {
                     hasChargingActivity = true;
                 }
             } else {
-                // Background passive charge for closed station
+                // Background passive charge for closed station:
+                // Auto-replenish fuel from stored fuelItem if buffer < 5000
+                if (station.getFuelBuffer() < 5000) {
+                    replenishStationFuel(station);
+                }
+
+                // Direct battery charging: STRICTLY requires fuelBuffer > 0
                 ItemStack bat = station.getBatteryItem();
                 if (bat != null && bat.getType() != Material.AIR && RobotBatteryUtil.isBatteryItem(bat)) {
                     String type = RobotBatteryUtil.getBatteryType(bat);
                     int cap = RobotBatteryUtil.getCapacity(type);
                     int current = RobotBatteryUtil.getBatteryEnergy(bat);
 
-                    if (current < cap) {
-                        int chargeAmount = 15; // Base passive ambient charge (+60 EU/s)
-                        if (station.getFuelBuffer() > 0) {
-                            int bonus = Math.min(35, station.getFuelBuffer());
-                            chargeAmount += bonus;
-                            station.setFuelBuffer(station.getFuelBuffer() - bonus);
-                        }
-
-                        boolean charged = RobotBatteryUtil.chargeBattery(bat, chargeAmount);
-                        if (charged) {
-                            hasChargingActivity = true;
+                    if (current < cap && station.getFuelBuffer() > 0) {
+                        int cycleCharge = Math.max(1, chargeRate / 4);
+                        int needed = cap - current;
+                        int actualCharge = Math.min(cycleCharge, Math.min(needed, station.getFuelBuffer()));
+                        if (actualCharge > 0) {
+                            station.setFuelBuffer(station.getFuelBuffer() - actualCharge);
+                            boolean charged = RobotBatteryUtil.chargeBattery(bat, actualCharge);
+                            if (charged) {
+                                hasChargingActivity = true;
+                            }
                         }
                     }
                 }
             }
 
-            // 2. Wireless charging for nearby Quadruped Robot
-            if (robotMechanic != null) {
+            // 2. Wireless charging for nearby Quadruped Robot: STRICTLY requires fuelBuffer > 0
+            if (robotMechanic != null && station.getFuelBuffer() > 0) {
                 for (Entity entity : loc.getWorld().getNearbyEntities(loc, 2.8, 2.5, 2.8)) {
                     if (entity instanceof LivingEntity living && robotMechanic.isRobotAlive(living)) {
                         LunarRobotEntity robot = robotMechanic.getOrRegisterRobot(living);
@@ -287,20 +327,21 @@ public class BatteryChargerMechanic implements Listener {
                             if (data.getBatteryType() != null && !"none".equals(data.getBatteryType())) {
                                 int curE = data.getEnergy();
                                 int maxE = data.getMaxEnergy();
-                                if (curE < maxE) {
-                                    int wirelessCharge = 10; // +40 EU/s
-                                    if (station.getFuelBuffer() > 0) {
-                                        int bonus = Math.min(20, station.getFuelBuffer());
-                                        wirelessCharge += bonus;
-                                        station.setFuelBuffer(station.getFuelBuffer() - bonus);
-                                    }
-                                    data.setEnergy(Math.min(maxE, curE + wirelessCharge));
-                                    hasChargingActivity = true;
+                                if (curE < maxE && station.getFuelBuffer() > 0) {
+                                    // Nerfed: 20% of direct charger rate (5x slower)
+                                    int wirelessCycleCharge = Math.max(1, (chargeRate / 4) / 5);
+                                    int needed = maxE - curE;
+                                    int actualCharge = Math.min(wirelessCycleCharge, Math.min(needed, station.getFuelBuffer()));
+                                    if (actualCharge > 0) {
+                                        station.setFuelBuffer(station.getFuelBuffer() - actualCharge);
+                                        data.setEnergy(curE + actualCharge);
+                                        hasChargingActivity = true;
 
-                                    // Electric arc between charger and robot
-                                    Location beamStart = loc.clone().add(0.5, 0.9, 0.5);
-                                    Location beamEnd = living.getLocation().add(0, 0.6, 0);
-                                    spawnBeamParticles(beamStart, beamEnd);
+                                        // Electric arc between charger and robot
+                                        Location beamStart = loc.clone().add(0.5, 0.9, 0.5);
+                                        Location beamEnd = living.getLocation().add(0, 0.6, 0);
+                                        spawnBeamParticles(beamStart, beamEnd);
+                                    }
                                 }
                             }
                         }
@@ -406,6 +447,9 @@ public class BatteryChargerMechanic implements Listener {
             if (st.getBatteryItem() != null && st.getBatteryItem().getType() != Material.AIR) {
                 map.put("battery", st.getBatteryItem());
             }
+            if (st.getFuelItem() != null && st.getFuelItem().getType() != Material.AIR) {
+                map.put("fuelItem", st.getFuelItem());
+            }
             list.add(map);
         }
         config.set("chargers", list);
@@ -452,6 +496,13 @@ public class BatteryChargerMechanic implements Listener {
                     }
                 }
 
+                if (map.containsKey("fuelItem")) {
+                    Object fuelObj = map.get("fuelItem");
+                    if (fuelObj instanceof ItemStack is) {
+                        st.setFuelItem(is);
+                    }
+                }
+
                 stations.put(formatKey(loc), st);
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to parse charger entry: " + e.getMessage());
@@ -473,5 +524,116 @@ public class BatteryChargerMechanic implements Listener {
             cleanupNearbyDisplayEntities(st.getLocation(), st.getKey());
         }
         activeUis.clear();
+    }
+
+    public static double calculateConditionMultiplier(boolean isLunar, int y, boolean skyAccess, boolean hasConductive) {
+        double multiplier = 1.0;
+        if (isLunar) multiplier += 0.25;
+        if (y >= 90) multiplier += 0.25;
+        if (skyAccess) multiplier += 0.25;
+        if (hasConductive) multiplier += 0.25;
+        return Math.round(multiplier * 100.0) / 100.0;
+    }
+
+    public static double calculateConditionMultiplier(Location loc) {
+        if (loc == null || loc.getWorld() == null) return 1.0;
+        World world = loc.getWorld();
+        boolean isLunar = HaoHanLunarPlugin.isLunarWorld(world);
+        int y = loc.getBlockY();
+        boolean skyAccess = false;
+        try {
+            skyAccess = world.getHighestBlockYAt(loc.getBlockX(), loc.getBlockZ()) <= loc.getBlockY()
+                    || loc.getBlock().getLightFromSky() >= 14;
+        } catch (Throwable ignored) {}
+
+        boolean hasConductive = false;
+        try {
+            hasConductive = hasAdjacentConductiveBlock(loc);
+        } catch (Throwable ignored) {}
+
+        return calculateConditionMultiplier(isLunar, y, skyAccess, hasConductive);
+    }
+
+    public static boolean hasAdjacentConductiveBlock(Location loc) {
+        if (loc == null || loc.getWorld() == null) return false;
+        try {
+            Block center = loc.getBlock();
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dy = -2; dy <= 2; dy++) {
+                    for (int dz = -2; dz <= 2; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
+                        Material mat = center.getRelative(dx, dy, dz).getType();
+                        if (mat == Material.LIGHTNING_ROD || mat == Material.COPPER_BLOCK ||
+                                mat == Material.EXPOSED_COPPER || mat == Material.WEATHERED_COPPER ||
+                                mat == Material.OXIDIZED_COPPER || mat == Material.WAXED_COPPER_BLOCK ||
+                                mat == Material.REDSTONE_BLOCK) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
+    public static int calculateChargeRate(double multiplier) {
+        if (multiplier <= 1.0) return 450;
+        if (multiplier <= 1.25) {
+            double progress = (multiplier - 1.0) / 0.25;
+            return (int) Math.round(450 + progress * 270);
+        }
+        if (multiplier <= 1.50) {
+            double progress = (multiplier - 1.25) / 0.25;
+            return (int) Math.round(720 + progress * 200);
+        }
+        if (multiplier <= 1.75) {
+            double progress = (multiplier - 1.50) / 0.25;
+            return (int) Math.round(920 + progress * 50);
+        }
+        if (multiplier <= 2.0) {
+            double progress = (multiplier - 1.75) / 0.25;
+            return (int) Math.round(970 + progress * 30);
+        }
+        // Multiplier > 2.0 (extreme/overclocked ideal conditions): asymptotically approach 1720 EU/s
+        double excess = multiplier - 2.0;
+        double bonus = 720.0 * (1.0 - Math.exp(-excess));
+        return (int) Math.round(Math.min(1720, 1000 + bonus));
+    }
+
+    public static int getFuelValue(ItemStack item) {
+        if (item == null) return 0;
+        Material mat = item.getType();
+        if (mat == Material.REDSTONE) return 500;
+        if (mat == Material.REDSTONE_BLOCK) return 4500;
+        if (mat == Material.COAL || mat == Material.CHARCOAL) return 200;
+        if (mat == Material.COAL_BLOCK) return 1800;
+        if (mat == Material.GLOWSTONE_DUST) return 600;
+
+        if (item.hasItemMeta()) {
+            try {
+                String id = HaoHanItemCore.get().getItemService().getId(item);
+                if (id != null) {
+                    if (id.equals("haohan:kreep_dust")) return 2000;
+                    if (id.equals("haohan:raw_ilmenite") || id.equals("haohan:ilmenite_ingot")) return 3000;
+                    if (id.equals("haohan:aero_compound")) return 5000;
+                }
+            } catch (Exception ignored) {}
+        }
+        return 0;
+    }
+
+    public static void replenishStationFuel(BatteryChargerStation station) {
+        if (station == null) return;
+        ItemStack fuel = station.getFuelItem();
+        if (fuel == null || fuel.getType() == Material.AIR) return;
+
+        int value = getFuelValue(fuel);
+        if (value > 0) {
+            station.addFuelBuffer(value);
+            fuel.subtract(1);
+            if (fuel.getAmount() <= 0) {
+                station.setFuelItem(null);
+            }
+        }
     }
 }

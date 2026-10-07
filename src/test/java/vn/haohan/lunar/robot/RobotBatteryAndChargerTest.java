@@ -97,67 +97,155 @@ public class RobotBatteryAndChargerTest {
     }
 
     @Test
-    public void testSimulatedBatteryChargingCycle() {
-        int capacity = 5000;
-        int currentEnergy = 4700;
-        int fuelBuffer = 500;
+    public void testConditionMultiplierCalculation() {
+        // Base case: normal world, low Y, no sky, no conductive block
+        assertEquals(1.0, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(false, 64, false, false));
 
-        // Tick 1: Needs 300 EU to full. Base 25 + bonus 50 = 75 EU
-        int needed = capacity - currentEnergy;
-        int chargeAmount = 25;
-        if (fuelBuffer > 0) {
-            int bonus = Math.min(50, fuelBuffer);
-            chargeAmount += bonus;
-            fuelBuffer -= bonus;
-        }
-        currentEnergy = Math.min(capacity, currentEnergy + chargeAmount);
-        assertEquals(4775, currentEnergy);
-        assertEquals(450, fuelBuffer);
+        // Single factors (+0.25 each)
+        assertEquals(1.25, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(true, 64, false, false));
+        assertEquals(1.25, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(false, 95, false, false));
+        assertEquals(1.25, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(false, 64, true, false));
+        assertEquals(1.25, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(false, 64, false, true));
 
-        // Run until full
-        while (currentEnergy < capacity) {
-            int tickCharge = 25;
-            if (fuelBuffer > 0) {
-                int b = Math.min(50, fuelBuffer);
-                tickCharge += b;
-                fuelBuffer -= b;
-            }
-            currentEnergy = Math.min(capacity, currentEnergy + tickCharge);
-        }
+        // Two factors (+0.50)
+        assertEquals(1.50, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(true, 95, false, false));
 
-        assertEquals(capacity, currentEnergy, "Energy must cap exactly at battery capacity");
-        assertTrue(fuelBuffer > 0, "Leftover fuel should remain in buffer");
+        // Three factors (+0.75)
+        assertEquals(1.75, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(true, 95, true, false));
+
+        // All 4 factors (+1.00 -> 2.0x)
+        assertEquals(2.0, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateConditionMultiplier(true, 95, true, true));
     }
 
     @Test
-    public void testRealTimeUiChargingRatesAndProgress() {
+    public void testChargeRateDiminishingReturns() {
+        // Base rate
+        assertEquals(450, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(1.0));
+        assertEquals(450, vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(0.8));
+
+        // Milestone points matching design
+        int r100 = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(1.0);
+        int r125 = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(1.25);
+        int r150 = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(1.50);
+        int r175 = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(1.75);
+        int r200 = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(2.00);
+
+        assertEquals(450, r100);
+        assertEquals(720, r125);
+        assertEquals(920, r150);
+        assertEquals(970, r175);
+        assertEquals(1000, r200);
+
+        // Verify strictly diminishing returns: delta1 > delta2 > delta3 > delta4
+        int delta1 = r125 - r100; // 270
+        int delta2 = r150 - r125; // 200
+        int delta3 = r175 - r150; // 50
+        int delta4 = r200 - r175; // 30
+
+        assertEquals(270, delta1);
+        assertEquals(200, delta2);
+        assertEquals(50, delta3);
+        assertEquals(30, delta4);
+
+        assertTrue(delta1 > delta2, "Gain from 1.0->1.25 must exceed 1.25->1.50");
+        assertTrue(delta2 > delta3, "Gain from 1.25->1.50 must exceed 1.50->1.75");
+        assertTrue(delta3 > delta4, "Gain from 1.50->1.75 must exceed 1.75->2.00");
+
+        // Extreme condition ceiling (asymptote never exceeds 1720)
+        int extremeRate = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(10.0);
+        assertTrue(extremeRate <= 1720, "Rate must not exceed 1720 EU/s cap");
+        assertTrue(extremeRate > 1000, "Extreme rate should exceed base 2.0x rate");
+    }
+
+    @Test
+    public void testStrictFuelRequirementZeroChargeWithoutFuel() {
         int capacity = 5000;
-        int currentEnergy = 0;
-        int fuelBuffer = 5000;
+        int currentEnergy = 1000;
+        int fuelBuffer = 0; // Hết nhiên liệu!
 
-        // At 5 ticks (0.25s per cycle):
-        // Base rate: 15 EU (60 EU/s)
-        // Fuel bonus: 35 EU (140 EU/s)
-        // Total: 50 EU per 0.25s = 200 EU/s
-        int ticks = 0;
-        while (currentEnergy < capacity && ticks < 200) {
-            ticks++;
-            int charge = 15;
-            if (fuelBuffer > 0) {
-                int bonus = Math.min(35, fuelBuffer);
-                charge += bonus;
-                fuelBuffer -= bonus;
-            }
-            currentEnergy = Math.min(capacity, currentEnergy + charge);
+        // If fuel buffer is 0, no matter the rate, charge MUST be 0
+        int chargeRate = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(1.50); // 920 EU/s
+        int cycleCharge = chargeRate / 4; // 230 EU per cycle
+        int actualCharge = Math.min(cycleCharge, fuelBuffer);
 
-            int pct = (int) Math.round(((double) currentEnergy / capacity) * 100.0);
-            assertTrue(pct >= 0 && pct <= 100);
+        assertEquals(0, actualCharge, "No energy should be charged when fuelBuffer is 0");
+        currentEnergy += actualCharge;
+        assertEquals(1000, currentEnergy, "Energy must remain unchanged");
+    }
+
+    @Test
+    public void testDirectBatteryVsWirelessRobotSpeedDifference() {
+        int chargeRate = vn.haohan.lunar.charger.BatteryChargerMechanic.calculateChargeRate(1.25); // 720 EU/s
+        int directCycleCharge = chargeRate / 4; // 180 EU/cycle (720 EU/s)
+        int wirelessCycleCharge = Math.max(1, (chargeRate / 4) / 5); // 36 EU/cycle (144 EU/s)
+
+        assertEquals(180, directCycleCharge);
+        assertEquals(36, wirelessCycleCharge);
+        assertEquals(5, directCycleCharge / wirelessCycleCharge, "Direct charging must be exactly 5x faster than wireless");
+    }
+
+    private static class TestFuelItemStack extends org.bukkit.inventory.ItemStack {
+        private final org.bukkit.Material mat;
+        private int count;
+
+        public TestFuelItemStack(org.bukkit.Material mat, int count) {
+            this.mat = mat;
+            this.count = count;
         }
 
-        assertEquals(5000, currentEnergy);
-        assertEquals(100, (int) Math.round(((double) currentEnergy / capacity) * 100.0));
-        assertEquals(100, ticks, "At 50 EU/tick, 5000 EU should take exactly 100 cycles");
-        assertEquals(5000 - (100 * 35), fuelBuffer, "Buffer should have consumed exactly 100 * 35 = 3500 EU bonus");
+        @Override
+        public org.bukkit.Material getType() {
+            return mat;
+        }
+
+        @Override
+        public int getAmount() {
+            return count;
+        }
+
+        @Override
+        public void setAmount(int amount) {
+            this.count = amount;
+        }
+
+        @Override
+        public org.bukkit.inventory.ItemStack subtract(int amount) {
+            this.count -= amount;
+            return this;
+        }
+
+        @Override
+        public boolean hasItemMeta() {
+            return false;
+        }
+
+        @Override
+        public org.bukkit.inventory.ItemStack clone() {
+            return new TestFuelItemStack(mat, count);
+        }
+    }
+
+    @Test
+    public void testStationStoredFuelAutoReplenishment() {
+        UUID owner = UUID.randomUUID();
+        UUID display = UUID.randomUUID();
+        BatteryChargerStation station = new BatteryChargerStation(null, display, owner, 0.0f);
+
+        // Put a fuel item into station (Redstone: 500 EU each, amount: 2)
+        org.bukkit.inventory.ItemStack redstone = new TestFuelItemStack(org.bukkit.Material.REDSTONE, 2);
+        station.setFuelItem(redstone);
+        assertEquals(0, station.getFuelBuffer());
+
+        // First replenishment consumes 1 redstone -> adds 500 EU buffer
+        vn.haohan.lunar.charger.BatteryChargerMechanic.replenishStationFuel(station);
+        assertEquals(500, station.getFuelBuffer());
+        assertNotNull(station.getFuelItem());
+        assertEquals(1, station.getFuelItem().getAmount());
+
+        // Second replenishment consumes remaining 1 redstone -> buffer becomes 1000 EU, fuelItem becomes null
+        vn.haohan.lunar.charger.BatteryChargerMechanic.replenishStationFuel(station);
+        assertEquals(1000, station.getFuelBuffer());
+        assertNull(station.getFuelItem());
     }
 }
 
