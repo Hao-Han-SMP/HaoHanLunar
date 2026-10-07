@@ -63,10 +63,14 @@ public class LunarRobotMechanic implements Listener {
     }
 
     private void initUiService() {
-        var reg = Bukkit.getServicesManager().getRegistration(DisplayUiService.class);
-        if (reg != null) {
-            this.uiService = reg.getProvider();
-        }
+        try {
+            if (Bukkit.getServer() != null && Bukkit.getServicesManager() != null) {
+                var reg = Bukkit.getServicesManager().getRegistration(DisplayUiService.class);
+                if (reg != null) {
+                    this.uiService = reg.getProvider();
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 
     public DisplayUiService getUiService() {
@@ -163,6 +167,7 @@ public class LunarRobotMechanic implements Listener {
             pdc.set(new NamespacedKey(plugin, "robot_id"), PersistentDataType.STRING, entity.getUniqueId().toString());
             pdc.set(new NamespacedKey(plugin, "is_lunar_robot"), PersistentDataType.BYTE, (byte) 1);
         }
+        entity.setSilent(true);
         LunarRobotData data = LunarRobotData.loadFrom(entity, plugin);
         LunarRobotEntity robot = new LunarRobotEntity(plugin, entity, data);
         activeRobots.put(entity.getUniqueId(), robot);
@@ -376,7 +381,7 @@ public class LunarRobotMechanic implements Listener {
         // Check ModelEngine ModeledEntity
         try {
             var me = ModelEngineAPI.getModeledEntity(entity.getUniqueId());
-            if (me != null && me.getModel("lunar_robot").isPresent()) {
+            if (me != null && (me.getModel("robot_dog").isPresent() || me.getModel("lunar_robot").isPresent())) {
                 return true;
             }
         } catch (Throwable ignored) {}
@@ -444,10 +449,16 @@ public class LunarRobotMechanic implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
+        Player player = event.getPlayer();
+        LunarRobotDashboardUi active = activeDashboards.get(player.getUniqueId());
+        if (active != null && active.getState() != LunarRobotDashboardUi.UiState.CLOSING) {
+            event.setCancelled(true);
+            active.handleClickAtCursor(player);
+            return;
+        }
         if (!(event.getRightClicked() instanceof LivingEntity living)) return;
         if (!isRobotAlive(living)) return;
 
-        Player player = event.getPlayer();
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         ItemStack offHand = player.getInventory().getItemInOffHand();
         boolean hasTablet = isTabletItem(mainHand) || isTabletItem(offHand);
@@ -465,11 +476,16 @@ public class LunarRobotMechanic implements Listener {
         if (event.getSlot() != org.bukkit.inventory.EquipmentSlot.HAND) {
             return;
         }
+        Player player = event.getPlayer();
+        LunarRobotDashboardUi active = activeDashboards.get(player.getUniqueId());
+        if (active != null && active.getState() != LunarRobotDashboardUi.UiState.CLOSING) {
+            active.handleClickAtCursor(player);
+            return;
+        }
         Object original = event.getBaseEntity().getOriginal();
         if (!(original instanceof LivingEntity living)) return;
         if (!isRobotAlive(living)) return;
 
-        Player player = event.getPlayer();
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         ItemStack offHand = player.getInventory().getItemInOffHand();
         boolean hasTablet = isTabletItem(mainHand) || isTabletItem(offHand);
@@ -477,10 +493,32 @@ public class LunarRobotMechanic implements Listener {
         handleRobotInteract(player, living, hasTablet);
     }
 
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerArmSwing(org.bukkit.event.player.PlayerAnimationEvent event) {
+        if (event.getAnimationType() != org.bukkit.event.player.PlayerAnimationType.ARM_SWING) return;
+        Player player = event.getPlayer();
+        LunarRobotDashboardUi dashboard = activeDashboards.get(player.getUniqueId());
+        if (dashboard != null && dashboard.getState() == LunarRobotDashboardUi.UiState.DASHBOARD) {
+            dashboard.handleClickAtCursor(player);
+        }
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
         Player player = event.getPlayer();
+
+        LunarRobotDashboardUi activeDashboard = activeDashboards.get(player.getUniqueId());
+        if (activeDashboard != null && activeDashboard.getState() != LunarRobotDashboardUi.UiState.CLOSING) {
+            event.setCancelled(true);
+            activeDashboard.handleClickAtCursor(player);
+            return;
+        }
+        if (activePuzzles.containsKey(player.getUniqueId())) {
+            event.setCancelled(true);
+            return;
+        }
+
         ItemStack mainHand = player.getInventory().getItemInMainHand();
         ItemStack offHand = player.getInventory().getItemInOffHand();
         boolean mainIsTablet = isTabletItem(mainHand);
@@ -831,9 +869,16 @@ public class LunarRobotMechanic implements Listener {
         }
 
         // Cập nhật máu vào data và cập nhật custom name tức thì
-        double newHealth = Math.max(0.0, living.getHealth() - event.getFinalDamage());
+        double damageTaken = event.getFinalDamage();
+        double newHealth = Math.max(0.0, living.getHealth() - damageTaken);
         robot.getData().setHealth(newHealth);
+        robot.getData().addDamageTaken(damageTaken);
         robot.updateCustomName();
+
+        // Robotic Hurt SFX: Metallic impact and electric spark
+        living.getWorld().playSound(living.getLocation(), Sound.BLOCK_COPPER_GRATE_HIT, 0.9f, 1.4f);
+        living.getWorld().playSound(living.getLocation(), Sound.BLOCK_ANVIL_LAND, 0.4f, 1.8f);
+        living.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, living.getLocation().add(0, 0.5, 0), 6, 0.2, 0.2, 0.2, 0.1);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -841,6 +886,14 @@ public class LunarRobotMechanic implements Listener {
         if (!isRobotEntity(event.getEntity())) return;
         LivingEntity living = event.getEntity();
         LunarRobotEntity robot = activeRobots.remove(living.getUniqueId());
+        if (robot != null) {
+            robot.cleanup();
+        }
+
+        // Robotic Destruction SFX
+        living.getWorld().playSound(living.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 0.8f);
+        living.getWorld().playSound(living.getLocation(), Sound.BLOCK_COPPER_BREAK, 1.0f, 1.2f);
+        living.getWorld().playSound(living.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 0.8f, 1.4f);
 
         // Close any active puzzle minigames for this robot immediately
         for (var entry : activePuzzles.entrySet()) {
@@ -916,9 +969,7 @@ public class LunarRobotMechanic implements Listener {
             }
         }
 
-        if (robot != null) {
-            robot.cleanupHolograms();
-        }
+
     }
 
     // --- Maintenance Crafting: Module + Diamond / Netherite Ingot ---
@@ -1129,6 +1180,10 @@ public class LunarRobotMechanic implements Listener {
     public void openRobotDashboard(Player player, LunarRobotEntity robot) {
         if (getUiService() == null) {
             player.sendMessage("§c[Lỗi] HaoHanDisplayUI chưa sẵn sàng!");
+            return;
+        }
+        LunarRobotDashboardUi existing = activeDashboards.get(player.getUniqueId());
+        if (existing != null && existing.getState() != LunarRobotDashboardUi.UiState.CLOSING) {
             return;
         }
         LunarRobotDashboardUi old = activeDashboards.remove(player.getUniqueId());

@@ -66,12 +66,14 @@ public class LunarRobotEntity {
     private boolean customAttacking = false;
     private boolean frozen = false;
     private ArmorStand fallbackSeat = null;
-    private BossBar statusBossBar = null;
+    private net.kyori.adventure.bossbar.BossBar statusBossBar = null;
+    private final Set<UUID> statusBossBarViewers = new HashSet<>();
     private String notificationTitle = null;
     private BarColor notificationColor = null;
     private int notificationTicksRemaining = 0;
-
     private final Set<ItemDisplay> activeHolograms = new HashSet<>();
+    private Location lastStepLocation = null;
+    private double stepDistanceAccumulator = 0.0;
 
     public boolean isFrozen() {
         return frozen;
@@ -104,6 +106,7 @@ public class LunarRobotEntity {
     }
 
     private void setupEntityAttributes() {
+        entity.setSilent(true);
         entity.setRemoveWhenFarAway(false);
         entity.setPersistent(true);
         entity.setCustomNameVisible(true);
@@ -133,6 +136,22 @@ public class LunarRobotEntity {
             } else {
                 wolf.setTamed(false);
                 wolf.setOwner(null);
+            }
+        }
+
+        if (entity != null) {
+            syncGravityAttributes(plugin, entity, entity.getWorld());
+        }
+    }
+
+    public static void syncGravityAttributes(Plugin plugin, LivingEntity entity, World world) {
+        if (plugin instanceof vn.haohan.lunar.HaoHanLunarPlugin lunarPlugin) {
+            if (lunarPlugin.getGravityMechanic() != null && world != null && entity != null) {
+                if (HaoHanLunarPlugin.isLunarWorld(world)) {
+                    lunarPlugin.getGravityMechanic().applyLunarAttributes(entity);
+                } else {
+                    lunarPlugin.getGravityMechanic().removeLunarAttributes(entity);
+                }
             }
         }
     }
@@ -331,7 +350,7 @@ public class LunarRobotEntity {
 
         // Clear combat target if out of energy or mode changed
         if (data.getActiveTask() != RobotTask.COMBAT || data.getEnergy() <= 0) {
-            combatTarget = null;
+            clearCombatTarget();
         }
 
         // 2. Rider & Movement Handling (SPEED task)
@@ -352,7 +371,25 @@ public class LunarRobotEntity {
         // 4. Update Status BossBar
         updateStatusBossBar();
 
-        // 5. Save state periodically
+        // 5. Track movement steps
+        Location currentLoc = entity.getLocation();
+        if (lastStepLocation != null && lastStepLocation.getWorld() != null && lastStepLocation.getWorld().equals(currentLoc.getWorld())) {
+            double dx = currentLoc.getX() - lastStepLocation.getX();
+            double dz = currentLoc.getZ() - lastStepLocation.getZ();
+            double horizontalDist = Math.sqrt(dx * dx + dz * dz);
+            // Cap to avoid counting teleports (> 5 blocks in 1 tick)
+            if (horizontalDist > 0.05 && horizontalDist < 5.0) {
+                stepDistanceAccumulator += horizontalDist;
+                if (stepDistanceAccumulator >= 1.0) {
+                    int wholeSteps = (int) stepDistanceAccumulator;
+                    data.addSteps(wholeSteps);
+                    stepDistanceAccumulator -= wholeSteps;
+                }
+            }
+        }
+        lastStepLocation = currentLoc.clone();
+
+        // 6. Save state periodically
         energyTickCooldown++;
         if (energyTickCooldown >= 100) { // Every 5s
             energyTickCooldown = 0;
@@ -379,18 +416,23 @@ public class LunarRobotEntity {
                         owner.playSound(owner.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.2f);
                     }
                 }
-                combatTarget = null;
+                clearCombatTarget();
                 if (entity instanceof Mob mob) {
                     mob.getPathfinder().stopPathfinding();
                 }
             } else {
+                if (!combatTarget.isGlowing()) {
+                    try {
+                        combatTarget.setGlowing(true);
+                    } catch (Throwable ignored) {}
+                }
                 Player owner = getOnlineOwner();
                 double distToOwnerSq = (owner != null && owner.getWorld().equals(entity.getWorld()))
                         ? entity.getLocation().distanceSquared(owner.getLocation()) : Double.MAX_VALUE;
 
                 if (distToOwnerSq > 1600.0) { // > 40 blocks away from owner
-                    setBossBarNotification("§c§l[CHIẾN ĐẤU] §eMục tiêu quá xa (>40m), hủy nhiệm vụ!", BarColor.RED, 60);
-                    combatTarget = null;
+                    setBossBarNotification("§c§l[CHIẾN ĐẤU] §eMục tiêu quá xa (>40m)", BarColor.RED, 60);
+                    clearCombatTarget();
                     if (entity instanceof Mob mob) {
                         mob.getPathfinder().stopPathfinding();
                     }
@@ -450,12 +492,15 @@ public class LunarRobotEntity {
         double distSq = entity.getLocation().distanceSquared(owner.getLocation());
         if (distSq > 400.0) { // Teleport if too far (> 20 blocks)
             teleportToOwner(owner);
-        } else if (distSq > 16.0) { // Move towards owner (> 4 blocks)
+        } else if (distSq > 25.0) { // Move towards owner (> 5 blocks)
             if (entity instanceof Mob mob) {
                 mob.getPathfinder().moveTo(owner, 1.3);
             }
             playAnimation("walk", 0.2, 0.2, 1.2, true);
         } else {
+            if (entity instanceof Mob mob) {
+                mob.getPathfinder().stopPathfinding();
+            }
             if (!isAttackAnimationPlaying()) {
                 playAnimation("idle", 0.2, 0.2, 1.0, true);
             }
@@ -496,7 +541,7 @@ public class LunarRobotEntity {
             long now = System.currentTimeMillis();
             if (now - lastSpeedWarningTime >= 2000) {
                 lastSpeedWarningTime = now;
-                setBossBarNotification("§c§l[ROBOT] §cCạn pin! Mọi module đã ngắt. Nhấn [Shift] để xuống.", BarColor.RED, 40);
+                setBossBarNotification("§c§l[ROBOT] §cCạn pin! Nhấn [Shift] xuống", BarColor.RED, 40);
                 rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.6f, 1.0f);
             }
             playAnimation("idle", 0.2, 0.2, 1.0, true);
@@ -582,7 +627,8 @@ public class LunarRobotEntity {
                     } else {
                         if (isJump && (entity.isOnGround() || entity.getLocation().getBlock().isLiquid())) {
                             moveVec.setY(0.5);
-                            entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_WOLF_STEP, 0.8f, 1.2f);
+                            entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_COPPER_STEP, 0.9f, 1.4f);
+                            entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_PISTON_EXTEND, 0.4f, 1.8f);
                         }
                         entity.setVelocity(moveVec);
                     }
@@ -687,7 +733,7 @@ public class LunarRobotEntity {
         if (nearestRareOre != null) {
             world.playSound(center, Sound.BLOCK_BEACON_ACTIVATE, 0.8f, 1.8f);
             spawnRareOreHologram(nearestRareOre.getLocation().add(0.5, 1.2, 0.5));
-            setBossBarNotification("§6§l[DÒ QUẶNG] §aPhát hiện quặng hiếm gần đây! (Chiếu hologram)", BarColor.YELLOW, 60);
+            setBossBarNotification("§6§l[DÒ QUẶNG] §aPhát hiện quặng hiếm!", BarColor.YELLOW, 60);
         } else if (nearestCommonOre != null) {
             world.playSound(center, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.7f, 1.2f);
             world.spawnParticle(Particle.HAPPY_VILLAGER, center.clone().add(0, 1.2, 0), 6, 0.5, 0.5, 0.5);
@@ -764,14 +810,19 @@ public class LunarRobotEntity {
             if (combatCooldown >= 20) { // 1s attack cycle
                 combatCooldown = 0;
 
-                // Execute melee strike
+                // Execute melee strike with emergency overdrive hidden stat
                 double eff = data.getModuleEfficiency("combat");
-                double damage = 8.0 + (eff / 100.0) * 12.0; // 8 to 20 damage
+                double baseDamage = 8.0 + (eff / 100.0) * 12.0; // 8 to 20 base damage
+                double multiplier = calculateEmergencyCombatMultiplier();
+                double damage = baseDamage * multiplier;
 
                 String[] combatAnims = {"attack", "attack_slash", "attack_pounce", "attack_spin"};
                 String chosenAnim = combatAnims[java.util.concurrent.ThreadLocalRandom.current().nextInt(combatAnims.length)];
                 playAnimation(chosenAnim, 0.05, 0.1, 1.3, false);
                 entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.2f);
+                entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_COPPER_GRATE_HIT, 0.8f, 1.5f);
+                entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 0.7f, 1.8f);
+
                 if ("attack_spin".equals(chosenAnim)) {
                     entity.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 0.8, 0), 4, 0.4, 0.1, 0.4, 0.0);
                     entity.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, target.getLocation().add(0, 0.8, 0), 8, 0.3, 0.3, 0.3, 0.1);
@@ -785,11 +836,15 @@ public class LunarRobotEntity {
                 customAttacking = true;
                 try {
                     target.damage(damage, entity);
+                    data.addDamageDealt(damage);
                 } finally {
                     customAttacking = false;
                 }
 
-                data.consumeEnergy(25);
+                // Energy cost is inversely proportional to the emergency overdrive multiplier
+                int baseEnergyCost = 25;
+                int energyCost = Math.max(1, (int) Math.round(baseEnergyCost / multiplier));
+                data.consumeEnergy(energyCost);
                 data.degradeModule("combat", 0.25);
 
                 String targetName = getEntityDisplayName(target);
@@ -801,17 +856,48 @@ public class LunarRobotEntity {
                     if (owner != null) {
                         owner.playSound(owner.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.2f);
                     }
-                    combatTarget = null;
+                    clearCombatTarget();
                 } else {
                     double remainingHp = Math.max(0.0, target.getHealth());
-                    setBossBarNotification(String.format("§c§l[CHIẾN ĐẤU] §fChém §e%s §c-%.1f ST §7(HP: %.1f)", targetName, damage, remainingHp), BarColor.RED, 40);
+                    if (multiplier > 1.05) {
+                        setBossBarNotification(String.format("§c§l[BẢO VỆ KHẨN CẤP] §fChém §e%s §c-%.1f ST §7(x%.1f)", targetName, damage, multiplier), BarColor.RED, 40);
+                    } else {
+                        setBossBarNotification(String.format("§c§l[CHIẾN ĐẤU] §fChém §e%s §c-%.1f ST §7(HP: %.1f)", targetName, damage, remainingHp), BarColor.RED, 40);
+                    }
                 }
 
                 if (data.getEnergy() <= 0) {
                     setBossBarNotification("§c§l[CHIẾN ĐẤU] §cCạn pin! Ngừng nhiệm vụ.", BarColor.RED, 60);
-                    combatTarget = null;
+                    clearCombatTarget();
                 }
             }
+        }
+    }
+
+    public static double calculateEmergencyCombatMultiplier(double ownerHp) {
+        if (ownerHp >= 13.0) return 1.0;
+        double emergencyRatio = Math.max(0.0, Math.min(1.0, (13.0 - ownerHp) / 13.0));
+        return 1.0 + emergencyRatio * 1.5;
+    }
+
+    public double calculateEmergencyCombatMultiplier() {
+        Player owner = getOnlineOwner();
+        if (owner == null) return 1.0;
+        return calculateEmergencyCombatMultiplier(owner.getHealth());
+    }
+
+    public void clearCombatTarget() {
+        if (this.combatTarget != null) {
+            clearTargetGlow(this.combatTarget);
+            this.combatTarget = null;
+        }
+    }
+
+    private void clearTargetGlow(LivingEntity target) {
+        if (target != null && target.isValid()) {
+            try {
+                target.setGlowing(false);
+            } catch (Throwable ignored) {}
         }
     }
 
@@ -836,15 +922,28 @@ public class LunarRobotEntity {
 
         if (this.combatTarget != target) {
             boolean isSwitch = (this.combatTarget != null && this.combatTarget.isValid() && !this.combatTarget.isDead());
+            if (this.combatTarget != null) {
+                clearTargetGlow(this.combatTarget);
+            }
             this.combatTarget = target;
+            if (target != null && target.isValid()) {
+                try {
+                    target.setGlowing(true);
+                } catch (Throwable ignored) {}
+            }
             this.combatCooldown = 15; // Set near-ready attack so first hit lands promptly upon arrival
             String targetName = getEntityDisplayName(target);
             if (isSwitch) {
                 setBossBarNotification("§e§l[CHIẾN ĐẤU] §eĐổi mục tiêu: §c" + targetName, BarColor.YELLOW, 50);
             } else {
-                setBossBarNotification("§e§l[CHIẾN ĐẤU] §eTấn công mục tiêu: §c" + targetName, BarColor.YELLOW, 50);
+                setBossBarNotification("§e§l[CHIẾN ĐẤU] §eTấn công: §c" + targetName, BarColor.YELLOW, 50);
             }
-            owner.playSound(owner.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.8f);
+            owner.playSound(owner.getLocation(), Sound.BLOCK_NOTE_BLOCK_BIT, 0.9f, 2.0f);
+            entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 0.7f, 1.8f);
+        } else if (target != null && target.isValid() && !target.isGlowing()) {
+            try {
+                target.setGlowing(true);
+            } catch (Throwable ignored) {}
         }
     }
 
@@ -962,7 +1061,7 @@ public class LunarRobotEntity {
                 long now = System.currentTimeMillis();
                 if (now - lastSpeedWarningTime >= 1000) {
                     lastSpeedWarningTime = now;
-                    setBossBarNotification("§c§l[TỐC HÀNH] §cKhông đủ năng lượng để bứt tốc! (Cần ≥ " + boostEnergyCost + " EU)", BarColor.RED, 40);
+                    setBossBarNotification("§c§l[TỐC HÀNH] §cKhông đủ năng lượng!", BarColor.RED, 40);
                     if (rider != null) {
                         rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.4f, 1.4f);
                     }
@@ -989,7 +1088,7 @@ public class LunarRobotEntity {
                 long now = System.currentTimeMillis();
                 if (now - lastSpeedWarningTime >= 1000) {
                     lastSpeedWarningTime = now;
-                    setBossBarNotification("§c§l[QUÁ NHIỆT] §cĐộng cơ quá nóng (100%)! Hãy thả Space để làm mát.", BarColor.RED, 40);
+                    setBossBarNotification("§c§l[QUÁ NHIỆT] §cQuá nóng! Thả [Space]", BarColor.RED, 40);
                     if (rider != null) {
                         rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.45f, 1.5f);
                     }
@@ -1009,7 +1108,7 @@ public class LunarRobotEntity {
                 lastBoostSoundTime = now;
             } else if (now - lastBoostSoundTime >= 240) { // Continuous high-speed gallop wind pulse
                 lastBoostSoundTime = now;
-                w.playSound(loc, Sound.ENTITY_HORSE_GALLOP, 0.7f, 1.55f);
+                w.playSound(loc, Sound.BLOCK_COPPER_GRATE_STEP, 0.7f, 1.55f);
                 w.playSound(loc, Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.35f, 1.8f);
                 w.playSound(loc, Sound.BLOCK_RESPAWN_ANCHOR_AMBIENT, 0.25f, 2.0f);
             }
@@ -1040,7 +1139,7 @@ public class LunarRobotEntity {
                 w.playSound(loc, Sound.BLOCK_COPPER_GRATE_HIT, 0.7f, 0.9f);
                 w.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, loc.clone().add(0, 0.3, 0), 12, 0.2, 0.15, 0.2, 0.04);
                 w.spawnParticle(Particle.LAVA, loc.clone().add(0, 0.4, 0), 4, 0.1, 0.1, 0.1, 0.02);
-                setBossBarNotification("§c§l[QUÁ NHIỆT] §cĐộng cơ đạt 100% nhiệt độ! Tự động ngắt bứt tốc.", BarColor.RED, 40);
+                setBossBarNotification("§c§l[QUÁ NHIỆT] §cQuá nóng! Ngắt bứt tốc", BarColor.RED, 40);
                 if (rider != null) {
                     rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.45f, 1.5f);
                 }
@@ -1088,7 +1187,7 @@ public class LunarRobotEntity {
         if (now - lastSpeedWarningTime < 1000) return;
         lastSpeedWarningTime = now;
 
-        setBossBarNotification("§c§l[TỐC HÀNH] §7Không thể nhảy hoặc bay! §8(Dùng Module Đẩy Phản Lực)", BarColor.RED, 40);
+        setBossBarNotification("§c§l[TỐC HÀNH] §7Không thể nhảy hoặc bay!", BarColor.RED, 40);
         if (rider != null && rider.isOnline()) {
             rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.4f, 1.6f);
         }
@@ -1119,7 +1218,7 @@ public class LunarRobotEntity {
         if (isJump) {
             if (data.getEnergy() < 3) {
                 isThrustFlying = false;
-                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cKhông đủ năng lượng để bay! (Cần ≥ 3 EU)", BarColor.RED, 40);
+                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cKhông đủ năng lượng!", BarColor.RED, 40);
                 if (rider != null) {
                     rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.5f, 1.4f);
                 }
@@ -1134,7 +1233,7 @@ public class LunarRobotEntity {
                     w.playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 0.5f, 1.8f);
                 }
                 isThrustFlying = false;
-                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cHết nhiên liệu bay! Tiếp đất để nạp lại.", BarColor.RED, 40);
+                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cHết nhiên liệu bay!", BarColor.RED, 40);
                 return;
             }
 
@@ -1184,7 +1283,7 @@ public class LunarRobotEntity {
         if (isJump) {
             if (data.getEnergy() < 3) {
                 isThrustFlying = false;
-                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cKhông đủ năng lượng để bay! (Cần ≥ 3 EU)", BarColor.RED, 40);
+                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cKhông đủ năng lượng!", BarColor.RED, 40);
                 if (rider != null) {
                     rider.playSound(rider.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.5f, 1.4f);
                 }
@@ -1200,7 +1299,7 @@ public class LunarRobotEntity {
                     w.playSound(loc, Sound.BLOCK_FIRE_EXTINGUISH, 0.5f, 1.8f);
                 }
                 isThrustFlying = false;
-                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cHết nhiên liệu bay! Tiếp đất để nạp lại.", BarColor.RED, 40);
+                setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cHết nhiên liệu bay!", BarColor.RED, 40);
                 entity.setVelocity(moveVec);
                 return;
             }
@@ -1255,10 +1354,10 @@ public class LunarRobotEntity {
         if (System.currentTimeMillis() - lastThrustTime < 2500) return false; // 2.5s cooldown
 
         double eff = data.getModuleEfficiency("thrust");
-        int energyCost = 500 - (int) (250 * (eff / 100.0)); // 500 to 250 EU
+        int energyCost = (int) Math.round(1240.0 - (eff / 100.0) * (1240.0 - 720.0)); // 1240 to 720 EU
 
         if (!data.consumeEnergy(energyCost)) {
-            setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cKhông đủ EU! (" + data.getEnergy() + "/" + energyCost + " EU)", BarColor.RED, 50);
+            setBossBarNotification("§c§l[ĐẨY PHẢN LỰC] §cKhông đủ năng lượng!", BarColor.RED, 50);
             return false;
         }
 
@@ -1350,7 +1449,7 @@ public class LunarRobotEntity {
         if (player == null || !player.isOnline()) return false;
 
         if (data.getEnergy() <= 0) {
-            setBossBarNotification("§c§l[ROBOT] §cRobot đã cạn pin, không thể cưỡi!", BarColor.RED, 50);
+            setBossBarNotification("§c§l[ROBOT] §cCạn pin! Không thể cưỡi", BarColor.RED, 50);
             player.playSound(player.getLocation(), Sound.BLOCK_DISPENSER_FAIL, 0.8f, 1.2f);
             return false;
         }
@@ -1360,7 +1459,7 @@ public class LunarRobotEntity {
             if (currentRider.getUniqueId().equals(player.getUniqueId())) {
                 return true;
             }
-            setBossBarNotification("§c§l[ROBOT] §cRobot hiện đang có người cưỡi!", BarColor.RED, 40);
+            setBossBarNotification("§c§l[ROBOT] §cĐang có người cưỡi!", BarColor.RED, 40);
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
             return false;
         }
@@ -1396,15 +1495,16 @@ public class LunarRobotEntity {
         }
 
         if (data.getActiveTask() == RobotTask.SPEED) {
-            setBossBarNotification("§b§l[TỐC HÀNH] §a[W/A/S/D] Di chuyển | Giữ [Space] Bứt Tốc | [Shift] Xuống", BarColor.BLUE, 80);
+            player.sendMessage("§b§l[ROBOT TỐC HÀNH] §f[W/A/S/D] §7Di chuyển §8| §b[Space] §7Bứt Tốc §8| §c[Shift] §7Xuống");
             player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_NETHERITE, 0.8f, 1.2f);
-            player.playSound(player.getLocation(), Sound.ENTITY_HORSE_GALLOP, 0.6f, 1.4f);
+            player.playSound(player.getLocation(), Sound.BLOCK_COPPER_GRATE_STEP, 0.6f, 1.4f);
         } else if (data.getActiveTask() == RobotTask.THRUST) {
-            setBossBarNotification("§e§l[ĐẨY PHẢN LỰC] §a[W/A/S/D] Di chuyển | Giữ [Space] Bay | [Shift] Xuống", BarColor.YELLOW, 80);
+            player.sendMessage("§e§l[ROBOT ĐẨY PHẢN LỰC] §f[W/A/S/D] §7Di chuyển §8| §e[Space] §7Bay phản lực §8| §c[Shift] §7Xuống");
         } else {
-            setBossBarNotification("§b§l[ROBOT] §a" + data.getActiveTask().getFormattedName() + " §8| §f[W/A/S/D] Chạy | [Shift] Xuống", BarColor.GREEN, 80);
+            player.sendMessage("§a§l[ROBOT] §f[W/A/S/D] §7Di chuyển §8| §c[Shift] §7Xuống");
         }
-        player.playSound(player.getLocation(), Sound.ENTITY_HORSE_ARMOR, 0.8f, 1.2f);
+        player.playSound(player.getLocation(), Sound.BLOCK_IRON_TRAPDOOR_OPEN, 0.8f, 1.4f);
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.6f, 1.8f);
         return true;
     }
 
@@ -1519,6 +1619,7 @@ public class LunarRobotEntity {
         entity.setFallDistance(0.0f);
         playAnimation("idle", 0.2, 0.2, 1.0, true);
 
+        syncGravityAttributes(plugin, entity, targetLoc.getWorld());
         if (plugin instanceof vn.haohan.lunar.HaoHanLunarPlugin lunarPlugin) {
             if (lunarPlugin.getLunarRobotMechanic() != null) {
                 lunarPlugin.getLunarRobotMechanic().saveRobotLocationToPlayer(owner, this);
@@ -1537,10 +1638,10 @@ public class LunarRobotEntity {
         World world = ownerLoc.getWorld();
         if (world == null) return ownerLoc.clone();
 
-        // 1. Try directly behind player
+        // 1. Try directly behind player (approx. 4.5 blocks)
         Vector dir = ownerLoc.getDirection().setY(0);
         if (dir.lengthSquared() > 0.001) {
-            dir.normalize().multiply(-2.0);
+            dir.normalize().multiply(-4.5);
             Location behind = ownerLoc.clone().add(dir);
             behind.setYaw(ownerLoc.getYaw());
             behind.setPitch(ownerLoc.getPitch());
@@ -1549,11 +1650,11 @@ public class LunarRobotEntity {
             }
         }
 
-        // 2. Try in surrounding offsets (radius 2-3 blocks)
+        // 2. Try in surrounding offsets (radius ~4-5 blocks)
         int[][] offsets = {
-                {-2, 0}, {2, 0}, {0, -2}, {0, 2},
-                {-1, -1}, {-1, 1}, {1, -1}, {1, 1},
-                {-3, 0}, {3, 0}, {0, -3}, {0, 3}
+                {-5, 0}, {5, 0}, {0, -5}, {0, 5},
+                {-4, -3}, {-4, 3}, {4, -3}, {4, 3},
+                {-3, -4}, {-3, 4}, {3, -4}, {3, 4}
         };
         for (int[] offset : offsets) {
             Location candidate = ownerLoc.clone().add(offset[0], 0, offset[1]);
@@ -1611,29 +1712,41 @@ public class LunarRobotEntity {
         }
 
         if (statusBossBar == null) {
-            statusBossBar = Bukkit.createBossBar("§b§l[ROBOT 4 CHÂN]", BarColor.WHITE, BarStyle.SOLID);
-            statusBossBar.setVisible(true);
+            statusBossBar = net.kyori.adventure.bossbar.BossBar.bossBar(
+                    Component.empty(),
+                    0.0f,
+                    net.kyori.adventure.bossbar.BossBar.Color.WHITE,
+                    net.kyori.adventure.bossbar.BossBar.Overlay.PROGRESS
+            );
         }
 
         // Add missing viewers
+        Set<UUID> targetViewerUUIDs = new HashSet<>();
         for (Player p : targetViewers) {
-            if (!statusBossBar.getPlayers().contains(p)) {
-                statusBossBar.addPlayer(p);
+            targetViewerUUIDs.add(p.getUniqueId());
+            if (!statusBossBarViewers.contains(p.getUniqueId())) {
+                p.showBossBar(statusBossBar);
+                statusBossBarViewers.add(p.getUniqueId());
             }
         }
         // Remove players no longer viewing
-        for (Player p : new ArrayList<>(statusBossBar.getPlayers())) {
-            if (!targetViewers.contains(p)) {
-                statusBossBar.removePlayer(p);
+        statusBossBarViewers.removeIf(uuid -> {
+            if (!targetViewerUUIDs.contains(uuid)) {
+                Player p = Bukkit.getPlayer(uuid);
+                if (p != null && p.isOnline()) {
+                    p.hideBossBar(statusBossBar);
+                }
+                return true;
             }
-        }
+            return false;
+        });
 
         int energy = data.getEnergy();
         int maxEnergy = Math.max(1, data.getMaxEnergy());
         int integrity = (int) Math.round(data.getIntegrityPercentage());
 
         String integrityColor = integrity > 50 ? "§a" : (integrity > 25 ? "§e" : "§c");
-        String healthStr = integrityColor + "❤ " + integrity + "%";
+        String healthStr = integrityColor + "♥ " + integrity + "%";
 
         String category = "ROBOT 4 CHÂN";
         String categoryColor = "§7";
@@ -1663,7 +1776,8 @@ public class LunarRobotEntity {
                 actionTitle = "NẠP NHIÊN LIỆU";
                 actionColor = "§e§l";
             }
-            indicatorText = "«««« NHIÊN LIỆU: " + pct + "% • " + String.format("%,d", energy) + " EU »»»»";
+            int altitude = (int) Math.round(entity.getLocation().getY());
+            indicatorText = "«« NL: " + pct + "% • ▲ " + altitude + "m • " + String.format(Locale.US, "%,d", energy) + " EU »»";
             indicatorColor = pct > 50 ? "§a" : (pct > 20 ? "§e" : "§c");
         } else if (task == RobotTask.SPEED) {
             category = "MODULE TỐC HÀNH";
@@ -1672,25 +1786,29 @@ public class LunarRobotEntity {
             int maxHeat = Math.max(1, maxEngineHeatTicks);
             int pct = (int) Math.round(Math.max(0.0, Math.min(1.0, (double) currentHeat / maxHeat)) * 100.0);
 
+            Vector vel = entity.getVelocity();
+            double speedMs = Math.round(Math.sqrt(vel.getX() * vel.getX() + vel.getZ() * vel.getZ()) * 20.0 * 10.0) / 10.0;
+            String speedStr = String.format(Locale.US, "%.1f m/s", speedMs);
+
             if (isOverheated || pct >= 100) {
                 actionTitle = "QUÁ NHIỆT (100%)";
                 actionColor = "§c§l";
-                indicatorText = "«««« HẠ NHIỆT: " + pct + "% • THẢ SPACE »»»»";
+                indicatorText = "«« HẠ NHIỆT: " + pct + "% • THẢ SPACE »»";
                 indicatorColor = "§c";
             } else if (isSpeedBoosting) {
                 actionTitle = "BỨT TỐC TỐI ĐA";
                 actionColor = "§e§l";
-                indicatorText = "«««« NHIỆT ĐỘ: " + pct + "% • " + String.format("%,d", energy) + " EU »»»»";
+                indicatorText = "«« ♨ " + pct + "% • " + speedStr + " • " + String.format(Locale.US, "%,d", energy) + " EU »»";
                 indicatorColor = pct > 60 ? "§c" : "§e";
             } else if (currentHeat > 0) {
                 actionTitle = "HẠ NHIỆT ĐỘNG CƠ";
                 actionColor = "§b§l";
-                indicatorText = "«««« NHIỆT ĐỘ: " + pct + "% • " + String.format("%,d", energy) + " EU »»»»";
+                indicatorText = "«« ♨ " + pct + "% • " + speedStr + " • " + String.format(Locale.US, "%,d", energy) + " EU »»";
                 indicatorColor = "§e";
             } else {
                 actionTitle = "SẴN SÀNG [SPACE]";
                 actionColor = "§a§l";
-                indicatorText = "«««« ỔN ĐỊNH (0%) • " + String.format("%,d", energy) + " EU »»»»";
+                indicatorText = "«« ♨ 0% • " + speedStr + " • " + String.format(Locale.US, "%,d", energy) + " EU »»";
                 indicatorColor = "§b";
             }
         } else if (task == RobotTask.COMBAT) {
@@ -1702,11 +1820,11 @@ public class LunarRobotEntity {
                 actionTitle = "TẤN CÔNG: " + targetName;
                 actionColor = "§c§l";
                 double dist = Math.round(target.getLocation().distance(entity.getLocation()) * 10.0) / 10.0;
-                indicatorText = "«««« CÁCH: " + dist + "m • " + String.format("%,d", energy) + " EU »»»»";
+                indicatorText = "«« CÁCH: " + dist + "m • " + String.format(Locale.US, "%,d", energy) + " EU »»";
             } else {
                 actionTitle = "TUẦN TRA TỰ DO";
                 actionColor = "§e§l";
-                indicatorText = "«««« " + String.format("%,d", energy) + " EU • " + healthStr + " »»»»";
+                indicatorText = "«« " + String.format(Locale.US, "%,d", energy) + " EU • " + healthStr + " »»";
             }
             indicatorColor = energy > 200 ? "§a" : "§c";
         } else if (task == RobotTask.ORE_SCAN) {
@@ -1714,36 +1832,35 @@ public class LunarRobotEntity {
             categoryColor = "§6";
             actionTitle = "DÒ QUẶNG TỰ ĐỘNG";
             actionColor = "§e§l";
-            indicatorText = "«««« QUÉT ĐỊA TẦNG • " + String.format("%,d", energy) + " EU »»»»";
+            indicatorText = "«« QUÉT ĐỊA TẦNG • " + String.format(Locale.US, "%,d", energy) + " EU »»";
             indicatorColor = "§e";
         } else {
             category = "ROBOT 4 CHÂN";
             categoryColor = "§7";
             actionTitle = "THEO DÕI / NGHỈ";
             actionColor = "§f§l";
-            indicatorText = "«««« " + String.format("%,d", energy) + "/" + String.format("%,d", maxEnergy) + " EU • " + healthStr + " »»»»";
+            indicatorText = "«« " + String.format(Locale.US, "%,d", energy) + "/" + String.format(Locale.US, "%,d", maxEnergy) + " EU • " + healthStr + " »»";
             indicatorColor = energy > maxEnergy * 0.3 ? "§a" : "§c";
         }
 
         // Transient event notification takes highest priority on BossBar
         if (notificationTicksRemaining > 0 && notificationTitle != null) {
             notificationTicksRemaining--;
-            category = "CẢNH BÁO ROBOT";
-            categoryColor = "§c";
-            actionTitle = notificationTitle.replace("§l", "");
+            category = "THÔNG BÁO ROBOT";
+            categoryColor = notificationColor == BarColor.RED ? "§c" : "§e";
+            actionTitle = notificationTitle;
             actionColor = "§e§l";
-            indicatorText = "«««« " + healthStr + " • " + String.format("%,d", energy) + " EU »»»»";
-            indicatorColor = "§c";
+            indicatorText = "«« " + healthStr + " • " + String.format(Locale.US, "%,d", energy) + " EU »»";
+            indicatorColor = notificationColor == BarColor.RED ? "§c" : "§e";
         }
 
-        String cardTitle = LunarModuleBossBarRenderer.renderCardLegacyString(
+        Component cardComponent = LunarModuleBossBarRenderer.render3LineCard(
                 category, actionTitle, indicatorText, categoryColor, actionColor, indicatorColor
         );
 
-        statusBossBar.setTitle(cardTitle);
-        statusBossBar.setProgress(0.0);
-        statusBossBar.setColor(BarColor.WHITE);
-        statusBossBar.setStyle(BarStyle.SOLID);
+        statusBossBar.name(cardComponent);
+        statusBossBar.progress(0.0f);
+        statusBossBar.color(net.kyori.adventure.bossbar.BossBar.Color.WHITE);
     }
 
     public void setBossBarNotification(String message, BarColor barColor, int durationTicks) {
@@ -1756,10 +1873,24 @@ public class LunarRobotEntity {
     public void cleanupStatusBossBar() {
         if (statusBossBar != null) {
             try {
-                statusBossBar.removeAll();
+                Player owner = getOnlineOwner();
+                if (owner != null && owner.isOnline()) {
+                    owner.hideBossBar(statusBossBar);
+                }
+                for (UUID uuid : statusBossBarViewers) {
+                    Player p = Bukkit.getPlayer(uuid);
+                    if (p != null && p.isOnline()) {
+                        p.hideBossBar(statusBossBar);
+                    }
+                }
+                statusBossBarViewers.clear();
             } catch (Throwable ignored) {}
             statusBossBar = null;
         }
+    }
+
+    public net.kyori.adventure.bossbar.BossBar getStatusBossBar() {
+        return statusBossBar;
     }
 
     private boolean isPlayerHoldingTablet(Player player) {
@@ -1772,6 +1903,7 @@ public class LunarRobotEntity {
     }
 
     public void cleanup() {
+        clearCombatTarget();
         dismountRider();
         cleanupFallbackSeat();
         cleanupHolograms();

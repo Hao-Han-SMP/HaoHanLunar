@@ -27,7 +27,16 @@ public class LunarRobotMountController extends AbstractMountController {
 
         // 1. Shift key handling: dismount driver
         if (this.input != null && this.input.isSneak()) {
+            robot.setDriverMoving(false);
+            robot.dismountRider();
             mm.dismountDriver();
+            moveController.move(0, 0, 0, 0);
+            return;
+        }
+
+        // Out of energy check: halt all robot movement while keeping rider mounted safely
+        if (robot.getData().getEnergy() <= 0) {
+            robot.setDriverMoving(false);
             moveController.move(0, 0, 0, 0);
             return;
         }
@@ -35,6 +44,8 @@ public class LunarRobotMountController extends AbstractMountController {
         // 2. Horizontal movement
         float side = this.input != null ? this.input.getSide() : 0f;
         float front = this.input != null ? this.input.getFront() : 0f;
+        boolean isMoving = Math.abs(front) > 0.01f || Math.abs(side) > 0.01f;
+        robot.setDriverMoving(isMoving);
         moveController.move(side, 0.0f, front, 1.0f);
 
         // 3. Task-specific vertical / jump / flight behavior
