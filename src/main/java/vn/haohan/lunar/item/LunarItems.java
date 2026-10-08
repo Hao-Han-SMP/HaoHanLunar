@@ -152,10 +152,10 @@ public class LunarItems {
 
                 // 6. Block
                 registry.register(ItemDefinition.builder("haohan:anorthosite_ore")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("Anorthosite Ore")
                                 .customModelData(5001)
-                                .type(ItemType.SPECIAL)
+                                .type(ItemType.BLOCK)
                                 .properties(Map.of(
                                                 "custom_block_id", "haohan:anorthosite_ore",
                                                 "custom_block_model", "minecraft:note_block[note=24,instrument=pling,powered=true]",
@@ -166,10 +166,10 @@ public class LunarItems {
                                 .build());
 
                 registry.register(ItemDefinition.builder("haohan:ilmenite_ore")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("Ilmenite Ore")
                                 .customModelData(5002)
-                                .type(ItemType.SPECIAL)
+                                .type(ItemType.BLOCK)
                                 .properties(Map.of(
                                                 "custom_block_id", "haohan:ilmenite_ore",
                                                 "custom_block_model", "minecraft:note_block[note=23,instrument=pling,powered=true]",
@@ -180,10 +180,10 @@ public class LunarItems {
                                 .build());
 
                 registry.register(ItemDefinition.builder("haohan:pyroxene_ore")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("Pyroxene Ore")
                                 .customModelData(5003)
-                                .type(ItemType.SPECIAL)
+                                .type(ItemType.BLOCK)
                                 .properties(Map.of(
                                                 "custom_block_id", "haohan:pyroxene_ore",
                                                 "custom_block_model", "minecraft:note_block[note=22,instrument=pling,powered=true]",
@@ -194,10 +194,10 @@ public class LunarItems {
                                 .build());
 
                 registry.register(ItemDefinition.builder("haohan:kreep_basalt")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("KREEP Basalt")
                                 .customModelData(5004)
-                                .type(ItemType.SPECIAL)
+                                .type(ItemType.BLOCK)
                                 .properties(Map.of(
                                                 "custom_block_id", "haohan:kreep_basalt",
                                                 "custom_block_model", "minecraft:note_block[note=21,instrument=pling,powered=true]",

@@ -93,7 +93,10 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(props.containsKey("custom_block_drop"), oreId + " must contain custom_block_drop");
             assertNotNull(props.get("custom_block_drop"));
 
+            assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
+            assertEquals(vn.haohan.itemcore.api.item.ItemType.BLOCK, def.getType(), oreId + " must use ItemType.BLOCK");
             assertTrue(ItemCategory.CUSTOM_BLOCKS.matches(def), oreId + " must match ItemCategory.CUSTOM_BLOCKS");
+            assertFalse(ItemCategory.SPECIAL.matches(def), oreId + " must not match ItemCategory.SPECIAL");
         }
     }
 
