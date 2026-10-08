@@ -60,7 +60,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.register('compileValidator', JavaCompile) {
-    source = files(fileTree('src/main/java/vn/haohan/lunar/core/system/validator'), 'src/main/java/vn/haohan/lunar/core/util/PatternUtil.java')
+    source = files(fileTree('src/main/java/vn/haohan/engine/core/system/validator'), 'src/main/java/vn/haohan/engine/core/util/PatternUtil.java')
     classpath = configurations.validatorClasspath
     destinationDirectory = layout.buildDirectory.dir('classes/validator')
 }
@@ -70,7 +70,7 @@ tasks.register('validateContent', JavaExec) {
     description = 'Validates content schemas and cross-references'
     dependsOn 'compileValidator'
     classpath = files(layout.buildDirectory.dir('classes/validator'), configurations.validatorClasspath)
-    mainClass = 'vn.haohan.lunar.core.system.validator.ContentLintTool'
+    mainClass = 'vn.haohan.engine.core.system.validator.ContentLintTool'
     args = ['src/main/resources']
 }
 
