@@ -14,17 +14,27 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlotGroup;
+import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.engine.core.service.IService;
 
+import java.util.Set;
+
 public class MiningMechanic implements Listener, IService {
+
+    public static final Set<String> LUNAR_ORE_BLOCK_IDS = Set.of(
+            "haohan:anorthosite_ore",
+            "haohan:ilmenite_ore",
+            "haohan:pyroxene_ore",
+            "haohan:kreep_basalt"
+    );
 
     private final NamespacedKey slowMiningKey;
     private final NamespacedKey noMiningKey;
 
     public MiningMechanic(HaoHanLunarPlugin plugin) {
-        this.slowMiningKey = new NamespacedKey(plugin, "slow_mining");
-        this.noMiningKey = new NamespacedKey(plugin, "no_mining");
+        this.slowMiningKey = plugin != null ? new NamespacedKey(plugin, "slow_mining") : new NamespacedKey("haohanlunar", "slow_mining");
+        this.noMiningKey = plugin != null ? new NamespacedKey(plugin, "no_mining") : new NamespacedKey("haohanlunar", "no_mining");
     }
 
     @Override
@@ -68,7 +78,28 @@ public class MiningMechanic implements Listener, IService {
 
     private boolean isLookingAtLunarOre(Player player) {
         Block target = player.getTargetBlockExact(5);
-        if (target != null && target.getType() == Material.NOTE_BLOCK) {
+        if (target == null) {
+            return false;
+        }
+
+        // 1. Check new Barrier Custom Block system via HaoHanItemCore
+        if (target.getType() == Material.BARRIER) {
+            try {
+                var core = HaoHanItemCore.get();
+                if (core != null && core.getCustomBlockService() != null) {
+                    var cbService = core.getCustomBlockService();
+                    if (cbService.isCustomBlock(target)) {
+                        String id = cbService.getCustomBlockId(target);
+                        if (id != null && LUNAR_ORE_BLOCK_IDS.contains(id)) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        // 2. Backward compatibility fallback: old NoteBlock system
+        if (target.getType() == Material.NOTE_BLOCK) {
             if (target.getBlockData() instanceof NoteBlock noteBlock) {
                 int note = noteBlock.getNote().getId();
                 return (note >= 21 && note <= 24) &&

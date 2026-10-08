@@ -157,8 +157,9 @@ public class LunarItems {
                                 .customModelData(5001)
                                 .type(ItemType.SPECIAL)
                                 .properties(Map.of(
-                                                "custom_block_data",
-                                                "minecraft:note_block[note=24,instrument=pling,powered=true]",
+                                                "custom_block_id", "haohan:anorthosite_ore",
+                                                "custom_block_model", "minecraft:note_block[note=24,instrument=pling,powered=true]",
+                                                "custom_block_data", "minecraft:note_block[note=24,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:raw_anorthosite",
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
@@ -170,8 +171,9 @@ public class LunarItems {
                                 .customModelData(5002)
                                 .type(ItemType.SPECIAL)
                                 .properties(Map.of(
-                                                "custom_block_data",
-                                                "minecraft:note_block[note=23,instrument=pling,powered=true]",
+                                                "custom_block_id", "haohan:ilmenite_ore",
+                                                "custom_block_model", "minecraft:note_block[note=23,instrument=pling,powered=true]",
+                                                "custom_block_data", "minecraft:note_block[note=23,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:raw_ilmenite",
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
@@ -183,8 +185,9 @@ public class LunarItems {
                                 .customModelData(5003)
                                 .type(ItemType.SPECIAL)
                                 .properties(Map.of(
-                                                "custom_block_data",
-                                                "minecraft:note_block[note=22,instrument=pling,powered=true]",
+                                                "custom_block_id", "haohan:pyroxene_ore",
+                                                "custom_block_model", "minecraft:note_block[note=22,instrument=pling,powered=true]",
+                                                "custom_block_data", "minecraft:note_block[note=22,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:raw_pyroxene",
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
@@ -196,12 +199,26 @@ public class LunarItems {
                                 .customModelData(5004)
                                 .type(ItemType.SPECIAL)
                                 .properties(Map.of(
-                                                "custom_block_data",
-                                                "minecraft:note_block[note=21,instrument=pling,powered=true]",
+                                                "custom_block_id", "haohan:kreep_basalt",
+                                                "custom_block_model", "minecraft:note_block[note=21,instrument=pling,powered=true]",
+                                                "custom_block_data", "minecraft:note_block[note=21,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:kreep_dust",
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
                                 .build());
+
+                // Register into CustomBlockService if available
+                var customBlockService = HaoHanItemCore.get().getCustomBlockService();
+                if (customBlockService != null) {
+                        registerCustomBlockDefinition(customBlockService, "haohan:anorthosite_ore",
+                                        "minecraft:note_block[note=24,instrument=pling,powered=true]", "haohan:raw_anorthosite");
+                        registerCustomBlockDefinition(customBlockService, "haohan:ilmenite_ore",
+                                        "minecraft:note_block[note=23,instrument=pling,powered=true]", "haohan:raw_ilmenite");
+                        registerCustomBlockDefinition(customBlockService, "haohan:pyroxene_ore",
+                                        "minecraft:note_block[note=22,instrument=pling,powered=true]", "haohan:raw_pyroxene");
+                        registerCustomBlockDefinition(customBlockService, "haohan:kreep_basalt",
+                                        "minecraft:note_block[note=21,instrument=pling,powered=true]", "haohan:kreep_dust");
+                }
 
                 // 7. Lunar Quadruped Robot Items
                 registry.register(ItemDefinition.builder("haohan:robot_tablet")
@@ -405,7 +422,9 @@ public class LunarItems {
                         if (!recipeRegistry.exists(upgradeRecipe.getId())) {
                                 recipeRegistry.register(upgradeRecipe);
                         }
-                        registerBukkitSmithingRecipe(plugin, upgradeRecipe, itemFactory, itemRegistry);
+                        if (plugin != null) {
+                                registerBukkitSmithingRecipe(plugin, upgradeRecipe, itemFactory, itemRegistry);
+                        }
                 }
         }
 
@@ -654,5 +673,26 @@ public class LunarItems {
                 if (!recipeRegistry.exists(modThrust.getId())) {
                         recipeRegistry.register(modThrust);
                 }
+        }
+
+        private static void registerCustomBlockDefinition(vn.haohan.itemcore.api.block.CustomBlockService service,
+                                                          String id, String blockDataStr, String dropItemId) {
+                try {
+                        var cbRegistry = service.getRegistry();
+                        if (cbRegistry != null && !cbRegistry.has(id)) {
+                                org.bukkit.block.data.BlockData blockData = null;
+                                try {
+                                        blockData = Bukkit.createBlockData(blockDataStr);
+                                } catch (Throwable ignored) {}
+                                if (blockData == null) {
+                                        blockData = Bukkit.createBlockData(Material.STONE);
+                                }
+                                var blockDef = vn.haohan.itemcore.api.block.CustomBlockDefinition.builder(id)
+                                                .model(new vn.haohan.itemcore.api.block.CustomBlockModel(blockData))
+                                                .dropItemId(dropItemId)
+                                                .build();
+                                cbRegistry.register(blockDef);
+                        }
+                } catch (Throwable ignored) {}
         }
 }
