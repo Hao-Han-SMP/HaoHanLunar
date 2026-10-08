@@ -130,4 +130,37 @@ public class LunarCustomBlockAdaptationTest {
         boolean resultStone = (boolean) isLookingMethod.invoke(mechanic, playerStone);
         assertFalse(resultStone, "MiningMechanic must return false for standard stone");
     }
+
+    @Test
+    @DisplayName("Robot 4 Chân phải nhận diện chính xác quặng Barrier hiếm và phổ thông")
+    void testRobotOreScanRecognition() {
+        Block barrierOreRare = mock(Block.class);
+        when(barrierOreRare.getType()).thenReturn(Material.BARRIER);
+        when(customBlockService.isCustomBlock(barrierOreRare)).thenReturn(true);
+        when(customBlockService.getCustomBlockId(barrierOreRare)).thenReturn("haohan:pyroxene_ore");
+
+        Block barrierOreCommon = mock(Block.class);
+        when(barrierOreCommon.getType()).thenReturn(Material.BARRIER);
+        when(customBlockService.isCustomBlock(barrierOreCommon)).thenReturn(true);
+        when(customBlockService.getCustomBlockId(barrierOreCommon)).thenReturn("haohan:anorthosite_ore");
+
+        Block normalBlock = mock(Block.class);
+        when(normalBlock.getType()).thenReturn(Material.STONE);
+        when(customBlockService.isCustomBlock(normalBlock)).thenReturn(false);
+
+        // 1. Test getCustomBlockIdSafe
+        assertEquals("haohan:pyroxene_ore", vn.haohan.lunar.robot.LunarRobotEntity.getCustomBlockIdSafe(barrierOreRare));
+        assertEquals("haohan:anorthosite_ore", vn.haohan.lunar.robot.LunarRobotEntity.getCustomBlockIdSafe(barrierOreCommon));
+        assertNull(vn.haohan.lunar.robot.LunarRobotEntity.getCustomBlockIdSafe(normalBlock));
+        assertNull(vn.haohan.lunar.robot.LunarRobotEntity.getCustomBlockIdSafe(null));
+
+        // 2. Test ore classification
+        assertTrue(vn.haohan.lunar.robot.LunarRobotEntity.isRareCustomOre("haohan:pyroxene_ore"));
+        assertTrue(vn.haohan.lunar.robot.LunarRobotEntity.isRareCustomOre("haohan:kreep_basalt"));
+        assertFalse(vn.haohan.lunar.robot.LunarRobotEntity.isRareCustomOre("haohan:anorthosite_ore"));
+
+        assertTrue(vn.haohan.lunar.robot.LunarRobotEntity.isCommonCustomOre("haohan:anorthosite_ore"));
+        assertTrue(vn.haohan.lunar.robot.LunarRobotEntity.isCommonCustomOre("haohan:ilmenite_ore"));
+        assertFalse(vn.haohan.lunar.robot.LunarRobotEntity.isCommonCustomOre("haohan:pyroxene_ore"));
+    }
 }

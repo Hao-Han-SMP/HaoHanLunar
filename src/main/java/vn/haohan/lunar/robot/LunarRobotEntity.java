@@ -29,6 +29,7 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.robot.ui.LunarModuleBossBarRenderer;
+import vn.haohan.itemcore.api.HaoHanItemCore;
 
 import java.util.*;
 
@@ -709,13 +710,27 @@ public class LunarRobotEntity {
                     Block block = world.getBlockAt(x, y, z);
                     Material mat = block.getType();
 
-                    if (isRareOre(mat)) {
+                    boolean isRare = isRareOre(mat);
+                    boolean isCommon = isCommonOre(mat);
+
+                    if (!isRare && !isCommon && mat == Material.BARRIER) {
+                        String customId = getCustomBlockIdSafe(block);
+                        if (customId != null) {
+                            if (isRareCustomOre(customId)) {
+                                isRare = true;
+                            } else if (isCommonCustomOre(customId)) {
+                                isCommon = true;
+                            }
+                        }
+                    }
+
+                    if (isRare) {
                         double d = center.distanceSquared(block.getLocation().add(0.5, 0.5, 0.5));
                         if (d < minRareDist) {
                             minRareDist = d;
                             nearestRareOre = block;
                         }
-                    } else if (isCommonOre(mat)) {
+                    } else if (isCommon) {
                         double d = center.distanceSquared(block.getLocation().add(0.5, 0.5, 0.5));
                         if (d < minCommonDist) {
                             minCommonDist = d;
@@ -1402,6 +1417,28 @@ public class LunarRobotEntity {
                 mat == Material.GOLD_ORE || mat == Material.DEEPSLATE_GOLD_ORE ||
                 mat == Material.COAL_ORE || mat == Material.DEEPSLATE_COAL_ORE ||
                 mat == Material.NOTE_BLOCK; // Lunar custom ores
+    }
+
+    public static String getCustomBlockIdSafe(Block block) {
+        if (block == null) return null;
+        try {
+            var core = HaoHanItemCore.get();
+            if (core != null && core.getCustomBlockService() != null) {
+                var service = core.getCustomBlockService();
+                if (service.isCustomBlock(block)) {
+                    return service.getCustomBlockId(block);
+                }
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
+    public static boolean isRareCustomOre(String customId) {
+        return "haohan:pyroxene_ore".equals(customId) || "haohan:kreep_basalt".equals(customId);
+    }
+
+    public static boolean isCommonCustomOre(String customId) {
+        return "haohan:anorthosite_ore".equals(customId) || "haohan:ilmenite_ore".equals(customId);
     }
 
     public Player getOnlineOwner() {
