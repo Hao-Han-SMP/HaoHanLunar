@@ -80,6 +80,14 @@ public class LunarRobotMechanic implements Listener {
         return uiService;
     }
 
+    public Map<UUID, LunarRobotEntity> getActiveRobots() {
+        return activeRobots;
+    }
+
+    public Map<UUID, UUID> getPlayerRobotMap() {
+        return playerRobotMap;
+    }
+
     public void tick() {
         // 1. Tick active robots
         Iterator<Map.Entry<UUID, LunarRobotEntity>> it = activeRobots.entrySet().iterator();
@@ -1273,6 +1281,21 @@ public class LunarRobotMechanic implements Listener {
         handleOwnerWorldChange(player);
     }
 
+    public void cleanupPlayerRobotBossBar(Player player) {
+        if (player == null) return;
+        UUID robotId = playerRobotMap.get(player.getUniqueId());
+        if (robotId != null) {
+            LunarRobotEntity robot = activeRobots.get(robotId);
+            if (robot != null) {
+                robot.hideStatusBossBarFrom(player);
+            }
+        }
+        LunarRobotEntity mounted = getPlayerMountedRobot(player);
+        if (mounted != null) {
+            mounted.hideStatusBossBarFrom(player);
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerChangeWorld(PlayerChangedWorldEvent event) {
         Player player = event.getPlayer();
@@ -1281,6 +1304,7 @@ public class LunarRobotMechanic implements Listener {
         if (puzzle != null) {
             puzzle.close();
         }
+        cleanupPlayerRobotBossBar(player);
         handleOwnerWorldChange(player);
     }
 
@@ -1308,6 +1332,7 @@ public class LunarRobotMechanic implements Listener {
                 if (puzzle != null) {
                     puzzle.close();
                 }
+                cleanupPlayerRobotBossBar(player);
             }
             handleOwnerWorldChange(player);
         }
@@ -1358,6 +1383,7 @@ public class LunarRobotMechanic implements Listener {
     @EventHandler
     public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
         Player player = event.getPlayer();
+        cleanupPlayerRobotBossBar(player);
         LunarRobotEntity mounted = getPlayerMountedRobot(player);
         if (mounted != null) {
             mounted.dismountRider();

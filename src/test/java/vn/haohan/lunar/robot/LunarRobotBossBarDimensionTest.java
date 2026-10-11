@@ -264,6 +264,45 @@ class LunarRobotBossBarDimensionTest {
         );
     }
 
+    @Test
+    @DisplayName("Mechanic cleanupPlayerRobotBossBar must cleanly hide robot BossBar on world transitions")
+    void testMechanicCleanupPlayerRobotBossBar() {
+        World worldA = mockWorld("world_overworld");
+        Location locA = new Location(worldA, 0, 64, 0);
+
+        UUID ownerId = UUID.randomUUID();
+        AtomicInteger showCount = new AtomicInteger(0);
+        AtomicInteger hideCount = new AtomicInteger(0);
+        List<BossBar> shownBars = new ArrayList<>();
+        List<BossBar> hiddenBars = new ArrayList<>();
+
+        Player owner = mockPlayer("Owner", locA, ownerId, showCount, hideCount, shownBars, hiddenBars);
+        Wolf wolf = mockWolf(locA);
+        LunarRobotData data = new LunarRobotData(UUID.randomUUID());
+        data.setOwnerUuid(ownerId);
+        data.setActiveTask(RobotTask.SPEED);
+
+        Plugin plugin = mockPlugin();
+        LunarRobotEntity robot = new LunarRobotEntity(plugin, wolf, data) {
+            @Override
+            public Player getOnlineOwner() {
+                return owner;
+            }
+        };
+
+        robot.setBossBarNotification("SPEED", BarColor.WHITE, 100);
+        assertEquals(1, robot.getStatusBossBarViewersCount());
+
+        LunarRobotMechanic mechanic = new LunarRobotMechanic(null);
+        mechanic.getActiveRobots().put(wolf.getUniqueId(), robot);
+        mechanic.getPlayerRobotMap().put(ownerId, wolf.getUniqueId());
+
+        mechanic.cleanupPlayerRobotBossBar(owner);
+
+        assertEquals(0, robot.getStatusBossBarViewersCount());
+        assertTrue(hideCount.get() >= 1);
+    }
+
     private static Plugin mockPlugin() {
         return (Plugin) Proxy.newProxyInstance(Plugin.class.getClassLoader(),
                 new Class<?>[]{Plugin.class}, (proxy, method, args) -> {
