@@ -129,15 +129,17 @@ public class LunarRobotEntity {
         } catch (Throwable ignored) {}
 
         if (entity instanceof Wolf wolf) {
-            wolf.setSitting(data.isSitting());
-            if (data.getOwnerUuid() != null) {
-                OfflinePlayer op = Bukkit.getOfflinePlayer(data.getOwnerUuid());
-                wolf.setOwner(op);
-                wolf.setTamed(true);
-            } else {
-                wolf.setTamed(false);
-                wolf.setOwner(null);
-            }
+            try {
+                wolf.setSitting(data.isSitting());
+                if (data.getOwnerUuid() != null) {
+                    OfflinePlayer op = Bukkit.getOfflinePlayer(data.getOwnerUuid());
+                    wolf.setOwner(op);
+                    wolf.setTamed(true);
+                } else {
+                    wolf.setTamed(false);
+                    wolf.setOwner(null);
+                }
+            } catch (Throwable ignored) {}
         }
 
         if (entity != null) {
@@ -190,7 +192,9 @@ public class LunarRobotEntity {
                 }
             }
         } catch (Throwable t) {
-            plugin.getLogger().warning("ModelEngine robot_dog model failed to load: " + t.getMessage());
+            if (plugin != null && plugin.getLogger() != null) {
+                plugin.getLogger().warning("ModelEngine robot_dog model failed to load: " + t.getMessage());
+            }
         }
     }
 
@@ -1731,7 +1735,7 @@ public class LunarRobotEntity {
     public void updateStatusBossBar() {
         Set<Player> targetViewers = new HashSet<>();
         Player rider = getRider();
-        if (rider != null && rider.isOnline()) {
+        if (rider != null && rider.isOnline() && rider.getWorld().equals(entity.getWorld())) {
             targetViewers.add(rider);
         }
 
@@ -1744,7 +1748,17 @@ public class LunarRobotEntity {
         }
 
         if (targetViewers.isEmpty()) {
-            cleanupStatusBossBar();
+            if (statusBossBar != null && !statusBossBarViewers.isEmpty()) {
+                for (UUID uuid : statusBossBarViewers) {
+                    Player p = getPlayerByUuid(uuid);
+                    if (p != null && p.isOnline()) {
+                        try {
+                            p.hideBossBar(statusBossBar);
+                        } catch (Throwable ignored) {}
+                    }
+                }
+                statusBossBarViewers.clear();
+            }
             return;
         }
 
@@ -1769,9 +1783,11 @@ public class LunarRobotEntity {
         // Remove players no longer viewing
         statusBossBarViewers.removeIf(uuid -> {
             if (!targetViewerUUIDs.contains(uuid)) {
-                Player p = Bukkit.getPlayer(uuid);
+                Player p = getPlayerByUuid(uuid);
                 if (p != null && p.isOnline()) {
-                    p.hideBossBar(statusBossBar);
+                    try {
+                        p.hideBossBar(statusBossBar);
+                    } catch (Throwable ignored) {}
                 }
                 return true;
             }
@@ -1907,6 +1923,23 @@ public class LunarRobotEntity {
         updateStatusBossBar();
     }
 
+    public Player getPlayerByUuid(UUID uuid) {
+        if (uuid == null) return null;
+        Player owner = getOnlineOwner();
+        if (owner != null && uuid.equals(owner.getUniqueId())) {
+            return owner;
+        }
+        Player rider = getRider();
+        if (rider != null && uuid.equals(rider.getUniqueId())) {
+            return rider;
+        }
+        try {
+            return Bukkit.getPlayer(uuid);
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
     public void cleanupStatusBossBar() {
         if (statusBossBar != null) {
             try {
@@ -1915,7 +1948,7 @@ public class LunarRobotEntity {
                     owner.hideBossBar(statusBossBar);
                 }
                 for (UUID uuid : statusBossBarViewers) {
-                    Player p = Bukkit.getPlayer(uuid);
+                    Player p = getPlayerByUuid(uuid);
                     if (p != null && p.isOnline()) {
                         p.hideBossBar(statusBossBar);
                     }
@@ -1928,6 +1961,18 @@ public class LunarRobotEntity {
 
     public net.kyori.adventure.bossbar.BossBar getStatusBossBar() {
         return statusBossBar;
+    }
+
+    public int getStatusBossBarViewersCount() {
+        return statusBossBarViewers.size();
+    }
+
+    public void hideStatusBossBarFrom(Player player) {
+        if (player == null || statusBossBar == null) return;
+        try {
+            player.hideBossBar(statusBossBar);
+        } catch (Throwable ignored) {}
+        statusBossBarViewers.remove(player.getUniqueId());
     }
 
     private boolean isPlayerHoldingTablet(Player player) {
