@@ -49,6 +49,13 @@ public final class LunarBossBarTracker {
         bars.clear();
     }
 
+    public void removeViewerFromAll(Player player) {
+        if (player == null || bars.isEmpty()) return;
+        for (LunarBossBar bar : bars.values()) {
+            bar.removeViewer(player);
+        }
+    }
+
     public Map<String, LunarBossBar> allBars() {
         return Collections.unmodifiableMap(bars);
     }

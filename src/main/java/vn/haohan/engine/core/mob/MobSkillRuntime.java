@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -520,21 +521,31 @@ public class MobSkillRuntime implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        UUID playerId = event.getPlayer().getUniqueId();
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
         for (ActiveMob mob : mobManager.snapshot()) {
             if (mob.threatTable() != null) {
                 mob.threatTable().removeTarget(playerId);
+            }
+            if (mob.bossBars() != null) {
+                mob.bossBars().removeViewerFromAll(player);
             }
         }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerChangedWorld(PlayerChangedWorldEvent event) {
-        UUID playerId = event.getPlayer().getUniqueId();
-        World currentWorld = event.getPlayer().getWorld();
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+        World currentWorld = player.getWorld();
         for (ActiveMob mob : mobManager.snapshot()) {
-            if (mob.threatTable() != null && mob.entity() != null && !mob.entity().getWorld().equals(currentWorld)) {
-                mob.threatTable().removeTarget(playerId);
+            if (mob.entity() != null && !mob.entity().getWorld().equals(currentWorld)) {
+                if (mob.threatTable() != null) {
+                    mob.threatTable().removeTarget(playerId);
+                }
+                if (mob.bossBars() != null) {
+                    mob.bossBars().removeViewerFromAll(player);
+                }
             }
         }
     }

@@ -95,6 +95,32 @@ class Phase8BossPresentationTest {
     }
 
     @Test
+    void testRemoveViewerAndRemoveViewerFromAll() {
+        LunarBossBarTracker tracker = new LunarBossBarTracker();
+        LunarBossBar bar1 = tracker.create("bar1", Component.text("Bar 1"), 1.0f,
+                BossBar.Color.RED, BossBar.Overlay.PROGRESS, 32.0);
+        LunarBossBar bar2 = tracker.create("bar2", Component.text("Bar 2"), 0.5f,
+                BossBar.Color.BLUE, BossBar.Overlay.PROGRESS, 32.0);
+
+        World mockWorld = mockWorld("lunar");
+        Location mobLoc = new Location(mockWorld, 0, 64, 0);
+        Player player = mockPlayer("PlayerA", new Location(mockWorld, 5, 64, 0));
+
+        tracker.tick(mobLoc, List.of(player));
+        assertTrue(bar1.currentViewers().contains(player));
+        assertTrue(bar2.currentViewers().contains(player));
+
+        // 1. Remove viewer from single bar
+        bar1.removeViewer(player);
+        assertFalse(bar1.currentViewers().contains(player));
+        assertTrue(bar2.currentViewers().contains(player));
+
+        // 2. Remove viewer from all bars
+        tracker.removeViewerFromAll(player);
+        assertFalse(bar2.currentViewers().contains(player));
+    }
+
+    @Test
     void testLunarNameplateFormatting() {
         World mockWorld = mockWorld("lunar");
         Location loc = new Location(mockWorld, 0, 64, 0);

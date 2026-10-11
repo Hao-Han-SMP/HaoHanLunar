@@ -111,6 +111,19 @@ public final class LunarBossBar {
     }
 
     /**
+     * Removes a single viewer and hides the bar for them.
+     */
+    public void removeViewer(Player player) {
+        if (player == null) return;
+        if (currentViewers.remove(player)) {
+            try {
+                player.hideBossBar(bar);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    /**
      * Removes all viewers and hides the bar.
      */
     public void removeAll() {
