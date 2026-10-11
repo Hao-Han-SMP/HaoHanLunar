@@ -19,4 +19,23 @@ class MiningMechanicTest {
             assertFalse(MiningMechanic.isAllowedLunarPickaxe(material), material.name());
         }
     }
+
+    @Test
+    void testIsAllowedLunarPickaxeWithToolTiers() {
+        // Air / Null
+        assertFalse(MiningMechanic.isAllowedLunarPickaxe((org.bukkit.inventory.ItemStack) null));
+
+        // Vanilla pickaxes without ItemCore registry mock
+        org.bukkit.inventory.ItemStack netheritePick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(netheritePick.getType()).thenReturn(Material.NETHERITE_PICKAXE);
+        assertTrue(MiningMechanic.isAllowedLunarPickaxe(netheritePick));
+
+        org.bukkit.inventory.ItemStack diamondPick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(diamondPick.getType()).thenReturn(Material.DIAMOND_PICKAXE);
+        assertFalse(MiningMechanic.isAllowedLunarPickaxe(diamondPick));
+
+        org.bukkit.inventory.ItemStack ironPick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(ironPick.getType()).thenReturn(Material.IRON_PICKAXE);
+        assertFalse(MiningMechanic.isAllowedLunarPickaxe(ironPick));
+    }
 }

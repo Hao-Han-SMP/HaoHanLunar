@@ -1528,6 +1528,8 @@ public class LunarRobotMechanic implements Listener {
 
     public boolean isTabletItem(ItemStack item) {
         if (item == null || item.getType() == Material.AIR || !item.hasItemMeta()) return false;
+        Material mat = item.getType();
+        if (mat != Material.PAPER && mat != Material.CARROT_ON_A_STICK) return false;
 
         try {
             if (HaoHanItemCore.get().getItemService().isItem(item, "haohan:robot_tablet")) {
@@ -1544,13 +1546,18 @@ public class LunarRobotMechanic implements Listener {
         String id2 = pdc.get(new NamespacedKey("haohan", "item_id"), PersistentDataType.STRING);
         if ("haohan:robot_tablet".equals(id2)) return true;
 
-        String id3 = pdc.get(new NamespacedKey(plugin, "item_id"), PersistentDataType.STRING);
-        if ("haohan:robot_tablet".equals(id3)) return true;
+        if (plugin != null && plugin.getName() != null) {
+            String id3 = pdc.get(new NamespacedKey(plugin, "item_id"), PersistentDataType.STRING);
+            if ("haohan:robot_tablet".equals(id3)) return true;
 
-        if (pdc.has(new NamespacedKey(plugin, "linked_robot_uuid"), PersistentDataType.STRING)) return true;
+            if (pdc.has(new NamespacedKey(plugin, "linked_robot_uuid"), PersistentDataType.STRING)) return true;
+        }
         if (pdc.has(new NamespacedKey("haohan", "linked_robot_uuid"), PersistentDataType.STRING)) return true;
 
-        if (meta.hasCustomModelData() && meta.getCustomModelData() == 6001) return true;
+        if (meta.hasCustomModelData()) {
+            int cmd = meta.getCustomModelData();
+            if (cmd == 6050 || cmd == 6001) return true;
+        }
 
         if (meta.hasDisplayName()) {
             String name = meta.getDisplayName().toLowerCase();

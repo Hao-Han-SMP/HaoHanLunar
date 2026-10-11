@@ -77,6 +77,7 @@ public class LunarClaymoreMechanic implements Listener, IService {
 
     public static boolean isLunarClaymore(ItemStack item) {
         if (item == null || item.getType() == Material.AIR) return false;
+        if (!item.getType().name().endsWith("_SWORD")) return false;
         if (!item.hasItemMeta()) return false;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;

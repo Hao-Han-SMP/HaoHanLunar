@@ -139,6 +139,46 @@ public class LunarRobotTabletInteractionTest {
         verify(activeDashboard, times(1)).handleClickAtCursor(player);
     }
 
+    @Test
+    @DisplayName("3. Verify Claymore is not identified as Tablet and Tablet is not identified as Claymore")
+    public void testSwordAndTabletDiscrimination() {
+        HaoHanLunarPlugin plugin = mock(HaoHanLunarPlugin.class);
+        LunarRobotMechanic robotMechanic = new LunarRobotMechanic(plugin);
+
+        // 1. Tạo thanh kiếm Claymore Netherite Sword (CMD 6001)
+        ItemStack sword = mock(ItemStack.class);
+        when(sword.getType()).thenReturn(Material.NETHERITE_SWORD);
+        ItemMeta swordMeta = mock(ItemMeta.class);
+        when(swordMeta.hasCustomModelData()).thenReturn(true);
+        when(swordMeta.getCustomModelData()).thenReturn(6001);
+        when(swordMeta.hasDisplayName()).thenReturn(true);
+        when(swordMeta.getDisplayName()).thenReturn("§b§lThanh Kiếm Nguyệt Thạch");
+        when(swordMeta.getPersistentDataContainer()).thenReturn(mock(PersistentDataContainer.class));
+        when(sword.hasItemMeta()).thenReturn(true);
+        when(sword.getItemMeta()).thenReturn(swordMeta);
+
+        // 2. Tạo Tablet Paper (CMD 6050)
+        ItemStack tablet = mock(ItemStack.class);
+        when(tablet.getType()).thenReturn(Material.PAPER);
+        ItemMeta tabletMeta = mock(ItemMeta.class);
+        when(tabletMeta.hasCustomModelData()).thenReturn(true);
+        when(tabletMeta.getCustomModelData()).thenReturn(6050);
+        when(tabletMeta.hasDisplayName()).thenReturn(true);
+        when(tabletMeta.getDisplayName()).thenReturn("§b§lBảng Điều Khiển Robot");
+        when(tabletMeta.getPersistentDataContainer()).thenReturn(mock(PersistentDataContainer.class));
+        when(tablet.hasItemMeta()).thenReturn(true);
+        when(tablet.getItemMeta()).thenReturn(tabletMeta);
+
+        // Kiểm tra phân biệt:
+        // - Kiếm: là LunarClaymore, KHÔNG phải là Tablet
+        assertTrue(vn.haohan.lunar.features.LunarClaymoreMechanic.isLunarClaymore(sword), "Sword must be LunarClaymore");
+        assertFalse(robotMechanic.isTabletItem(sword), "Sword must NOT be recognized as Tablet");
+
+        // - Tablet: là Tablet, KHÔNG phải là LunarClaymore
+        assertTrue(robotMechanic.isTabletItem(tablet), "Tablet must be recognized as Tablet");
+        assertFalse(vn.haohan.lunar.features.LunarClaymoreMechanic.isLunarClaymore(tablet), "Tablet must NOT be recognized as LunarClaymore");
+    }
+
     @SuppressWarnings("unchecked")
     private java.util.Map<UUID, LunarRobotDashboardUi> getActiveDashboardsMap(LunarRobotMechanic mechanic) {
         try {

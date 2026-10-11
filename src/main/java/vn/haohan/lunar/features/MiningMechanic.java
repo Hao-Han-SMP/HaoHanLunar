@@ -76,6 +76,30 @@ public class MiningMechanic implements Listener, IService {
         return material == Material.NETHERITE_PICKAXE;
     }
 
+    /**
+     * Checks if the held tool satisfies the Netherite tier requirement for Lunar Anorthosite Ore.
+     * Accurately supports custom pickaxes (e.g., HaoHanMetallurgy) resolved via ToolTierRegistry.
+     */
+    public static boolean isAllowedLunarPickaxe(org.bukkit.inventory.ItemStack tool) {
+        if (tool == null || tool.getType() == Material.AIR) {
+            return false;
+        }
+
+        try {
+            var core = HaoHanItemCore.get();
+            if (core != null && core.getToolTierRegistry() != null) {
+                var tierRegistry = core.getToolTierRegistry();
+                var toolTier = tierRegistry.findTier(tool);
+                if (toolTier != null) {
+                    var netheriteTier = tierRegistry.get("netherite").orElse(vn.haohan.itemcore.api.block.ToolTier.NETHERITE);
+                    return toolTier.level() >= netheriteTier.level();
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        return isAllowedLunarPickaxe(tool.getType());
+    }
+
     private boolean isLookingAtLunarOre(Player player) {
         Block target = player.getTargetBlockExact(5);
         if (target == null) {
@@ -115,7 +139,7 @@ public class MiningMechanic implements Listener, IService {
             return;
 
         if (lookingAtOre) {
-            boolean hasNetherite = isAllowedLunarPickaxe(player.getInventory().getItemInMainHand().getType());
+            boolean hasNetherite = isAllowedLunarPickaxe(player.getInventory().getItemInMainHand());
             applyOreMiningModifier(instance, hasNetherite);
         } else {
             // Remove modifiers if present

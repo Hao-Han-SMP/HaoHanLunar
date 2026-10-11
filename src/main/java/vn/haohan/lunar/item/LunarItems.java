@@ -151,6 +151,35 @@ public class LunarItems {
                                 .build());
 
                 // 6. Block
+                Map<String, String> anorthositeSounds = Map.of(
+                                "place", "minecraft:block.deepslate.place",
+                                "break", "minecraft:block.deepslate.break",
+                                "hit", "minecraft:block.deepslate.hit",
+                                "step", "minecraft:block.deepslate.step",
+                                "fall", "minecraft:block.deepslate.fall"
+                );
+                Map<String, String> ilmeniteSounds = Map.of(
+                                "place", "minecraft:block.deepslate.place",
+                                "break", "minecraft:block.deepslate.break",
+                                "hit", "minecraft:block.netherite_block.hit",
+                                "step", "minecraft:block.deepslate.step",
+                                "fall", "minecraft:block.deepslate.fall"
+                );
+                Map<String, String> pyroxeneSounds = Map.of(
+                                "place", "minecraft:block.basalt.place",
+                                "break", "minecraft:block.basalt.break",
+                                "hit", "minecraft:block.basalt.hit",
+                                "step", "minecraft:block.basalt.step",
+                                "fall", "minecraft:block.basalt.fall"
+                );
+                Map<String, String> kreepSounds = Map.of(
+                                "place", "minecraft:block.basalt.place",
+                                "break", "minecraft:block.basalt.break",
+                                "hit", "minecraft:block.basalt.hit",
+                                "step", "minecraft:block.basalt.step",
+                                "fall", "minecraft:block.basalt.fall"
+                );
+
                 registry.register(ItemDefinition.builder("haohan:anorthosite_ore")
                                 .material(Material.BARRIER)
                                 .displayName("Anorthosite Ore")
@@ -161,6 +190,10 @@ public class LunarItems {
                                                 "custom_block_model", "minecraft:note_block[note=24,instrument=pling,powered=true]",
                                                 "custom_block_data", "minecraft:note_block[note=24,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:raw_anorthosite",
+                                                "custom_block_hardness", 7.5f,
+                                                "custom_block_tool_type", "PICKAXE",
+                                                "custom_block_required_tier", "netherite",
+                                                "custom_block_sounds", anorthositeSounds,
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
                                 .build());
@@ -175,6 +208,9 @@ public class LunarItems {
                                                 "custom_block_model", "minecraft:note_block[note=23,instrument=pling,powered=true]",
                                                 "custom_block_data", "minecraft:note_block[note=23,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:raw_ilmenite",
+                                                "custom_block_hardness", 6.0f,
+                                                "custom_block_tool_type", "PICKAXE",
+                                                "custom_block_sounds", ilmeniteSounds,
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
                                 .build());
@@ -189,6 +225,9 @@ public class LunarItems {
                                                 "custom_block_model", "minecraft:note_block[note=22,instrument=pling,powered=true]",
                                                 "custom_block_data", "minecraft:note_block[note=22,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:raw_pyroxene",
+                                                "custom_block_hardness", 6.0f,
+                                                "custom_block_tool_type", "PICKAXE",
+                                                "custom_block_sounds", pyroxeneSounds,
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
                                 .build());
@@ -203,21 +242,50 @@ public class LunarItems {
                                                 "custom_block_model", "minecraft:note_block[note=21,instrument=pling,powered=true]",
                                                 "custom_block_data", "minecraft:note_block[note=21,instrument=pling,powered=true]",
                                                 "custom_block_drop", "haohan:kreep_dust",
+                                                "custom_block_hardness", 6.5f,
+                                                "custom_block_tool_type", "PICKAXE",
+                                                "custom_block_sounds", kreepSounds,
                                                 "hide_additional_tooltip", true))
                                 .maxStackSize(64)
                                 .build());
 
                 // Register into CustomBlockService if available
-                var customBlockService = HaoHanItemCore.get().getCustomBlockService();
+                var customBlockService = HaoHanItemCore.get() != null ? HaoHanItemCore.get().getCustomBlockService() : null;
                 if (customBlockService != null) {
+                        vn.haohan.itemcore.api.block.ToolTier netheriteTier = vn.haohan.itemcore.api.block.ToolTier.NETHERITE;
+                        try {
+                                if (HaoHanItemCore.get().getToolTierRegistry() != null) {
+                                        netheriteTier = HaoHanItemCore.get().getToolTierRegistry().get("netherite").orElse(netheriteTier);
+                                }
+                        } catch (Throwable ignored) {}
+
                         registerCustomBlockDefinition(customBlockService, "haohan:anorthosite_ore",
-                                        "minecraft:note_block[note=24,instrument=pling,powered=true]", "haohan:raw_anorthosite");
+                                        "minecraft:note_block[note=24,instrument=pling,powered=true]", "haohan:raw_anorthosite",
+                                        7.5f, netheriteTier,
+                                        buildSoundGroup(anorthositeSounds));
                         registerCustomBlockDefinition(customBlockService, "haohan:ilmenite_ore",
-                                        "minecraft:note_block[note=23,instrument=pling,powered=true]", "haohan:raw_ilmenite");
+                                        "minecraft:note_block[note=23,instrument=pling,powered=true]", "haohan:raw_ilmenite",
+                                        6.0f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        buildSoundGroup(ilmeniteSounds));
                         registerCustomBlockDefinition(customBlockService, "haohan:pyroxene_ore",
-                                        "minecraft:note_block[note=22,instrument=pling,powered=true]", "haohan:raw_pyroxene");
+                                        "minecraft:note_block[note=22,instrument=pling,powered=true]", "haohan:raw_pyroxene",
+                                        6.0f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        buildSoundGroup(pyroxeneSounds));
                         registerCustomBlockDefinition(customBlockService, "haohan:kreep_basalt",
-                                        "minecraft:note_block[note=21,instrument=pling,powered=true]", "haohan:kreep_dust");
+                                        "minecraft:note_block[note=21,instrument=pling,powered=true]", "haohan:kreep_dust",
+                                        6.5f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        buildSoundGroup(kreepSounds));
+                        Map<String, String> chargerSounds = Map.of(
+                                        "place", "minecraft:block.anvil.place",
+                                        "break", "minecraft:block.anvil.break",
+                                        "hit", "minecraft:block.netherite_block.hit",
+                                        "step", "minecraft:block.netherite_block.step",
+                                        "fall", "minecraft:block.anvil.fall"
+                        );
+                        registerCustomBlockDefinition(customBlockService, "haohan:battery_charger",
+                                        "minecraft:note_block[note=20,instrument=pling,powered=true]", "haohan:battery_charger",
+                                        4.0f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        buildSoundGroup(chargerSounds));
                 }
 
                 // 7. Lunar Quadruped Robot Items
@@ -228,7 +296,7 @@ public class LunarItems {
                                                 "§7Thiết bị kết nối và điều khiển từ xa cho Robot 4 Chân.",
                                                 "§8▪ Chuột phải vào Robot hoang dã để giải mã kết nối.",
                                                 "§8▪ Chuột phải khi đã liên kết để mở Dashboard quản lý."))
-                                .customModelData(6001)
+                                .customModelData(6050)
                                 .type(ItemType.SPECIAL)
                                 .maxStackSize(1)
                                 .build());
@@ -338,15 +406,30 @@ public class LunarItems {
                                 .build());
 
                 registry.register(ItemDefinition.builder("haohan:battery_charger")
-                                .material(Material.CARROT_ON_A_STICK)
+                                .material(Material.BARRIER)
                                 .displayName("§e§lTrạm Sạc Pin Robot")
                                 .lore(List.of(
                                                 "§7Trạm sạc năng lượng cao cấp cho Pin Robot 4 Chân.",
                                                 "§e▪ Chế độ: §fNạp Thụ Động (Quang năng) & Nạp Nhanh",
                                                 "§8Chuột phải lên mặt đất để đặt Trạm Sạc."))
                                 .customModelData(6205)
-                                .type(ItemType.SPECIAL)
-                                .properties(Map.of("battery_charger", true))
+                                .type(ItemType.BLOCK)
+                                .properties(Map.of(
+                                                "battery_charger", true,
+                                                "custom_block_id", "haohan:battery_charger",
+                                                "custom_block_model", "minecraft:note_block[note=20,instrument=pling,powered=true]",
+                                                "custom_block_data", "minecraft:note_block[note=20,instrument=pling,powered=true]",
+                                                "custom_block_drop", "haohan:battery_charger",
+                                                "custom_block_hardness", 4.0f,
+                                                "custom_block_tool_type", "PICKAXE",
+                                                "custom_block_sounds", Map.of(
+                                                                "place", "minecraft:block.anvil.place",
+                                                                "break", "minecraft:block.anvil.break",
+                                                                "hit", "minecraft:block.netherite_block.hit",
+                                                                "step", "minecraft:block.netherite_block.step",
+                                                                "fall", "minecraft:block.anvil.fall"
+                                                ),
+                                                "hide_additional_tooltip", true))
                                 .maxStackSize(16)
                                 .build());
 
@@ -675,8 +758,24 @@ public class LunarItems {
                 }
         }
 
+        private static vn.haohan.itemcore.api.block.CustomBlockSoundGroup buildSoundGroup(Map<String, String> sounds) {
+                if (sounds == null || sounds.isEmpty()) {
+                        return vn.haohan.itemcore.api.block.CustomBlockSoundGroup.STONE;
+                }
+                var builder = vn.haohan.itemcore.api.block.CustomBlockSoundGroup.builder();
+                if (sounds.containsKey("place")) builder.placeSound(sounds.get("place"));
+                if (sounds.containsKey("break")) builder.breakSound(sounds.get("break"));
+                if (sounds.containsKey("hit")) builder.hitSound(sounds.get("hit"));
+                if (sounds.containsKey("step")) builder.stepSound(sounds.get("step"));
+                if (sounds.containsKey("fall")) builder.fallSound(sounds.get("fall"));
+                return builder.build();
+        }
+
         private static void registerCustomBlockDefinition(vn.haohan.itemcore.api.block.CustomBlockService service,
-                                                          String id, String blockDataStr, String dropItemId) {
+                                                          String id, String blockDataStr, String dropItemId,
+                                                          float hardnessSeconds,
+                                                          vn.haohan.itemcore.api.block.ToolTier minTier,
+                                                          vn.haohan.itemcore.api.block.CustomBlockSoundGroup soundGroup) {
                 try {
                         var cbRegistry = service.getRegistry();
                         if (cbRegistry != null && !cbRegistry.has(id)) {
@@ -685,12 +784,28 @@ public class LunarItems {
                                         blockData = Bukkit.createBlockData(blockDataStr);
                                 } catch (Throwable ignored) {}
                                 if (blockData == null) {
-                                        blockData = Bukkit.createBlockData(Material.STONE);
+                                        try {
+                                                blockData = Bukkit.createBlockData(Material.STONE);
+                                        } catch (Throwable ignored) {}
                                 }
-                                var blockDef = vn.haohan.itemcore.api.block.CustomBlockDefinition.builder(id)
-                                                .model(new vn.haohan.itemcore.api.block.CustomBlockModel(blockData))
-                                                .dropItemId(dropItemId)
+                                var dropProvider = vn.haohan.itemcore.api.block.BlockDropProvider.builder()
+                                                .defaultDrop(dropItemId, 1)
+                                                .silkTouchDrop(id)
+                                                .fortune(true)
                                                 .build();
+
+                                var builder = vn.haohan.itemcore.api.block.CustomBlockDefinition.builder(id)
+                                                .model(new vn.haohan.itemcore.api.block.CustomBlockModel(blockData))
+                                                .hardness(hardnessSeconds)
+                                                .mineableWith(vn.haohan.itemcore.api.block.ToolType.PICKAXE, minTier)
+                                                .miningCondition(vn.haohan.itemcore.api.block.MiningCondition.requiresTool(
+                                                                vn.haohan.itemcore.api.block.ToolType.PICKAXE, minTier))
+                                                .dropProvider(dropProvider)
+                                                .dropItemId(dropItemId);
+                                if (soundGroup != null) {
+                                        builder.soundGroup(soundGroup);
+                                }
+                                var blockDef = builder.build();
                                 cbRegistry.register(blockDef);
                         }
                 } catch (Throwable ignored) {}

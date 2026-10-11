@@ -74,12 +74,13 @@ public class LunarCustomBlockAdaptationTest {
                 "haohan:anorthosite_ore",
                 "haohan:ilmenite_ore",
                 "haohan:pyroxene_ore",
-                "haohan:kreep_basalt"
+                "haohan:kreep_basalt",
+                "haohan:battery_charger"
         };
 
         for (String oreId : lunarOres) {
             ItemDefinition def = itemRegistry.get(oreId);
-            assertNotNull(def, "Ore item must be registered: " + oreId);
+            assertNotNull(def, "Ore/Block item must be registered: " + oreId);
 
             Map<String, Object> props = def.getProperties();
             assertTrue(props.containsKey("custom_block_id"), oreId + " must contain custom_block_id");
@@ -93,10 +94,42 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(props.containsKey("custom_block_drop"), oreId + " must contain custom_block_drop");
             assertNotNull(props.get("custom_block_drop"));
 
+            assertTrue(props.containsKey("custom_block_hardness"), oreId + " must contain custom_block_hardness");
+            float hardness = ((Number) props.get("custom_block_hardness")).floatValue();
+            assertTrue(hardness >= 4.0f, oreId + " hardness must be >= 4.0s");
+
+            assertTrue(props.containsKey("custom_block_tool_type"), oreId + " must contain custom_block_tool_type");
+            assertEquals("PICKAXE", props.get("custom_block_tool_type"), oreId + " must require PICKAXE");
+
+            assertTrue(props.containsKey("custom_block_sounds"), oreId + " must contain custom_block_sounds");
+            Object soundsObj = props.get("custom_block_sounds");
+            assertTrue(soundsObj instanceof Map<?, ?>, oreId + " custom_block_sounds must be a Map");
+            Map<?, ?> soundMap = (Map<?, ?>) soundsObj;
+            assertTrue(soundMap.containsKey("place"), oreId + " sounds must have place");
+            assertTrue(soundMap.containsKey("break"), oreId + " sounds must have break");
+            assertTrue(soundMap.containsKey("hit"), oreId + " sounds must have hit");
+            assertTrue(soundMap.containsKey("step"), oreId + " sounds must have step");
+
             assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
             assertEquals(vn.haohan.itemcore.api.item.ItemType.BLOCK, def.getType(), oreId + " must use ItemType.BLOCK");
             assertTrue(ItemCategory.CUSTOM_BLOCKS.matches(def), oreId + " must match ItemCategory.CUSTOM_BLOCKS");
             assertFalse(ItemCategory.SPECIAL.matches(def), oreId + " must not match ItemCategory.SPECIAL");
+
+            if ("haohan:anorthosite_ore".equals(oreId)) {
+                assertEquals("netherite", props.get("custom_block_required_tier"), "anorthosite_ore must require netherite tier");
+            }
+        }
+
+        // Verify that custom block definition was registered with a valid SoundGroup
+        org.mockito.ArgumentCaptor<vn.haohan.itemcore.api.block.CustomBlockDefinition> captor =
+                org.mockito.ArgumentCaptor.forClass(vn.haohan.itemcore.api.block.CustomBlockDefinition.class);
+        verify(customBlockRegistry, atLeast(5)).register(captor.capture());
+        for (vn.haohan.itemcore.api.block.CustomBlockDefinition blockDef : captor.getAllValues()) {
+            assertNotNull(blockDef.getSoundGroup(), "Registered blockDef " + blockDef.getId() + " must have a SoundGroup");
+            assertNotNull(blockDef.getSoundGroup().getPlaceSound(), "SoundGroup must have placeSound");
+            assertNotNull(blockDef.getSoundGroup().getBreakSound(), "SoundGroup must have breakSound");
+            assertNotNull(blockDef.getSoundGroup().getHitSound(), "SoundGroup must have hitSound");
+            assertNotNull(blockDef.getSoundGroup().getStepSound(), "SoundGroup must have stepSound");
         }
     }
 
