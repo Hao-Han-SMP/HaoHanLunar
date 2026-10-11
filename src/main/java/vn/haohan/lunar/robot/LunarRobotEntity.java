@@ -1762,7 +1762,13 @@ public class LunarRobotEntity {
             return;
         }
 
-        if (statusBossBar == null) {
+        UUID persistentOwnerId = data.getOwnerUuid();
+        if (persistentOwnerId == null && rider != null) {
+            persistentOwnerId = rider.getUniqueId();
+        }
+        if (plugin instanceof HaoHanLunarPlugin lunarPlugin && lunarPlugin.getLunarRobotMechanic() != null && persistentOwnerId != null) {
+            statusBossBar = lunarPlugin.getLunarRobotMechanic().getOrCreatePlayerStatusBossBar(persistentOwnerId);
+        } else if (statusBossBar == null) {
             statusBossBar = net.kyori.adventure.bossbar.BossBar.bossBar(
                     Component.empty(),
                     0.0f,

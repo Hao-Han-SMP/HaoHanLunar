@@ -539,7 +539,7 @@ public class MobSkillRuntime implements Listener {
         UUID playerId = player.getUniqueId();
         World currentWorld = player.getWorld();
         for (ActiveMob mob : mobManager.snapshot()) {
-            if (mob.entity() != null && !mob.entity().getWorld().equals(currentWorld)) {
+            if (mob.entity() == null || !mob.entity().getWorld().equals(currentWorld)) {
                 if (mob.threatTable() != null) {
                     mob.threatTable().removeTarget(playerId);
                 }
