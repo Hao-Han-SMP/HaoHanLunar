@@ -1,0 +1,38 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:tuff"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "M", "color": "#00a5ff" },
+        { "text": "ặ", "color": "#00baff" },
+        { "text": "t ", "color": "#00cfff" },
+        { "text": "T", "color": "#00e4ff" },
+        { "text": "r", "color": "#00f9ff" },
+        { "text": "ă", "color": "#24ffff" },
+        { "text": "n", "color": "#54ffff" },
+        { "text": "g", "color": "#84ffff" }
+      ]
+    },
+    "description": {
+      "text": "Mặt,trăng? Vũ trụ? Nó có ăn được không?",
+      "color": "#737b7f"
+    },
+    "background": "minecraft:block/tuff",
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "auto_unlock": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "rewards": {
+    "experience": 20
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "parent": "haohan:lunar/enter_lunar",
+  "display": {
+    "icon": {
+      "id": "minecraft:lodestone"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "T", "color": "#d0d0d0" },
+        { "text": "r", "color": "#d8d8d8" },
+        { "text": "ạ", "color": "#e0e0e0" },
+        { "text": "m ", "color": "#e8e8e8" },
+        { "text": "V", "color": "#f0f0f0" },
+        { "text": "ũ ", "color": "#f8f8f8" },
+        { "text": "t", "color": "#ffffff" },
+        { "text": "r", "color": "#ffffff" },
+        { "text": "ụ", "color": "#ffffff" }
+      ]
+    },
+    "description": {
+      "text": "Tìm thấy trạm vũ trụ trên Mặt Trăng",
+      "color": "yellow"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter_space_station": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "structures": "haohan:space_station"
+          }
+        }
+      }
+    }
+  },
+  "rewards": {
+    "experience": 100
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "type": "minecraft:add",
+  "argument1": "haohan:lunar/meteor_hole/depressions",
+  "argument2": "haohan:lunar/meteor_hole/reliefs"
+}

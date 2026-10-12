@@ -1,0 +1,53 @@
+{
+  "parent": "haohan:lunar/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:iron_ingot"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "H", "color": "#8a8a8a" },
+        { "text": "ợ", "color": "#999999" },
+        { "text": "p ", "color": "#a8a8a8" },
+        { "text": "k", "color": "#b7b7b7" },
+        { "text": "i", "color": "#c6c6c6" },
+        { "text": "m ", "color": "#d5d5d5" },
+        { "text": "T", "color": "#e4e4e4" },
+        { "text": "h", "color": "#f3f3f3" },
+        { "text": "é", "color": "#ffffff" },
+        { "text": "p", "color": "#ffffff" }
+      ]
+    },
+    "description": {
+      "text": "Chế tạo hoặc sở hữu một Thỏi Thép (Steel Ingot)",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has_steel_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "predicates": {
+              "minecraft:custom_data": {
+                "haohan": {
+                  "steel_ingot": true
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "experience": 50
+  }
+}

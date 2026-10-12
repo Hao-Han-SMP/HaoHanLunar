@@ -1,0 +1,45 @@
+{
+  "parent": "haohan:lunar/aero_compound",
+  "display": {
+    "icon": {
+      "id": "minecraft:carrot_on_a_stick",
+      "components": {
+        "minecraft:item_model": "haohan:oxygen_tank_small"
+      }
+    },
+    "title": {
+      "text": "Bình Oxy Nhỏ",
+      "color": "#55FFFF",
+      "bold": true
+    },
+    "description": {
+      "text": "Sở hữu một Bình Oxy Nhỏ (Dung tích 1500)",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has_oxygen_tank_small": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "predicates": {
+              "minecraft:custom_data": {
+                "haohan": {
+                  "oxygen_tank_tier": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "experience": 50
+  }
+}

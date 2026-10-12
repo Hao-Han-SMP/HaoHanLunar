@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:generic",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:netherite_leggings",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "haohan:spacesuit_leggings",
+                "minecraft:item_name": "Spacesuit Leggings",
+                "minecraft:equippable": {
+                  "slot": "legs",
+                  "asset_id": "haohan:spacesuit",
+                  "equip_sound": "minecraft:item.armor.equip_netherite"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

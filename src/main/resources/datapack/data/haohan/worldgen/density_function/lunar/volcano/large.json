@@ -1,0 +1,53 @@
+{
+  "type": "minecraft:spline",
+  "spline": {
+    "coordinate": {
+      "type": "minecraft:noise",
+      "noise": "haohan:lunar/volcano/large",
+      "xz_scale": 1.0,
+      "y_scale": 0.0
+    },
+    "points": [
+      {
+        "location": -1.0,
+        "value": 0.08,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.88,
+        "value": 0.12,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.76,
+        "value": 0.32,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.64,
+        "value": 0.42,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.5,
+        "value": 0.3,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.36,
+        "value": 0.12,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.22,
+        "value": 0.0,
+        "derivative": 0.0
+      },
+      {
+        "location": 1.0,
+        "value": 0.0,
+        "derivative": 0.0
+      }
+    ]
+  }
+}

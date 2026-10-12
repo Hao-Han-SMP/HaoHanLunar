@@ -1,0 +1,45 @@
+{
+  "parent": "haohan:lunar/oxygen_tank_small",
+  "display": {
+    "icon": {
+      "id": "minecraft:carrot_on_a_stick",
+      "components": {
+        "minecraft:item_model": "haohan:oxygen_tank_medium"
+      }
+    },
+    "title": {
+      "text": "Bình Oxy Vừa",
+      "color": "#55FFFF",
+      "bold": true
+    },
+    "description": {
+      "text": "Sở hữu một Bình Oxy Vừa (Dung tích 3000)",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has_oxygen_tank_medium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "predicates": {
+              "minecraft:custom_data": {
+                "haohan": {
+                  "oxygen_tank_tier": 2
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "experience": 100
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 38947120,
+    "separation": 50,
+    "spacing": 160
+  },
+  "structures": [
+    {
+      "structure": "haohan:space_station",
+      "weight": 1
+    }
+  ]
+}

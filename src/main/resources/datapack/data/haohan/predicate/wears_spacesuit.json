@@ -1,0 +1,28 @@
+{
+  "condition": "minecraft:entity_properties",
+  "entity": "this",
+  "predicate": {
+    "slots": {
+      "armor.head": {
+        "components": {
+          "minecraft:item_model": "haohan:spacesuit_helmet"
+        }
+      },
+      "armor.chest": {
+        "components": {
+          "minecraft:item_model": "haohan:spacesuit_chestplate"
+        }
+      },
+      "armor.legs": {
+        "components": {
+          "minecraft:item_model": "haohan:spacesuit_leggings"
+        }
+      },
+      "armor.feet": {
+        "components": {
+          "minecraft:item_model": "haohan:spacesuit_boots"
+        }
+      }
+    }
+  }
+}

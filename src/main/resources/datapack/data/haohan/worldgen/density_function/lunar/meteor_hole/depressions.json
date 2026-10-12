@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:add",
+  "argument1": "haohan:lunar/meteor_hole/major_depressions",
+  "argument2": {
+    "type": "minecraft:mul",
+    "argument1": "haohan:lunar/meteor_hole/minor_depressions",
+    "argument2": 0.7
+  }
+}

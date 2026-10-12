@@ -1,0 +1,45 @@
+{
+  "parent": "haohan:lunar/oxygen_tank_medium",
+  "display": {
+    "icon": {
+      "id": "minecraft:carrot_on_a_stick",
+      "components": {
+        "minecraft:item_model": "haohan:oxygen_tank_large"
+      }
+    },
+    "title": {
+      "text": "Bình Oxy Lớn",
+      "color": "#55FFFF",
+      "bold": true
+    },
+    "description": {
+      "text": "Sở hữu một Bình Oxy Lớn (Dung tích 6800)",
+      "color": "yellow"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has_oxygen_tank_large": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "predicates": {
+              "minecraft:custom_data": {
+                "haohan": {
+                  "oxygen_tank_tier": 3
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "experience": 250
+  }
+}

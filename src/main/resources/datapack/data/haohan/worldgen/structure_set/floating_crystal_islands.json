@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 93476319,
+    "separation": 5,
+    "spacing": 9
+  },
+  "structures": [
+    {
+      "structure": "haohan:floating_crystal_island",
+      "weight": 1
+    }
+  ]
+}

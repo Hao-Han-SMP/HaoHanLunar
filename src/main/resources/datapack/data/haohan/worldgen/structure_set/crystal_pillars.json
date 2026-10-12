@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 93476237,
+    "separation": 3,
+    "spacing": 7
+  },
+  "structures": [
+    {
+      "structure": "haohan:crystal_pillar",
+      "weight": 1
+    }
+  ]
+}

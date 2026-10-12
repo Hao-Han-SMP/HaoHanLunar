@@ -1,0 +1,44 @@
+{
+  "type": "minecraft:spline",
+  "spline": {
+    "coordinate": {
+      "type": "minecraft:mul",
+      "argument1": {
+        "type": "minecraft:end_islands"
+      },
+      "argument2": 0.01
+    },
+    "points": [
+      {
+        "location": -1.0,
+        "value": 0.0,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.28,
+        "value": 0.0,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.02,
+        "value": 0.54,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.24,
+        "value": -0.72,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.62,
+        "value": -0.58,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.8,
+        "value": 0.16,
+        "derivative": 0.0
+      }
+    ]
+  }
+}

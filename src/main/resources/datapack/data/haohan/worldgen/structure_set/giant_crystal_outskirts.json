@@ -1,0 +1,14 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "salt": 93476191,
+    "separation": 1,
+    "spacing": 3
+  },
+  "structures": [
+    {
+      "structure": "haohan:giant_crystal_outskirts",
+      "weight": 1
+    }
+  ]
+}

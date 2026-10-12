@@ -1,0 +1,63 @@
+{
+  "parent": "haohan:lunar/aero_compound",
+  "display": {
+    "icon": {
+      "id": "minecraft:iron_helmet"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "S", "color": "#ffffff" },
+        { "text": "ẵ", "color": "#f8f8f8" },
+        { "text": "n ", "color": "#f0f0f0" },
+        { "text": "s", "color": "#ffd700" },
+        { "text": "à", "color": "#ffdf00" },
+        { "text": "n", "color": "#ffe700" },
+        { "text": "g", "color": "#fff700" }
+      ]
+    },
+    "description": {
+      "text": "Mặc đầy đủ bộ đồ phi hành gia (Spacesuit)",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "wear_full_spacesuit": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "player": {
+          "slots": {
+            "armor.head": {
+              "components": {
+                "minecraft:item_model": "haohan:spacesuit_helmet"
+              }
+            },
+            "armor.chest": {
+              "components": {
+                "minecraft:item_model": "haohan:spacesuit_chestplate"
+              }
+            },
+            "armor.legs": {
+              "components": {
+                "minecraft:item_model": "haohan:spacesuit_leggings"
+              }
+            },
+            "armor.feet": {
+              "components": {
+                "minecraft:item_model": "haohan:spacesuit_boots"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "rewards": {
+    "experience": 150
+  }
+}

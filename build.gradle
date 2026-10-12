@@ -85,14 +85,6 @@ processResources {
     filesMatching('paper-plugin.yml') {
         expand props
     }
-    from(project.file('../HaoHanSMP-datapack')) {
-        include 'data/**'
-        include 'pack.mcmeta'
-        include 'pack.png'
-        include 'LICENSE'
-        include 'README.md'
-        into 'datapack'
-    }
 }
 
 jar {

@@ -1,0 +1,54 @@
+{
+  "parent": "haohan:lunar/steel_ingot",
+  "display": {
+    "icon": {
+      "id": "minecraft:wind_charge"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "H", "color": "#70ffd2" },
+        { "text": "ợ", "color": "#7affd8" },
+        { "text": "p ", "color": "#85ffdf" },
+        { "text": "c", "color": "#8fffe5" },
+        { "text": "h", "color": "#9affec" },
+        { "text": "ấ", "color": "#a4fff2" },
+        { "text": "t ", "color": "#affff9" },
+        { "text": "A", "color": "#baffff" },
+        { "text": "e", "color": "#c4ffff" },
+        { "text": "r", "color": "#ceffff" },
+        { "text": "o", "color": "#d8ffff" }
+      ]
+    },
+    "description": {
+      "text": "Chế tạo hoặc sở hữu một Hợp Chất Aero (Aero Compound)",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "has_aero_compound": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "predicates": {
+              "minecraft:custom_data": {
+                "haohan": {
+                  "aero_compound": true
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "experience": 100
+  }
+}

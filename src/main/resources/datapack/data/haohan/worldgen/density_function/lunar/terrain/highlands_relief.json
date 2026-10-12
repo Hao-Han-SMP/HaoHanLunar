@@ -1,0 +1,89 @@
+{
+  "type": "minecraft:add",
+  "argument1": {
+    "type": "minecraft:spline",
+    "spline": {
+      "coordinate": {
+        "type": "minecraft:shifted_noise",
+        "noise": "haohan:lunar/terrain/rolling",
+        "shift_x": "minecraft:shift_x",
+        "shift_y": 0.0,
+        "shift_z": "minecraft:shift_z",
+        "xz_scale": 1.45,
+        "y_scale": 0.0
+      },
+      "points": [
+        {
+          "location": -1.0,
+          "value": 0.12,
+          "derivative": 0.0
+        },
+        {
+          "location": -0.3,
+          "value": 0.2,
+          "derivative": 0.0
+        },
+        {
+          "location": 0.1,
+          "value": 0.32,
+          "derivative": 0.0
+        },
+        {
+          "location": 0.5,
+          "value": 0.4,
+          "derivative": 0.0
+        },
+        {
+          "location": 1.0,
+          "value": 0.48,
+          "derivative": 0.0
+        }
+      ]
+    }
+  },
+  "argument2": {
+    "type": "minecraft:add",
+    "argument1": {
+      "type": "minecraft:mul",
+      "argument1": {
+        "type": "minecraft:shifted_noise",
+        "noise": "haohan:lunar/terrain/mid",
+        "shift_x": "minecraft:shift_x",
+        "shift_y": 0.0,
+        "shift_z": "minecraft:shift_z",
+        "xz_scale": 1.25,
+        "y_scale": 0.0
+      },
+      "argument2": 0.1
+    },
+    "argument2": {
+      "type": "minecraft:add",
+      "argument1": {
+        "type": "minecraft:mul",
+        "argument1": {
+          "type": "minecraft:shifted_noise",
+          "noise": "haohan:lunar/terrain/detail",
+          "shift_x": "minecraft:shift_x",
+          "shift_y": 0.0,
+          "shift_z": "minecraft:shift_z",
+          "xz_scale": 1.35,
+          "y_scale": 0.0
+        },
+        "argument2": 0.02
+      },
+      "argument2": {
+        "type": "minecraft:mul",
+        "argument1": {
+          "type": "minecraft:shifted_noise",
+          "noise": "haohan:lunar/terrain/highlands",
+          "shift_x": "minecraft:shift_x",
+          "shift_y": 0.0,
+          "shift_z": "minecraft:shift_z",
+          "xz_scale": 1.5,
+          "y_scale": 0.0
+        },
+        "argument2": 0.06
+      }
+    }
+  }
+}

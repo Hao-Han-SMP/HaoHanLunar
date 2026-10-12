@@ -1,0 +1,63 @@
+{
+  "type": "minecraft:spline",
+  "spline": {
+    "coordinate": {
+      "type": "minecraft:noise",
+      "noise": "haohan:lunar/meteor_hole/mega",
+      "xz_scale": 1.0,
+      "y_scale": 0.0
+    },
+    "points": [
+      {
+        "location": -1.0,
+        "value": -0.72,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.81,
+        "value": -0.58,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.61,
+        "value": 0.3,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.51,
+        "value": 0.12,
+        "derivative": 0.0
+      },
+      {
+        "location": -0.39,
+        "value": 0.0,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.39,
+        "value": 0.0,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.51,
+        "value": 0.12,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.61,
+        "value": 0.3,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.81,
+        "value": -0.58,
+        "derivative": 0.0
+      },
+      {
+        "location": 1.0,
+        "value": -0.72,
+        "derivative": 0.0
+      }
+    ]
+  }
+}

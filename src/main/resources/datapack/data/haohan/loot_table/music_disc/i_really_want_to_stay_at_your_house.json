@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:generic",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:music_disc_13",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:custom_data": {
+                  "haohan_music_disc": true
+                },
+                "minecraft:custom_name": {
+                  "text": "Đĩa nhạc HaoHanSMP",
+                  "color": "gold",
+                  "italic": false
+                },
+                "minecraft:item_model": "haohan:i_really_want_to_stay_at_your_house",
+                "minecraft:jukebox_playable": "haohan:i_really_want_to_stay_at_your_house"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

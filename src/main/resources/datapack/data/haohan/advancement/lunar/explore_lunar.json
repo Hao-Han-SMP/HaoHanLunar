@@ -1,0 +1,121 @@
+{
+  "parent": "haohan:lunar/enter_lunar",
+  "display": {
+    "icon": {
+      "id": "minecraft:compass"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "B", "color": "#ffaa00" },
+        { "text": "ư", "color": "#f4b011" },
+        { "text": "ớ", "color": "#e9b722" },
+        { "text": "c", "color": "#debe33" },
+        { "text": " ", "color": "#d3c444" },
+        { "text": "C", "color": "#c8cb55" },
+        { "text": "h", "color": "#bdd266" },
+        { "text": "â", "color": "#b2d977" },
+        { "text": "n", "color": "#a7df88" },
+        { "text": " ", "color": "#9ce699" },
+        { "text": "T", "color": "#91edaa" },
+        { "text": "r", "color": "#86f4bb" },
+        { "text": "ê", "color": "#7bfbcc" },
+        { "text": "n", "color": "#70ffdd" },
+        { "text": " ", "color": "#65ffee" },
+        { "text": "M", "color": "#5affff" },
+        { "text": "ặ", "color": "#4ffeff" },
+        { "text": "t", "color": "#44fdff" },
+        { "text": " ", "color": "#39fcff" },
+        { "text": "T", "color": "#2efbff" },
+        { "text": "r", "color": "#23faff" },
+        { "text": "ă", "color": "#18f9ff" },
+        { "text": "n", "color": "#0df8ff" },
+        { "text": "g", "color": "#02f7ff" }
+      ]
+    },
+    "description": {
+      "text": "Khám phá tất cả các quần xã sinh vật trên Mặt Trăng",
+      "color": "yellow"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "lunar_bright_patches": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biomes": "haohan:lunar_bright_patches"
+          }
+        }
+      }
+    },
+    "lunar_craters": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biomes": "haohan:lunar_craters"
+          }
+        }
+      }
+    },
+    "lunar_crystal_craters": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biomes": "haohan:lunar_crystal_craters"
+          }
+        }
+      }
+    },
+    "lunar_giant_crystal_outskirts": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biomes": "haohan:lunar_giant_crystal_outskirts"
+          }
+        }
+      }
+    },
+    "lunar_giant_crystals": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biomes": "haohan:lunar_giant_crystals"
+          }
+        }
+      }
+    },
+    "lunar_maria": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biomes": "haohan:lunar_maria"
+          }
+        }
+      }
+    },
+    "lunar_terrae": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "biomes": "haohan:lunar_terrae"
+          }
+        }
+      }
+    }
+  },
+  "rewards": {
+    "experience": 500
+  }
+}

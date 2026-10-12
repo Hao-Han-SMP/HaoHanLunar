@@ -1,0 +1,49 @@
+{
+  "parent": "haohan:lunar/enter_lunar",
+  "display": {
+    "icon": {
+      "id": "minecraft:cyan_bed"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "T", "color": "#00ffff" },
+        { "text": "r", "color": "#12f5ff" },
+        { "text": "ạ", "color": "#24ebff" },
+        { "text": "m ", "color": "#36e1ff" },
+        { "text": "d", "color": "#48d7ff" },
+        { "text": "ừ", "color": "#5acdff" },
+        { "text": "n", "color": "#6cc3ff" },
+        { "text": "g ", "color": "#7eb9ff" },
+        { "text": "c", "color": "#90afff" },
+        { "text": "h", "color": "#a2a5ff" },
+        { "text": "â", "color": "#b49bff" },
+        { "text": "n", "color": "#c691ff" }
+      ]
+    },
+    "description": {
+      "text": "Tìm thấy trạm dừng chân trên Mặt Trăng",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter_rest_base": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": {
+          "location": {
+            "structures": "haohan:rest_base"
+          }
+        }
+      }
+    }
+  },
+  "rewards": {
+    "experience": 50
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:generic",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:netherite_chestplate",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "haohan:spacesuit_chestplate",
+                "minecraft:item_name": "Spacesuit Chestplate",
+                "minecraft:equippable": {
+                  "slot": "chest",
+                  "asset_id": "haohan:spacesuit",
+                  "equip_sound": "minecraft:item.armor.equip_netherite"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

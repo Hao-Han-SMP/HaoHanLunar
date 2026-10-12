@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:generic",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:netherite_helmet",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "haohan:spacesuit_helmet",
+                "minecraft:item_name": "Spacesuit Helmet",
+                "minecraft:equippable": {
+                  "slot": "head",
+                  "asset_id": "haohan:spacesuit",
+                  "equip_sound": "minecraft:item.armor.equip_netherite"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

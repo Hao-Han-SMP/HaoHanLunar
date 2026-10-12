@@ -1,0 +1,41 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:carrot_on_a_stick",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "haohan:oxygen_tank_small",
+                "minecraft:item_name": {
+                  "text": "Bình Oxy Nhỏ",
+                  "color": "#55FFFF",
+                  "italic": false
+                },
+                "minecraft:lore": [
+                  {"text": "Dung tích: 1500", "color": "gray", "italic": false},
+                  {"text": "Chuột phải để kích hoạt", "color": "dark_gray", "italic": false}
+                ],
+                "minecraft:max_stack_size": 1,
+                "minecraft:max_damage": 1500,
+                "minecraft:damage": 0,
+                "minecraft:enchantment_glint_override": false,
+                "minecraft:custom_data": {
+                  "haohan": {
+                    "oxygen_tank": true,
+                    "oxygen_tank_tier": 1,
+                    "oxygen_tank_capacity": 1500
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

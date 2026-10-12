@@ -1,0 +1,68 @@
+{
+  "parent": "haohan:lunar/spacesuit",
+  "display": {
+    "icon": {
+      "id": "minecraft:netherite_boots"
+    },
+    "title": {
+      "text": "",
+      "bold": true,
+      "extra": [
+        { "text": "I", "color": "#0055ff" },
+        { "text": " ", "color": "#005aff" },
+        { "text": "R", "color": "#005fff" },
+        { "text": "e", "color": "#0064ff" },
+        { "text": "a", "color": "#0069ff" },
+        { "text": "l", "color": "#006eff" },
+        { "text": "l", "color": "#0073ff" },
+        { "text": "y", "color": "#0078ff" },
+        { "text": " ", "color": "#007dff" },
+        { "text": "W", "color": "#0082ff" },
+        { "text": "a", "color": "#0087ff" },
+        { "text": "n", "color": "#008cff" },
+        { "text": "t", "color": "#0091ff" },
+        { "text": " ", "color": "#0096ff" },
+        { "text": "t", "color": "#009bff" },
+        { "text": "o", "color": "#00a0ff" },
+        { "text": " ", "color": "#00a5ff" },
+        { "text": "S", "color": "#00aaff" },
+        { "text": "t", "color": "#00afff" },
+        { "text": "a", "color": "#00b4ff" },
+        { "text": "y", "color": "#00b9ff" },
+        { "text": " ", "color": "#00beff" },
+        { "text": "a", "color": "#00c3ff" },
+        { "text": "t", "color": "#00c8ff" },
+        { "text": " ", "color": "#00cdff" },
+        { "text": "Y", "color": "#00d2ff" },
+        { "text": "o", "color": "#00d7ff" },
+        { "text": "u", "color": "#00dcff" },
+        { "text": "r", "color": "#00e1ff" },
+        { "text": " ", "color": "#00e6ff" },
+        { "text": "H", "color": "#00ebff" },
+        { "text": "o", "color": "#00f0ff" },
+        { "text": "u", "color": "#00f5ff" },
+        { "text": "s", "color": "#00faff" },
+        { "text": "e", "color": "#00ffff" }
+      ]
+    },
+    "description": {
+      "text": "Ước mơ của em là lên ngắm mặt trăng đó",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "enter_lunar": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "haohan:lunar"
+      }
+    }
+  },
+  "rewards": {
+    "experience": 100
+  }
+}

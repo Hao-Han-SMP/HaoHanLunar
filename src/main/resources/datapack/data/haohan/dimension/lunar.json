@@ -1,0 +1,96 @@
+{
+  "type": "haohan:lunar",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "haohan:lunar",
+    "biome_source": {
+      "type": "minecraft:multi_noise",
+      "biomes": [
+        {
+          "biome": "haohan:lunar_giant_crystals",
+          "parameters": {
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-1.0, 1.0],
+            "temperature": [-1.0, 1.0],
+            "humidity": [-1.0, 1.0],
+            "weirdness": [0.58, 1.0],
+            "depth": [0.56, 1.0],
+            "offset": 0
+          }
+        },
+        {
+          "biome": "haohan:lunar_giant_crystal_outskirts",
+          "parameters": {
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-1.0, 1.0],
+            "temperature": [-1.0, 1.0],
+            "humidity": [-1.0, 1.0],
+            "weirdness": [0.58, 1.0],
+            "depth": [0.32, 0.55],
+            "offset": 0
+          }
+        },
+        {
+          "biome": "haohan:lunar_crystal_craters",
+          "parameters": {
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-1.0, 1.0],
+            "temperature": [-1.0, 1.0],
+            "humidity": [-1.0, 1.0],
+            "weirdness": [0.58, 1.0],
+            "depth": [-1.0, 0.31],
+            "offset": 0
+          }
+        },
+        {
+          "biome": "haohan:lunar_bright_patches",
+          "parameters": {
+            "continentalness": [0.15, 1.0],
+            "erosion": [-1.0, 0.35],
+            "temperature": [-1.0, 1.0],
+            "humidity": [0.72, 1.0],
+            "weirdness": [-1.0, 0.46],
+            "depth": [-1.0, 1.0],
+            "offset": 0
+          }
+        },
+        {
+          "biome": "haohan:lunar_maria",
+          "parameters": {
+            "continentalness": [-1.0, -0.3],
+            "erosion": [-1.0, 0.3],
+            "temperature": [-1.0, -0.3],
+            "humidity": [-1.0, 0.58],
+            "weirdness": [-1.0, 0.46],
+            "depth": [-1.0, 1.0],
+            "offset": 0
+          }
+        },
+        {
+          "biome": "haohan:lunar_terrae",
+          "parameters": {
+            "continentalness": [-1.0, 1.0],
+            "erosion": [-1.0, 0.4],
+            "temperature": [-1.0, 1.0],
+            "humidity": [-1.0, 0.58],
+            "weirdness": [-1.0, 0.46],
+            "depth": [-1.0, 1.0],
+            "offset": 0.15
+          }
+        },
+        {
+          "biome": "haohan:lunar_craters",
+          "parameters": {
+            "continentalness": [-1.0, 1.0],
+            "erosion": [0.3, 1.0],
+            "temperature": [-1.0, 1.0],
+            "humidity": [-1.0, 0.58],
+            "weirdness": [-1.0, 0.46],
+            "depth": [-1.0, 1.0],
+            "offset": 0.1
+          }
+        }
+      ]
+    }
+  }
+}

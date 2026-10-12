@@ -1,0 +1,146 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:alternatives",
+          "conditions": [
+            {
+              "condition": "minecraft:block_state_property",
+              "block": "minecraft:note_block",
+              "properties": {
+                "instrument": "pling",
+                "note": "24"
+              }
+            },
+            {
+              "condition": "minecraft:match_tool",
+              "predicate": {
+                "items": "minecraft:netherite_pickaxe"
+              }
+            }
+          ],
+          "children": [
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:note_block",
+              "conditions": [
+                {
+                  "condition": "minecraft:match_tool",
+                  "predicate": {
+                    "predicates": {
+                      "minecraft:enchantments": [
+                        {
+                          "enchantments": "minecraft:silk_touch",
+                          "levels": {
+                            "min": 1
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "functions": [
+                {
+                  "function": "minecraft:set_components",
+                  "components": {
+                    "minecraft:item_model": "haohan:anorthosite_ore",
+                    "minecraft:custom_name": "Anorthosite Ore",
+                    "minecraft:custom_model_data": {
+                      "floats": [
+                        5001.0
+                      ]
+                    },
+                    "minecraft:tooltip_display": {
+                      "hidden_components": [
+                        "minecraft:jukebox_playable",
+                        "minecraft:painting/variant",
+                        "minecraft:pot_decorations",
+                        "minecraft:written_book_content",
+                        "minecraft:block_entity_data",
+                        "minecraft:firework_explosion",
+                        "minecraft:bundle_contents",
+                        "minecraft:potion_contents",
+                        "minecraft:banner_patterns",
+                        "minecraft:container_loot",
+                        "minecraft:tropical_fish/pattern",
+                        "minecraft:container",
+                        "minecraft:instrument",
+                        "minecraft:charged_projectiles",
+                        "minecraft:block_state",
+                        "minecraft:bees",
+                        "minecraft:fireworks",
+                        "minecraft:map_id"
+                      ]
+                    },
+                    "minecraft:block_state": {
+                      "instrument": "pling",
+                      "note": "24",
+                      "powered": "true"
+                    },
+                    "minecraft:custom_data": {
+                      "PublicBukkitValues": {
+                        "haohanitemcore:item_id": "haohan:anorthosite_ore"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:paper",
+              "functions": [
+                {
+                  "function": "minecraft:apply_bonus",
+                  "enchantment": "minecraft:fortune",
+                  "formula": "minecraft:ore_drops"
+                },
+                {
+                  "function": "minecraft:set_components",
+                  "components": {
+                    "minecraft:item_model": "haohan:raw_anorthosite",
+                    "minecraft:custom_name": "Raw Anorthosite",
+                    "minecraft:custom_model_data": {
+                      "floats": [
+                        3003.0
+                      ]
+                    },
+                    "minecraft:custom_data": {
+                      "PublicBukkitValues": {
+                        "haohanitemcore:item_id": "haohan:raw_anorthosite"
+                      }
+                    }
+                  }
+                },
+                {
+                  "function": "minecraft:explosion_decay"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:note_block",
+          "conditions": [
+            {
+              "condition": "minecraft:inverted",
+              "term": {
+                "condition": "minecraft:block_state_property",
+                "block": "minecraft:note_block",
+                "properties": {
+                  "instrument": "pling",
+                  "note": "24"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

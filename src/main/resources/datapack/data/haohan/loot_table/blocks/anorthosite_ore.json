@@ -1,0 +1,58 @@
+{
+  "type": "minecraft:generic",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:note_block",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:item_model": "haohan:anorthosite_ore",
+                "minecraft:block_state": {
+                  "instrument": "pling",
+                  "note": "24",
+                  "powered": "true"
+                },
+                "minecraft:item_name": {
+                  "text": "Anorthosite Ore",
+                  "italic": false
+                },
+                "minecraft:tooltip_display": {
+                  "hidden_components": [
+                    "minecraft:jukebox_playable",
+                    "minecraft:painting/variant",
+                    "minecraft:pot_decorations",
+                    "minecraft:written_book_content",
+                    "minecraft:block_entity_data",
+                    "minecraft:firework_explosion",
+                    "minecraft:bundle_contents",
+                    "minecraft:potion_contents",
+                    "minecraft:banner_patterns",
+                    "minecraft:container_loot",
+                    "minecraft:tropical_fish/pattern",
+                    "minecraft:container",
+                    "minecraft:instrument",
+                    "minecraft:charged_projectiles",
+                    "minecraft:block_state",
+                    "minecraft:bees",
+                    "minecraft:fireworks",
+                    "minecraft:map_id"
+                  ]
+                },
+                "minecraft:custom_data": {
+                  "PublicBukkitValues": {
+                    "haohanitemcore:item_id": "haohan:anorthosite_ore"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

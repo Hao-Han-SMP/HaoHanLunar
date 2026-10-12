@@ -1,0 +1,43 @@
+{
+  "type": "minecraft:spline",
+  "spline": {
+    "coordinate": "haohan:lunar/biome/crystal_regions",
+    "points": [
+      {
+        "location": -1.0,
+        "value": 0.0,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.3,
+        "value": 0.0,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.42,
+        "value": 0.08,
+        "derivative": 0.0
+      },
+      {
+        "location": 0.52,
+        "value": 0.04,
+        "derivative": -0.35
+      },
+      {
+        "location": 0.62,
+        "value": -0.18,
+        "derivative": -0.55
+      },
+      {
+        "location": 0.76,
+        "value": -0.38,
+        "derivative": -0.25
+      },
+      {
+        "location": 1.0,
+        "value": -0.48,
+        "derivative": 0.0
+      }
+    ]
+  }
+}
