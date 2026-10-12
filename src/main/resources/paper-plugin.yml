@@ -1,6 +1,7 @@
 name: HaoHanLunar
 version: '1.0.0'
 main: vn.haohan.lunar.HaoHanLunarPlugin
+bootstrapper: vn.haohan.lunar.bootstrap.HaoHanLunarBootstrap
 api-version: '1.21'
 description: Lunar Dimension mechanics and custom items for HaoHan SMP
 dependencies:
