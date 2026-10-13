@@ -253,9 +253,11 @@ public class LunarItems {
                 var customBlockService = HaoHanItemCore.get() != null ? HaoHanItemCore.get().getCustomBlockService() : null;
                 if (customBlockService != null) {
                         vn.haohan.itemcore.api.block.ToolTier netheriteTier = vn.haohan.itemcore.api.block.ToolTier.NETHERITE;
+                        vn.haohan.itemcore.api.block.ToolTier ironTier = vn.haohan.itemcore.api.block.ToolTier.IRON;
                         try {
                                 if (HaoHanItemCore.get().getToolTierRegistry() != null) {
                                         netheriteTier = HaoHanItemCore.get().getToolTierRegistry().get("netherite").orElse(netheriteTier);
+                                        ironTier = HaoHanItemCore.get().getToolTierRegistry().get("iron").orElse(ironTier);
                                 }
                         } catch (Throwable ignored) {}
 
@@ -265,15 +267,15 @@ public class LunarItems {
                                         buildSoundGroup(anorthositeSounds));
                         registerCustomBlockDefinition(customBlockService, "haohan:ilmenite_ore",
                                         "minecraft:note_block[note=23,instrument=pling,powered=true]", "haohan:raw_ilmenite",
-                                        6.0f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        6.0f, ironTier,
                                         buildSoundGroup(ilmeniteSounds));
                         registerCustomBlockDefinition(customBlockService, "haohan:pyroxene_ore",
                                         "minecraft:note_block[note=22,instrument=pling,powered=true]", "haohan:raw_pyroxene",
-                                        6.0f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        6.0f, ironTier,
                                         buildSoundGroup(pyroxeneSounds));
                         registerCustomBlockDefinition(customBlockService, "haohan:kreep_basalt",
                                         "minecraft:note_block[note=21,instrument=pling,powered=true]", "haohan:kreep_dust",
-                                        6.5f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        6.5f, ironTier,
                                         buildSoundGroup(kreepSounds));
                         Map<String, String> chargerSounds = Map.of(
                                         "place", "minecraft:block.anvil.place",
@@ -284,7 +286,7 @@ public class LunarItems {
                         );
                         registerCustomBlockDefinition(customBlockService, "haohan:battery_charger",
                                         "minecraft:note_block[note=20,instrument=pling,powered=true]", "haohan:battery_charger",
-                                        4.0f, vn.haohan.itemcore.api.block.ToolTier.IRON,
+                                        4.0f, ironTier,
                                         buildSoundGroup(chargerSounds));
                 }
 
