@@ -138,6 +138,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(lunarRobotMechanic, this);
         pm.registerEvents(modelEngineDeathListener, this);
         pm.registerEvents(batteryChargerMechanic, this);
+        pm.registerEvents(new vn.haohan.lunar.features.LunarOrePopulatorListener(this), this);
 
         // Register robot commands
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("spawnrobot") {

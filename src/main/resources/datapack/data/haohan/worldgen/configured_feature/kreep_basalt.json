@@ -1,0 +1,51 @@
+{
+  "type": "minecraft:ore",
+  "config": {
+    "size": 4,
+    "discard_chance_on_air_exposure": 0.0,
+    "targets": [
+      {
+        "target": {
+          "predicate_type": "minecraft:block_match",
+          "block": "minecraft:blackstone"
+        },
+        "state": {
+          "Name": "minecraft:note_block",
+          "Properties": {
+            "instrument": "pling",
+            "note": "21",
+            "powered": "true"
+          }
+        }
+      },
+      {
+        "target": {
+          "predicate_type": "minecraft:block_match",
+          "block": "minecraft:obsidian"
+        },
+        "state": {
+          "Name": "minecraft:note_block",
+          "Properties": {
+            "instrument": "pling",
+            "note": "21",
+            "powered": "true"
+          }
+        }
+      },
+      {
+        "target": {
+          "predicate_type": "minecraft:block_match",
+          "block": "minecraft:deepslate"
+        },
+        "state": {
+          "Name": "minecraft:note_block",
+          "Properties": {
+            "instrument": "pling",
+            "note": "21",
+            "powered": "true"
+          }
+        }
+      }
+    ]
+  }
+}

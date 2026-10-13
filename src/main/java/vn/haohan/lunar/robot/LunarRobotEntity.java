@@ -1419,8 +1419,7 @@ public class LunarRobotEntity {
         return mat == Material.IRON_ORE || mat == Material.DEEPSLATE_IRON_ORE ||
                 mat == Material.COPPER_ORE || mat == Material.DEEPSLATE_COPPER_ORE ||
                 mat == Material.GOLD_ORE || mat == Material.DEEPSLATE_GOLD_ORE ||
-                mat == Material.COAL_ORE || mat == Material.DEEPSLATE_COAL_ORE ||
-                mat == Material.NOTE_BLOCK; // Lunar custom ores
+                mat == Material.COAL_ORE || mat == Material.DEEPSLATE_COAL_ORE;
     }
 
     public static String getCustomBlockIdSafe(Block block) {

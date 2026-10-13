@@ -49,7 +49,7 @@ public class MiningMechanic implements Listener, IService {
 
     @Override
     public boolean isTickable() {
-        return true;
+        return false;
     }
 
     @Override
@@ -61,14 +61,8 @@ public class MiningMechanic implements Listener, IService {
 
     @Override
     public void tick() {
-        World lunarWorld = HaoHanLunarPlugin.getLunarWorld();
-        if (lunarWorld == null) {
-            return;
-        }
-        for (Player player : lunarWorld.getPlayers()) {
-            boolean lookingAtOre = isLookingAtLunarOre(player);
-            updateMiningAttributes(player, lookingAtOre);
-        }
+        // Mining speed, tool tier verification, and break progressions
+        // are now fully managed by HaoHanItemCore's CustomBlockService.
     }
 
     /** The only tool that can mine Anorthosite Ore in the lunar dimension. */
@@ -100,83 +94,35 @@ public class MiningMechanic implements Listener, IService {
         return isAllowedLunarPickaxe(tool.getType());
     }
 
-    private boolean isLookingAtLunarOre(Player player) {
+    public boolean isLookingAtLunarOre(Player player) {
+        if (player == null) return false;
         Block target = player.getTargetBlockExact(5);
-        if (target == null) {
+        if (target == null || target.getType() != Material.BARRIER) {
             return false;
         }
 
-        // 1. Check new Barrier Custom Block system via HaoHanItemCore
-        if (target.getType() == Material.BARRIER) {
-            try {
-                var core = HaoHanItemCore.get();
-                if (core != null && core.getCustomBlockService() != null) {
-                    var cbService = core.getCustomBlockService();
-                    if (cbService.isCustomBlock(target)) {
-                        String id = cbService.getCustomBlockId(target);
-                        if (id != null && LUNAR_ORE_BLOCK_IDS.contains(id)) {
-                            return true;
-                        }
-                    }
+        try {
+            var core = HaoHanItemCore.get();
+            if (core != null && core.getCustomBlockService() != null) {
+                var cbService = core.getCustomBlockService();
+                if (cbService.isCustomBlock(target)) {
+                    String id = cbService.getCustomBlockId(target);
+                    return id != null && LUNAR_ORE_BLOCK_IDS.contains(id);
                 }
-            } catch (Throwable ignored) {}
-        }
-
-        // 2. Backward compatibility fallback: old NoteBlock system
-        if (target.getType() == Material.NOTE_BLOCK) {
-            if (target.getBlockData() instanceof NoteBlock noteBlock) {
-                int note = noteBlock.getNote().getId();
-                return (note >= 21 && note <= 24) &&
-                        noteBlock.getInstrument() == org.bukkit.Instrument.PLING;
             }
-        }
+        } catch (Throwable ignored) {}
         return false;
     }
 
-    private void updateMiningAttributes(Player player, boolean lookingAtOre) {
+    public void resetMiningModifiers(Player player) {
         var instance = player.getAttribute(Attribute.BLOCK_BREAK_SPEED);
-        if (instance == null)
-            return;
-
-        if (lookingAtOre) {
-            boolean hasNetherite = isAllowedLunarPickaxe(player.getInventory().getItemInMainHand());
-            applyOreMiningModifier(instance, hasNetherite);
-        } else {
-            // Remove modifiers if present
+        if (instance != null) {
             if (instance.getModifier(slowMiningKey) != null) {
                 instance.removeModifier(slowMiningKey);
             }
             if (instance.getModifier(noMiningKey) != null) {
                 instance.removeModifier(noMiningKey);
             }
-        }
-    }
-
-    private void applyOreMiningModifier(org.bukkit.attribute.AttributeInstance instance, boolean hasNetherite) {
-        if (hasNetherite) {
-            // Apply slow mining
-            if (instance.getModifier(slowMiningKey) == null) {
-                instance.removeModifier(noMiningKey);
-                AttributeModifier modifier = new AttributeModifier(slowMiningKey, -0.974,
-                        AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
-                instance.addModifier(modifier);
-            }
-        } else {
-            // Apply no mining
-            if (instance.getModifier(noMiningKey) == null) {
-                instance.removeModifier(slowMiningKey);
-                AttributeModifier modifier = new AttributeModifier(noMiningKey, -1.0,
-                        AttributeModifier.Operation.MULTIPLY_SCALAR_1, EquipmentSlotGroup.ANY);
-                instance.addModifier(modifier);
-            }
-        }
-    }
-
-    public void resetMiningModifiers(Player player) {
-        var instance = player.getAttribute(Attribute.BLOCK_BREAK_SPEED);
-        if (instance != null) {
-            instance.removeModifier(slowMiningKey);
-            instance.removeModifier(noMiningKey);
         }
     }
 

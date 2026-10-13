@@ -89,7 +89,8 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(props.containsKey("custom_block_model"), oreId + " must contain custom_block_model");
             String modelStr = (String) props.get("custom_block_model");
             assertNotNull(modelStr);
-            assertTrue(modelStr.startsWith("minecraft:note_block["), "custom_block_model must reference blockstate: " + modelStr);
+            assertEquals(oreId, modelStr, "custom_block_model must reference item ID directly: " + modelStr);
+            assertFalse(modelStr.contains("note_block"), "custom_block_model must not reference note_block: " + modelStr);
 
             assertTrue(props.containsKey("custom_block_drop"), oreId + " must contain custom_block_drop");
             assertNotNull(props.get("custom_block_drop"));
@@ -97,6 +98,20 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(props.containsKey("custom_block_hardness"), oreId + " must contain custom_block_hardness");
             float hardness = ((Number) props.get("custom_block_hardness")).floatValue();
             assertTrue(hardness >= 4.0f, oreId + " hardness must be >= 4.0s");
+
+            if ("haohan:anorthosite_ore".equals(oreId)) {
+                assertEquals(90.0f, hardness, "anorthosite_ore hardness must be 90.0f");
+                assertEquals("netherite", props.get("custom_block_required_tier"), "anorthosite_ore must require netherite tier");
+            } else if ("haohan:kreep_basalt".equals(oreId)) {
+                assertEquals(80.0f, hardness, "kreep_basalt hardness must be 80.0f");
+                assertEquals("soulsteel", props.get("custom_block_required_tier"), "kreep_basalt must require soulsteel tier");
+            } else if ("haohan:pyroxene_ore".equals(oreId)) {
+                assertEquals(75.0f, hardness, "pyroxene_ore hardness must be 75.0f");
+                assertEquals("mithril", props.get("custom_block_required_tier"), "pyroxene_ore must require mithril tier");
+            } else if ("haohan:ilmenite_ore".equals(oreId)) {
+                assertEquals(70.0f, hardness, "ilmenite_ore hardness must be 70.0f");
+                assertEquals("diamond", props.get("custom_block_required_tier"), "ilmenite_ore must require diamond tier");
+            }
 
             assertTrue(props.containsKey("custom_block_tool_type"), oreId + " must contain custom_block_tool_type");
             assertEquals("PICKAXE", props.get("custom_block_tool_type"), oreId + " must require PICKAXE");
@@ -114,10 +129,6 @@ public class LunarCustomBlockAdaptationTest {
             assertEquals(vn.haohan.itemcore.api.item.ItemType.BLOCK, def.getType(), oreId + " must use ItemType.BLOCK");
             assertTrue(ItemCategory.CUSTOM_BLOCKS.matches(def), oreId + " must match ItemCategory.CUSTOM_BLOCKS");
             assertFalse(ItemCategory.SPECIAL.matches(def), oreId + " must not match ItemCategory.SPECIAL");
-
-            if ("haohan:anorthosite_ore".equals(oreId)) {
-                assertEquals("netherite", props.get("custom_block_required_tier"), "anorthosite_ore must require netherite tier");
-            }
         }
 
         // Verify that custom block definition was registered with a valid SoundGroup
