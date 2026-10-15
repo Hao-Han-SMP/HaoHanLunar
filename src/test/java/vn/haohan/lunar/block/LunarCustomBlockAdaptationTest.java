@@ -126,10 +126,8 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(soundMap.containsKey("step"), oreId + " sounds must have step");
 
             boolean isBatteryCharger = "haohan:battery_charger".equals(oreId);
-            if (isBatteryCharger) {
-                assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
-            } else {
-                assertEquals(Material.NOTE_BLOCK, def.getMaterial(), oreId + " must use Material.NOTE_BLOCK");
+            assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
+            if (!isBatteryCharger) {
                 assertTrue(props.containsKey("custom_variation"), oreId + " must contain custom_variation");
                 int expectedVariation = switch (oreId) {
                     case "haohan:kreep_basalt" -> 771;

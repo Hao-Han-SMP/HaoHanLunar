@@ -183,7 +183,7 @@ public class LunarItems {
                 );
 
                 registry.register(ItemDefinition.builder("haohan:anorthosite_ore")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("Anorthosite Ore")
                                 .customModelData(5001)
                                 .type(ItemType.BLOCK)
@@ -201,7 +201,7 @@ public class LunarItems {
                                 .build());
 
                 registry.register(ItemDefinition.builder("haohan:ilmenite_ore")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("Ilmenite Ore")
                                 .customModelData(5002)
                                 .type(ItemType.BLOCK)
@@ -219,7 +219,7 @@ public class LunarItems {
                                 .build());
 
                 registry.register(ItemDefinition.builder("haohan:pyroxene_ore")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("Pyroxene Ore")
                                 .customModelData(5003)
                                 .type(ItemType.BLOCK)
@@ -237,7 +237,7 @@ public class LunarItems {
                                 .build());
 
                 registry.register(ItemDefinition.builder("haohan:kreep_basalt")
-                                .material(Material.NOTE_BLOCK)
+                                .material(Material.BARRIER)
                                 .displayName("KREEP Basalt")
                                 .customModelData(5004)
                                 .type(ItemType.BLOCK)
