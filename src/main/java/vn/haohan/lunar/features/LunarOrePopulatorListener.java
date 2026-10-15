@@ -49,57 +49,24 @@ public final class LunarOrePopulatorListener implements Listener {
             return;
         }
 
-        CustomBlockService cbService;
-        try {
-            var core = HaoHanItemCore.get();
-            if (core == null || (cbService = core.getCustomBlockService()) == null) {
-                return;
-            }
-        } catch (Throwable t) {
-            return;
-        }
-
-        int converted = populateChunkOres(chunk, cbService);
+        // NoteBlocks are natively recognized by ItemCore via variations 771..774.
+        // Chunk scanning to convert to barrier is disabled.
         pdc.set(populatedKey, PersistentDataType.BYTE, (byte) 1);
-
-        if (converted > 0 && plugin != null) {
-            plugin.getSLF4JLogger().debug("Populated {} lunar custom ores in chunk [{}, {}]", converted, chunk.getX(), chunk.getZ());
-        }
     }
 
     /**
      * Scans and populates note blocks matching lunar ore representations in the given chunk.
      *
+     * @deprecated NoteBlocks are now recognized natively by ItemCore as NativeCustomBlock.
+     * Chunk scanning is no longer needed and is disabled.
+     *
      * @param chunk the chunk to scan
      * @param cbService ItemCore custom block service
      * @return number of blocks converted
      */
+    @Deprecated
     public int populateChunkOres(Chunk chunk, CustomBlockService cbService) {
-        if (chunk == null || cbService == null) return 0;
-        int count = 0;
-        var world = chunk.getWorld();
-        int minY = world != null ? world.getMinHeight() : -32;
-        int maxY = world != null ? world.getMaxHeight() - 1 : 159;
-
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                for (int y = minY; y <= maxY; y++) {
-                    Block block = chunk.getBlock(x, y, z);
-                    if (block.getType() != Material.NOTE_BLOCK) {
-                        continue;
-                    }
-
-                    if (block.getBlockData() instanceof NoteBlock noteBlock) {
-                        String oreId = resolveOreId(noteBlock);
-                        if (oreId != null) {
-                            cbService.placeCustomBlock(block.getLocation(), oreId);
-                            count++;
-                        }
-                    }
-                }
-            }
-        }
-        return count;
+        return 0;
     }
 
     /**

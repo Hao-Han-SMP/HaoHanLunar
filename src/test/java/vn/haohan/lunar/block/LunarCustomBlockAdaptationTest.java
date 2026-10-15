@@ -125,7 +125,22 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(soundMap.containsKey("hit"), oreId + " sounds must have hit");
             assertTrue(soundMap.containsKey("step"), oreId + " sounds must have step");
 
-            assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
+            boolean isBatteryCharger = "haohan:battery_charger".equals(oreId);
+            if (isBatteryCharger) {
+                assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
+            } else {
+                assertEquals(Material.NOTE_BLOCK, def.getMaterial(), oreId + " must use Material.NOTE_BLOCK");
+                assertTrue(props.containsKey("custom_variation"), oreId + " must contain custom_variation");
+                int expectedVariation = switch (oreId) {
+                    case "haohan:kreep_basalt" -> 771;
+                    case "haohan:pyroxene_ore" -> 772;
+                    case "haohan:ilmenite_ore" -> 773;
+                    case "haohan:anorthosite_ore" -> 774;
+                    default -> -1;
+                };
+                assertEquals(expectedVariation, ((Number) props.get("custom_variation")).intValue(), oreId + " variation must match");
+            }
+
             assertEquals(vn.haohan.itemcore.api.item.ItemType.BLOCK, def.getType(), oreId + " must use ItemType.BLOCK");
             assertTrue(ItemCategory.CUSTOM_BLOCKS.matches(def), oreId + " must match ItemCategory.CUSTOM_BLOCKS");
             assertFalse(ItemCategory.SPECIAL.matches(def), oreId + " must not match ItemCategory.SPECIAL");
@@ -141,6 +156,21 @@ public class LunarCustomBlockAdaptationTest {
             assertNotNull(blockDef.getSoundGroup().getBreakSound(), "SoundGroup must have breakSound");
             assertNotNull(blockDef.getSoundGroup().getHitSound(), "SoundGroup must have hitSound");
             assertNotNull(blockDef.getSoundGroup().getStepSound(), "SoundGroup must have stepSound");
+
+            if ("haohan:battery_charger".equals(blockDef.getId())) {
+                assertTrue(blockDef.isAlternative(), "battery_charger must be AlternativeCustomBlock");
+            } else if (blockDef.getId().startsWith("haohan:")) {
+                assertTrue(blockDef.isNative(), blockDef.getId() + " must be NativeCustomBlock");
+                vn.haohan.itemcore.api.block.NativeCustomBlock nativeBlock = (vn.haohan.itemcore.api.block.NativeCustomBlock) blockDef;
+                int expectedVar = switch (blockDef.getId()) {
+                    case "haohan:kreep_basalt" -> 771;
+                    case "haohan:pyroxene_ore" -> 772;
+                    case "haohan:ilmenite_ore" -> 773;
+                    case "haohan:anorthosite_ore" -> 774;
+                    default -> -1;
+                };
+                assertEquals(expectedVar, nativeBlock.getCustomVariation(), blockDef.getId() + " variation must match");
+            }
         }
     }
 
