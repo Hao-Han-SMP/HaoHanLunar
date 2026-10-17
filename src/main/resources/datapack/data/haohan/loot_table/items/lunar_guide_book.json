@@ -1,0 +1,54 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:written_book",
+          "functions": [
+            {
+              "function": "minecraft:set_components",
+              "components": {
+                "minecraft:written_book_content": {
+                  "title": "Nhật Ký Thám Hiểm Mặt Trăng",
+                  "author": "Nhà Thiên Văn Bí Ẩn",
+                  "generation": 0,
+                  "pages": [
+                    {
+                      "raw": "{\"text\":\"=== MẶT TRĂNG ===\\n\\nThứ trên kia... không chỉ là một khối đá vô tri!\\n\\nKhi nhìn qua kính viễn vọng, ta đã thấy những tàn tích và ánh sáng pha lê kỳ lạ trên bề mặt của nó.\"}"
+                    },
+                    {
+                      "raw": "{\"text\":\"=== CÁCH LÊN ĐÓ ===\\n\\n1. Để bước lên Mặt Trăng, ngươi cần mở cổng không gian bằng cách dùng lệnh:\\n  \\\\u00a7b/hhl tp\\\\u00a7r\\n\\n2. Trọng lực tại đó chỉ bằng \\\\u00a7e16%\\\\u00a7r thông thường, ngươi sẽ nhảy rất cao!\"}"
+                    },
+                    {
+                      "raw": "{\"text\":\"=== CẢNH BÁO ===\\n\\n\\\\u00a7cKHÔNG CÓ KHÔNG KHÍ!\\\\u00a7r\\n\\nNgươi sẽ bị ngạt thở nếu không mặc đủ bộ \\\\u00a7bSpacesuit\\\\u00a7r và mang theo \\\\u00a7aBình Oxy\\\\u00a7r.\\n\\nHãy bảo trọng!\"}"
+                    }
+                  ]
+                },
+                "minecraft:item_name": {
+                  "text": "Sách Hướng Dẫn: Khám Phá Mặt Trăng",
+                  "color": "gold",
+                  "bold": true,
+                  "italic": false
+                },
+                "minecraft:lore": [
+                  {
+                    "text": "Cuốn sách ghi chép cách tiếp cận",
+                    "color": "gray",
+                    "italic": false
+                  },
+                  {
+                    "text": "thế giới Mặt Trăng đầy bí ẩn.",
+                    "color": "yellow",
+                    "italic": false
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
