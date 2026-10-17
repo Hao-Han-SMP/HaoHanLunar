@@ -49,6 +49,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     private LunarRobotMechanic lunarRobotMechanic;
     private ModelEngineDeathListener modelEngineDeathListener;
     private BatteryChargerMechanic batteryChargerMechanic;
+    private MoonGazingMechanic moonGazingMechanic;
 
     /**
      * Returns the singleton plugin instance.
@@ -124,6 +125,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         lunarRobotMechanic = new LunarRobotMechanic(this);
         modelEngineDeathListener = new ModelEngineDeathListener(this);
         batteryChargerMechanic = new BatteryChargerMechanic(this);
+        moonGazingMechanic = new MoonGazingMechanic(this);
 
         // Register event listeners
         var pm = getServer().getPluginManager();
@@ -138,6 +140,7 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(lunarRobotMechanic, this);
         pm.registerEvents(modelEngineDeathListener, this);
         pm.registerEvents(batteryChargerMechanic, this);
+        pm.registerEvents(moonGazingMechanic, this);
         pm.registerEvents(new vn.haohan.lunar.features.LunarOrePopulatorListener(this), this);
 
         // Register robot commands
@@ -234,6 +237,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         if (batteryChargerMechanic != null) {
             batteryChargerMechanic.cleanupOnDisable();
         }
+        if (moonGazingMechanic != null) {
+            moonGazingMechanic.cleanup();
+        }
 
         // Clean up low gravity and mining attributes modifiers from players
         if (gravityMechanic != null) {
@@ -281,6 +287,10 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
     public LunarClaymoreMechanic getLunarClaymoreMechanic() {
         return lunarClaymoreMechanic;
+    }
+
+    public MoonGazingMechanic getMoonGazingMechanic() {
+        return moonGazingMechanic;
     }
 
     public LunarRobotMechanic getLunarRobotMechanic() {
