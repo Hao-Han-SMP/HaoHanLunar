@@ -1,0 +1,29 @@
+{
+  "parent": "haohan:lunar/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:clock"
+    },
+    "title": {
+      "text": "Ngắm nhìn chú cuội",
+      "bold": true,
+      "color": "#e0e6ed"
+    },
+    "description": {
+      "text": "Đứng yên và ngắm nhìn mặt trăng trên bầu trời đêm",
+      "color": "yellow"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "look_at_moon": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 50
+  }
+}

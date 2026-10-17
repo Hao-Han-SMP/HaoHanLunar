@@ -1,0 +1,29 @@
+{
+  "parent": "haohan:lunar/moon_cuoi",
+  "display": {
+    "icon": {
+      "id": "minecraft:spyglass"
+    },
+    "title": {
+      "text": "Cái đó là gì vậy?",
+      "bold": true,
+      "color": "#00ffff"
+    },
+    "description": {
+      "text": "Sử dụng kính viễn vọng quan sát kỹ mặt trăng...",
+      "color": "yellow"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "spyglass_moon": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 200
+  }
+}
