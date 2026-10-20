@@ -34,15 +34,15 @@ configurations {
 
 dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
-    compileOnly 'vn.haohan:HaoHanItemCore:1.0.0'
-    compileOnly 'vn.haohan:HaoHanDisplayUI:1.0.2'
+    compileOnly 'com.github.Hao-Han-SMP:HaoHanItemCore:v1.0.0'
+    compileOnly 'com.github.Hao-Han-SMP:HaoHanDisplayUI:v1.0.2'
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
 
     validatorClasspath 'org.yaml:snakeyaml:2.2'
 
     testImplementation 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
-    testImplementation 'vn.haohan:HaoHanItemCore:1.0.0'
-    testImplementation 'vn.haohan:HaoHanDisplayUI:1.0.2'
+    testImplementation 'com.github.Hao-Han-SMP:HaoHanItemCore:v1.0.0'
+    testImplementation 'com.github.Hao-Han-SMP:HaoHanDisplayUI:v1.0.2'
     testImplementation fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'org.yaml:snakeyaml:2.2'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
