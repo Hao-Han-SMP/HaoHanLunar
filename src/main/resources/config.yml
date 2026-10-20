@@ -34,13 +34,13 @@ lunar-surface:
 skybox:
   enabled: true
   world: "haohan:lunar"
-  # Default skybox for haohan:lunar if no specific biome mapping matches
+  # Default skybox for haohan:lunar
   default-skybox: "lunar_space"
   # Mapping from lunar biomes to skybox identifiers registered in SkyboxEngine
   biome-skyboxes:
     "haohan:lunar_terrae": "lunar_space"
     "haohan:lunar_maria": "lunar_space"
-    "haohan:lunar_craters": "lunar_raymarching"
-    "haohan:lunar_crystal_craters": "lunar_animated_stars"
-    "haohan:lunar_giant_crystals": "lunar_void_vortex"
-    "haohan:lunar_giant_crystal_outskirts": "lunar_animated_stars"
+    "haohan:lunar_craters": "lunar_space"
+    "haohan:lunar_crystal_craters": "lunar_space"
+    "haohan:lunar_giant_crystals": "lunar_space"
+    "haohan:lunar_giant_crystal_outskirts": "lunar_space"
