@@ -6,6 +6,24 @@ import org.bukkit.inventory.ItemStack;
 import java.util.UUID;
 
 public class BatteryChargerStation {
+
+    public enum ChargerState {
+        RED("haohan:robot_charger_red"),
+        BLUE("haohan:robot_charger"),
+        YELLOW("haohan:robot_charger_yellow"),
+        CYAN("haohan:robot_charger_cyan");
+
+        private final String customItemId;
+
+        ChargerState(String customItemId) {
+            this.customItemId = customItemId;
+        }
+
+        public String getCustomItemId() {
+            return customItemId;
+        }
+    }
+
     private final Location location;
     private UUID displayEntityUuid;
     private UUID ownerUuid;
@@ -15,6 +33,10 @@ public class BatteryChargerStation {
     private float yaw;
     private double cachedMultiplier = 1.0;
     private int cachedChargeRate = 450;
+
+    private ChargerState currentState = ChargerState.RED;
+    private UUID dockedRobotUuid = null;
+    private int cyanDisplayTicks = 0;
 
     public BatteryChargerStation(Location location, UUID displayEntityUuid, UUID ownerUuid, float yaw) {
         this.location = location;
@@ -26,6 +48,7 @@ public class BatteryChargerStation {
         this.fuelBuffer = 0;
         this.cachedMultiplier = 1.0;
         this.cachedChargeRate = 450;
+        this.currentState = ChargerState.RED;
     }
 
     public Location getLocation() {
@@ -100,6 +123,30 @@ public class BatteryChargerStation {
 
     public void setCachedChargeRate(int cachedChargeRate) {
         this.cachedChargeRate = cachedChargeRate;
+    }
+
+    public ChargerState getCurrentState() {
+        return currentState;
+    }
+
+    public void setCurrentState(ChargerState currentState) {
+        this.currentState = currentState;
+    }
+
+    public UUID getDockedRobotUuid() {
+        return dockedRobotUuid;
+    }
+
+    public void setDockedRobotUuid(UUID dockedRobotUuid) {
+        this.dockedRobotUuid = dockedRobotUuid;
+    }
+
+    public int getCyanDisplayTicks() {
+        return cyanDisplayTicks;
+    }
+
+    public void setCyanDisplayTicks(int cyanDisplayTicks) {
+        this.cyanDisplayTicks = cyanDisplayTicks;
     }
 
     public String getKey() {

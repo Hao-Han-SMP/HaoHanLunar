@@ -75,6 +75,8 @@ public class LunarRobotEntity {
     private final Set<ItemDisplay> activeHolograms = new HashSet<>();
     private Location lastStepLocation = null;
     private double stepDistanceAccumulator = 0.0;
+    private Location dockedChargerLocation = null;
+    private int chargeTickCooldown = 0;
 
     public boolean isFrozen() {
         return frozen;
@@ -474,13 +476,22 @@ public class LunarRobotEntity {
             return;
         }
 
+        // Autonomous MagSafe Charger Seeking & Docking
+        if (handleMagSafeCharging()) {
+            return;
+        }
+
         Player owner = getOnlineOwner();
         Vector vel = entity.getVelocity();
         double horizVelSq = vel.getX() * vel.getX() + vel.getZ() * vel.getZ();
         if (owner == null || !data.isFollowOwner() || data.isSitting()) {
             if (horizVelSq < 0.005) {
                 if (!isAttackAnimationPlaying()) {
-                    playAnimation("idle", 0.2, 0.2, 1.0, true);
+                    if (data.isSitting()) {
+                        playAnimation("sit", 0.2, 0.2, 1.0, true);
+                    } else {
+                        playAnimation("idle", 0.2, 0.2, 1.0, true);
+                    }
                 }
             } else {
                 playAnimation("walk", 0.2, 0.2, 1.0, true);
@@ -1989,7 +2000,185 @@ public class LunarRobotEntity {
         return false;
     }
 
+    public boolean handleMagSafeCharging() {
+        if (!data.isTamed() || data.isSitting() || getRider() != null) {
+            if (dockedChargerLocation != null) {
+                releaseChargerDocking();
+            }
+            return false;
+        }
+
+        if (data.getBatteryType() == null || "none".equalsIgnoreCase(data.getBatteryType())) {
+            if (dockedChargerLocation != null) {
+                releaseChargerDocking();
+            }
+            return false;
+        }
+
+        int curE = data.getEnergy();
+        int maxE = data.getMaxEnergy();
+
+        vn.haohan.lunar.charger.BatteryChargerMechanic chargerMechanic = null;
+        if (plugin instanceof HaoHanLunarPlugin lunarPlugin) {
+            chargerMechanic = lunarPlugin.getBatteryChargerMechanic();
+        }
+        if (chargerMechanic == null) return false;
+
+        // 1. If currently docked at a charger
+        if (dockedChargerLocation != null) {
+            String key = chargerMechanic.formatKey(dockedChargerLocation);
+            vn.haohan.lunar.charger.BatteryChargerStation station = chargerMechanic.getStations().get(key);
+
+            // Verify station validity and distance
+            if (station == null || station.getLocation() == null || !entity.getWorld().equals(station.getLocation().getWorld())
+                    || entity.getLocation().distanceSquared(station.getLocation().clone().add(0.5, 0.5, 0.5)) > 9.0) {
+                releaseChargerDocking();
+                return false;
+            }
+
+            // Check if battery is fully charged!
+            if (curE >= maxE) {
+                station.setDockedRobotUuid(null);
+                station.setCyanDisplayTicks(120); // 6s cyan display
+                chargerMechanic.updateStationDisplay(station);
+
+                data.incrementChargeCycles();
+                releaseChargerDocking();
+
+                entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.4f);
+                entity.getWorld().spawnParticle(Particle.WAX_OFF, entity.getLocation().add(0, 0.6, 0), 15, 0.3, 0.3, 0.3, 0.05);
+                playAnimation("idle", 0.2, 0.2, 1.0, true);
+                return false;
+            }
+
+            // Check if station has power
+            if (station.getFuelBuffer() <= 0) {
+                releaseChargerDocking();
+                chargerMechanic.updateStationDisplay(station);
+                playAnimation("idle", 0.2, 0.2, 1.0, true);
+                return false;
+            }
+
+            // Robot is docked & actively charging
+            if (entity instanceof Mob mob) {
+                mob.getPathfinder().stopPathfinding();
+            }
+
+            // Ensure sit animation is playing
+            if (!"sit".equals(currentAnimation)) {
+                playAnimation("sit", 0.2, 0.2, 1.0, true);
+            }
+
+            // Face the charger block
+            Location lookTarget = station.getLocation().clone().add(0.5, 0.3, 0.5);
+            Vector dir = lookTarget.toVector().subtract(entity.getLocation().toVector());
+            if (dir.lengthSquared() > 0.01) {
+                float targetYaw = (float) Math.toDegrees(Math.atan2(-dir.getX(), dir.getZ()));
+                entity.setRotation(targetYaw, 10.0f);
+            }
+
+            station.setDockedRobotUuid(entity.getUniqueId());
+            station.setCyanDisplayTicks(0);
+            chargerMechanic.updateStationDisplay(station);
+
+            // Charge rate: random between 350 and 780 EU per second (ticked every 20 ticks)
+            chargeTickCooldown++;
+            if (chargeTickCooldown >= 20) {
+                chargeTickCooldown = 0;
+                int randomRate = 350 + java.util.concurrent.ThreadLocalRandom.current().nextInt(431); // 350 - 780 EU
+                int needed = maxE - curE;
+                int actualCharge = Math.min(randomRate, Math.min(needed, station.getFuelBuffer()));
+
+                if (actualCharge > 0) {
+                    station.setFuelBuffer(station.getFuelBuffer() - actualCharge);
+                    data.setEnergy(curE + actualCharge);
+
+                    Location beamStart = station.getLocation().clone().add(0.5, 0.7, 0.5);
+                    Location beamEnd = entity.getLocation().add(0, 0.5, 0);
+                    spawnChargingArc(beamStart, beamEnd);
+                    entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.4f, 1.8f);
+                }
+            }
+
+            return true;
+        }
+
+        // 2. If not docked, check if robot needs charging and search for nearby available charger
+        if (curE < maxE) {
+            vn.haohan.lunar.charger.BatteryChargerStation bestStation = null;
+            double bestDistSq = 256.0; // Max radius 16 blocks (16^2 = 256)
+
+            for (vn.haohan.lunar.charger.BatteryChargerStation st : chargerMechanic.getStations().values()) {
+                Location stLoc = st.getLocation();
+                if (stLoc == null || !entity.getWorld().equals(stLoc.getWorld())) continue;
+                if (st.getFuelBuffer() <= 0) continue; // Skip unpowered stations
+                if (st.getDockedRobotUuid() != null && !st.getDockedRobotUuid().equals(entity.getUniqueId())) continue; // Skip occupied stations
+
+                double dSq = entity.getLocation().distanceSquared(stLoc.clone().add(0.5, 0.5, 0.5));
+                if (dSq < bestDistSq) {
+                    bestDistSq = dSq;
+                    bestStation = st;
+                }
+            }
+
+            if (bestStation != null) {
+                Location targetLoc = bestStation.getLocation().clone().add(0.5, 0.0, 0.5);
+                double dist = Math.sqrt(bestDistSq);
+
+                if (dist > 1.6) {
+                    // Navigate towards charger
+                    if (entity instanceof Mob mob) {
+                        mob.getPathfinder().moveTo(targetLoc, 1.25);
+                    }
+                    playAnimation("walk", 0.2, 0.2, 1.2, true);
+                    return true;
+                } else {
+                    // Reached charger -> Dock!
+                    if (entity instanceof Mob mob) {
+                        mob.getPathfinder().stopPathfinding();
+                    }
+                    this.dockedChargerLocation = bestStation.getLocation();
+                    bestStation.setDockedRobotUuid(entity.getUniqueId());
+                    chargerMechanic.updateStationDisplay(bestStation);
+                    playAnimation("sit", 0.2, 0.2, 1.0, true);
+                    entity.getWorld().playSound(entity.getLocation(), Sound.BLOCK_ANVIL_USE, 0.5f, 1.8f);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public void releaseChargerDocking() {
+        if (dockedChargerLocation != null) {
+            if (plugin instanceof HaoHanLunarPlugin lunarPlugin && lunarPlugin.getBatteryChargerMechanic() != null) {
+                String key = lunarPlugin.getBatteryChargerMechanic().formatKey(dockedChargerLocation);
+                var st = lunarPlugin.getBatteryChargerMechanic().getStations().get(key);
+                if (st != null && entity.getUniqueId().equals(st.getDockedRobotUuid())) {
+                    st.setDockedRobotUuid(null);
+                    lunarPlugin.getBatteryChargerMechanic().updateStationDisplay(st);
+                }
+            }
+            this.dockedChargerLocation = null;
+        }
+    }
+
+    private void spawnChargingArc(Location start, Location end) {
+        World w = start.getWorld();
+        if (w == null) return;
+        int points = 5;
+        double dx = (end.getX() - start.getX()) / points;
+        double dy = (end.getY() - start.getY()) / points;
+        double dz = (end.getZ() - start.getZ()) / points;
+        for (int i = 1; i <= points; i++) {
+            w.spawnParticle(Particle.WAX_OFF, start.getX() + dx * i, start.getY() + dy * i, start.getZ() + dz * i, 1, 0.02, 0.02, 0.02, 0.0);
+            w.spawnParticle(Particle.ELECTRIC_SPARK, start.getX() + dx * i, start.getY() + dy * i, start.getZ() + dz * i, 1, 0.01, 0.01, 0.01, 0.0);
+        }
+    }
+
     public void cleanup() {
+        releaseChargerDocking();
         clearCombatTarget();
         dismountRider();
         cleanupFallbackSeat();

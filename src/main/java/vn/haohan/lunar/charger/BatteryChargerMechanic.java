@@ -12,16 +12,17 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.Plugin;
 import vn.haohan.itemcore.api.HaoHanItemCore;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.lunar.robot.LunarRobotEntity;
 import vn.haohan.lunar.robot.LunarRobotMechanic;
-import vn.haohan.lunar.robot.battery.RobotBatteryUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +33,6 @@ public class BatteryChargerMechanic implements Listener {
 
     private final HaoHanLunarPlugin plugin;
     private final Map<String, BatteryChargerStation> stations = new ConcurrentHashMap<>();
-    private final List<BatteryChargerUi> activeUis = new ArrayList<>();
     private final NamespacedKey chargerKey;
     private long tickCounter = 0;
 
@@ -44,37 +44,6 @@ public class BatteryChargerMechanic implements Listener {
 
     public Map<String, BatteryChargerStation> getStations() {
         return stations;
-    }
-
-    public void registerOpenUi(BatteryChargerUi ui) {
-        activeUis.add(ui);
-    }
-
-    public void unregisterOpenUi(BatteryChargerUi ui) {
-        activeUis.remove(ui);
-    }
-
-    public BatteryChargerUi getOpenUi(BatteryChargerStation station) {
-        for (BatteryChargerUi ui : activeUis) {
-            if (ui.getStation() == station && ui.getPlayer().isOnline() && ui.getPlayer().getOpenInventory().getTopInventory() == ui.getInventory()) {
-                return ui;
-            }
-        }
-        return null;
-    }
-
-    public void openChargerUi(Player player, BatteryChargerStation station) {
-        BatteryChargerUi existingUi = getOpenUi(station);
-        if (existingUi != null && existingUi.getPlayer().isOnline() && !existingUi.getPlayer().getUniqueId().equals(player.getUniqueId())) {
-            player.sendMessage("§c§l[Trạm Sạc] §cTrạm sạc này đang được người chơi " + existingUi.getPlayer().getName() + " sử dụng!");
-            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
-            return;
-        }
-
-        BatteryChargerUi ui = new BatteryChargerUi(plugin, this, station, player);
-        plugin.getServer().getPluginManager().registerEvents(ui, plugin);
-        registerOpenUi(ui);
-        ui.open();
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -98,50 +67,42 @@ public class BatteryChargerMechanic implements Listener {
                     return;
                 }
 
-                // RIGHT CLICK -> Open GUI or Quick-insert battery
+                // RIGHT CLICK -> Feed Raw Anorthosite or View Info
                 if (action == Action.RIGHT_CLICK_BLOCK) {
                     ItemStack handItem = player.getInventory().getItemInMainHand();
-                    if (player.isSneaking() && RobotBatteryUtil.isBatteryItem(handItem)) {
-                        // Quick insert/swap
-                        ItemStack currentBat = station.getBatteryItem();
-                        station.setBatteryItem(handItem.clone());
-                        if (player.getGameMode() != GameMode.CREATIVE) {
-                            handItem.setAmount(0);
-                        }
-                        if (currentBat != null && currentBat.getType() != Material.AIR) {
-                            player.getInventory().addItem(currentBat);
-                        }
-                        player.playSound(clickedBlock.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.8f, 1.6f);
-                        player.sendMessage("§e§l[Trạm Sạc] §aĐã đặt Pin vào trạm sạc!");
-                        return;
-                    }
 
-                    if (player.isSneaking() && getFuelValue(handItem) > 0) {
-                        ItemStack currentFuel = station.getFuelItem();
-                        if (currentFuel == null || currentFuel.getType() == Material.AIR) {
-                            station.setFuelItem(handItem.clone());
+                    // Fuel: ONLY raw_anorthosite (+3500 EU / 4s)
+                    if (isRawAnorthosite(handItem)) {
+                        int amountToFeed = player.isSneaking() ? handItem.getAmount() : 1;
+                        if (amountToFeed > 0) {
+                            station.addFuelBuffer(amountToFeed * 3500);
                             if (player.getGameMode() != GameMode.CREATIVE) {
-                                handItem.setAmount(0);
+                                if (handItem.getAmount() > amountToFeed) {
+                                    handItem.subtract(amountToFeed);
+                                } else {
+                                    player.getInventory().setItemInMainHand(null);
+                                }
                             }
                             player.playSound(clickedBlock.getLocation(), Sound.BLOCK_BLASTFURNACE_FIRE_CRACKLE, 0.8f, 1.4f);
-                            player.sendMessage("§e§l[Trạm Sạc] §aĐã đặt nguyên liệu vào trạm sạc!");
+                            player.sendMessage("§e§l[Trạm Sạc] §aĐã nạp §f" + amountToFeed + "x §aRaw Anorthosite! §e(+ " + String.format("%,d", amountToFeed * 3500) + " EU)");
+                            updateStationDisplay(station);
+                            saveAll();
                             return;
-                        } else if (currentFuel.isSimilar(handItem)) {
-                            int space = currentFuel.getMaxStackSize() - currentFuel.getAmount();
-                            int move = Math.min(space, handItem.getAmount());
-                            if (move > 0) {
-                                currentFuel.setAmount(currentFuel.getAmount() + move);
-                                if (player.getGameMode() != GameMode.CREATIVE) {
-                                    handItem.subtract(move);
-                                }
-                                player.playSound(clickedBlock.getLocation(), Sound.BLOCK_BLASTFURNACE_FIRE_CRACKLE, 0.8f, 1.4f);
-                                player.sendMessage("§e§l[Trạm Sạc] §aĐã thêm nguyên liệu vào trạm sạc!");
-                                return;
-                            }
                         }
                     }
 
-                    openChargerUi(player, station);
+                    // Status report on click without raw anorthosite
+                    String statusName = switch (station.getCurrentState()) {
+                        case RED -> "§cKhông khả dụng (Cạn năng lượng)";
+                        case BLUE -> "§9Sẵn sàng (Đang chờ Robot)";
+                        case YELLOW -> "§eĐang sạc Robot";
+                        case CYAN -> "§bRobot đã sạc đầy";
+                    };
+                    player.sendMessage("§9§l[Trạm Sạc]");
+                    player.sendMessage("§7▪ Trạng thái: " + statusName);
+                    player.sendMessage("§7▪ Năng lượng dự trữ: §f" + String.format("%,d", station.getFuelBuffer()) + " EU");
+                    player.sendMessage("§8Cầm Raw Anorthosite bấm chuột phải để tiếp năng lượng (+3,500 EU / 4s).");
+                    player.playSound(clickedBlock.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.6f, 1.6f);
                     return;
                 }
             }
@@ -154,16 +115,90 @@ public class BatteryChargerMechanic implements Listener {
                 event.setCancelled(true);
 
                 BlockFace face = event.getBlockFace();
-                Block targetBlock = clickedBlock.getRelative(face);
+                Block targetBlock = clickedBlock.isReplaceable() ? clickedBlock : clickedBlock.getRelative(face);
 
-                if (!targetBlock.getType().isAir() && !targetBlock.isReplaceable()) {
-                    player.sendMessage("§c§l[Trạm Sạc] §cKhông có đủ không gian để đặt Trạm Sạc!");
+                if (targetBlock.getY() < targetBlock.getWorld().getMinHeight() || targetBlock.getY() >= targetBlock.getWorld().getMaxHeight()) {
+                    return;
+                }
+
+                org.bukkit.util.BoundingBox targetBox = org.bukkit.util.BoundingBox.of(targetBlock).expand(-0.05);
+                if (player.getBoundingBox().overlaps(targetBox)) {
+                    player.sendMessage("§c§l[Trạm Sạc] §cBạn đang đứng quá gần vị trí đặt!");
+                    return;
+                }
+
+                Block ground = targetBlock.getRelative(BlockFace.DOWN);
+                if (!ground.getType().isSolid()) {
+                    player.sendMessage("§c§l[Trạm Sạc] §cPhải đặt Trạm Sạc trên một bề mặt vững chắc!");
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
+                    return;
+                }
+
+                // Check 3x3x2 space requirement
+                if (!is3x3x2AreaClear(targetBlock.getLocation(), targetBlock)) {
+                    player.sendMessage("§c§l[Trạm Sạc] §cKhông đủ không gian để đặt! Trạm sạc yêu cầu khoảng trống 3x3x2.");
+                    player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
                     return;
                 }
 
                 placeStation(player, targetBlock, itemInHand);
             }
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Block placed = event.getBlockPlaced();
+        Location pLoc = placed.getLocation();
+        World w = pLoc.getWorld();
+        if (w == null) return;
+        int px = pLoc.getBlockX();
+        int py = pLoc.getBlockY();
+        int pz = pLoc.getBlockZ();
+
+        for (BatteryChargerStation station : stations.values()) {
+            Location sLoc = station.getLocation();
+            if (sLoc == null || !w.equals(sLoc.getWorld())) continue;
+            int sx = sLoc.getBlockX();
+            int sy = sLoc.getBlockY();
+            int sz = sLoc.getBlockZ();
+
+            // Exclude the station's own barrier block
+            if (px == sx && py == sy && pz == sz) continue;
+
+            // 3x3x2 Bounding Box Protection: dx in [-1, 1], dz in [-1, 1], dy in [0, 1]
+            if (Math.abs(px - sx) <= 1 && Math.abs(pz - sz) <= 1 && (py == sy || py == sy + 1)) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage("§c§l[Trạm Sạc] §cKhông thể đặt khối trong vùng hoạt động 3x3x2 của Trạm Sạc!");
+                return;
+            }
+        }
+    }
+
+    public static boolean is3x3x2AreaClear(Location center, Block placedBlock) {
+        if (center == null || center.getWorld() == null) return false;
+        World w = center.getWorld();
+        int cx = center.getBlockX();
+        int cy = center.getBlockY();
+        int cz = center.getBlockZ();
+
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dy = 0; dy <= 1; dy++) {
+                    int bx = cx + dx;
+                    int by = cy + dy;
+                    int bz = cz + dz;
+                    Block b = w.getBlockAt(bx, by, bz);
+                    if (placedBlock != null && b.getLocation().equals(placedBlock.getLocation())) {
+                        continue;
+                    }
+                    if (!b.getType().isAir() && !b.isReplaceable()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     public void placeStation(Player player, Block block, ItemStack itemInHand) {
@@ -176,7 +211,7 @@ public class BatteryChargerMechanic implements Listener {
         // 2. Calculate snap yaw facing the player
         final float finalYaw = Math.round((player.getLocation().getYaw() + 180.0f) / 90.0f) * 90.0f;
 
-        // 3. Spawn 3D ItemDisplay
+        // 3. Spawn 3D ItemDisplay: initially RED because fuelBuffer is 0
         Location displayLoc = loc.clone().add(0.5, 0.5, 0.5);
         ItemDisplay display = loc.getWorld().spawn(displayLoc, ItemDisplay.class, entity -> {
             entity.setPersistent(false);
@@ -184,8 +219,7 @@ public class BatteryChargerMechanic implements Listener {
             entity.setGravity(false);
             entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
 
-            var itemFactory = HaoHanItemCore.get().getItemFactory();
-            ItemStack modelStack = itemFactory.create("haohan:battery_charger", 1);
+            ItemStack modelStack = createDisplayItemStack("haohan:robot_charger_red");
             if (modelStack != null) {
                 entity.setItemStack(modelStack);
             }
@@ -195,18 +229,23 @@ public class BatteryChargerMechanic implements Listener {
 
         // 4. Register Station
         BatteryChargerStation station = new BatteryChargerStation(loc, display.getUniqueId(), player.getUniqueId(), finalYaw);
+        station.setCurrentState(BatteryChargerStation.ChargerState.RED);
         stations.put(key, station);
         saveAll();
 
         // 5. Consume item
         if (player.getGameMode() != GameMode.CREATIVE) {
-            itemInHand.subtract(1);
+            if (itemInHand.getAmount() > 1) {
+                itemInHand.subtract(1);
+            } else {
+                player.getInventory().setItemInMainHand(null);
+            }
         }
 
         // 6. Effects
         loc.getWorld().playSound(loc, Sound.BLOCK_ANVIL_PLACE, 0.8f, 1.4f);
         loc.getWorld().spawnParticle(Particle.WAX_ON, loc.clone().add(0.5, 0.6, 0.5), 15, 0.3, 0.3, 0.3, 0.05);
-        player.sendMessage("§e§l[Trạm Sạc] §aĐã đặt Trạm Sạc Pin Robot thành công!");
+        player.sendMessage("§9§l[Trạm Sạc] §aĐã đặt Trạm Sạc thành công! Hãy nạp Raw Anorthosite để kích hoạt.");
     }
 
     public void breakStation(Player player, Block block, BatteryChargerStation station) {
@@ -227,131 +266,102 @@ public class BatteryChargerMechanic implements Listener {
         // 3. Restore block to air
         block.setType(Material.AIR);
 
-        // 4. Drop Station Item & Battery
+        // 4. Drop Station Item (Always drop base blue robot_charger)
         var itemFactory = HaoHanItemCore.get().getItemFactory();
-        ItemStack dropCharger = itemFactory.create("haohan:battery_charger", 1);
+        ItemStack dropCharger = itemFactory.create("haohan:robot_charger", 1);
         if (dropCharger != null && player.getGameMode() != GameMode.CREATIVE) {
             loc.getWorld().dropItemNaturally(loc.clone().add(0.5, 0.3, 0.5), dropCharger);
         }
 
-        if (station.getBatteryItem() != null && station.getBatteryItem().getType() != Material.AIR) {
-            loc.getWorld().dropItemNaturally(loc.clone().add(0.5, 0.5, 0.5), station.getBatteryItem());
-        }
-
-        if (station.getFuelItem() != null && station.getFuelItem().getType() != Material.AIR) {
-            loc.getWorld().dropItemNaturally(loc.clone().add(0.5, 0.5, 0.5), station.getFuelItem());
-        }
-
-        // 5. Close any open UIs for this station
-        for (BatteryChargerUi ui : new ArrayList<>(activeUis)) {
-            if (ui.getStation() == station) {
-                ui.getPlayer().closeInventory();
+        // 5. Refund remaining raw anorthosite fuel if any
+        if (station.getFuelBuffer() >= 3500 && player.getGameMode() != GameMode.CREATIVE) {
+            int returnCount = station.getFuelBuffer() / 3500;
+            ItemStack raw = itemFactory.create("haohan:raw_anorthosite", returnCount);
+            if (raw != null) {
+                loc.getWorld().dropItemNaturally(loc.clone().add(0.5, 0.5, 0.5), raw);
             }
         }
 
         // 6. Effects
         loc.getWorld().playSound(loc, Sound.BLOCK_ANVIL_BREAK, 0.8f, 1.2f);
         loc.getWorld().spawnParticle(Particle.BLOCK, loc.clone().add(0.5, 0.5, 0.5), 25, 0.4, 0.4, 0.4, Material.IRON_BLOCK.createBlockData());
-        player.sendMessage("§e§l[Trạm Sạc] §cĐã thu hồi Trạm Sạc Pin Robot.");
+        player.sendMessage("§9§l[Trạm Sạc] §cĐã thu hồi Trạm Sạc.");
     }
 
     public void tick() {
         tickCounter++;
-        // Run charging logic every 5 ticks (0.25s) for smooth real-time animation
+        // Run charging logic every 5 ticks (0.25s) for responsive real-time animation
         if (tickCounter % 5 != 0) return;
-
-        LunarRobotMechanic robotMechanic = plugin.getLunarRobotMechanic();
-
-        // Prune stale or closed UIs
-        activeUis.removeIf(ui -> !ui.getPlayer().isOnline() || ui.getPlayer().getOpenInventory().getTopInventory() != ui.getInventory());
 
         for (BatteryChargerStation station : stations.values()) {
             Location loc = station.getLocation();
             if (loc == null || loc.getWorld() == null || !loc.isChunkLoaded()) continue;
 
-            // Ensure ItemDisplay is alive
             ensureDisplayEntity(station);
 
-            // Update cached condition and rate for this station
-            double conditionMultiplier = calculateConditionMultiplier(loc);
-            int chargeRate = calculateChargeRate(conditionMultiplier);
-            station.setCachedMultiplier(conditionMultiplier);
-            station.setCachedChargeRate(chargeRate);
+            // Handle Cyan display duration countdown
+            if (station.getCyanDisplayTicks() > 0) {
+                station.setCyanDisplayTicks(station.getCyanDisplayTicks() - 5);
+            }
 
-            boolean hasChargingActivity = false;
-
-            // 1. Check if station currently has an open UI
-            BatteryChargerUi openUi = getOpenUi(station);
-            if (openUi != null) {
-                // Charge directly inside the open UI in real-time
-                boolean charged = openUi.tickCharging();
-                if (charged) {
-                    hasChargingActivity = true;
-                }
-            } else {
-                // Background passive charge for closed station:
-                // Auto-replenish fuel from stored fuelItem if buffer < 5000
-                if (station.getFuelBuffer() < 5000) {
-                    replenishStationFuel(station);
-                }
-
-                // Direct battery charging: STRICTLY requires fuelBuffer > 0
-                ItemStack bat = station.getBatteryItem();
-                if (bat != null && bat.getType() != Material.AIR && RobotBatteryUtil.isBatteryItem(bat)) {
-                    String type = RobotBatteryUtil.getBatteryType(bat);
-                    int cap = RobotBatteryUtil.getCapacity(type);
-                    int current = RobotBatteryUtil.getBatteryEnergy(bat);
-
-                    if (current < cap && station.getFuelBuffer() > 0) {
-                        int cycleCharge = Math.max(1, chargeRate / 4);
-                        int needed = cap - current;
-                        int actualCharge = Math.min(cycleCharge, Math.min(needed, station.getFuelBuffer()));
-                        if (actualCharge > 0) {
-                            station.setFuelBuffer(station.getFuelBuffer() - actualCharge);
-                            boolean charged = RobotBatteryUtil.chargeBattery(bat, actualCharge);
-                            if (charged) {
-                                hasChargingActivity = true;
-                            }
-                        }
-                    }
+            // Verify docked robot validity
+            if (station.getDockedRobotUuid() != null) {
+                Entity robotEnt = Bukkit.getEntity(station.getDockedRobotUuid());
+                if (robotEnt == null || !robotEnt.isValid() || robotEnt.isDead() || robotEnt.getLocation().distanceSquared(loc.clone().add(0.5, 0.5, 0.5)) > 9.0) {
+                    station.setDockedRobotUuid(null);
                 }
             }
 
-            // 2. Wireless charging for nearby Quadruped Robot: STRICTLY requires fuelBuffer > 0
-            if (robotMechanic != null && station.getFuelBuffer() > 0) {
-                for (Entity entity : loc.getWorld().getNearbyEntities(loc, 2.8, 2.5, 2.8)) {
-                    if (entity instanceof LivingEntity living && robotMechanic.isRobotAlive(living)) {
-                        LunarRobotEntity robot = robotMechanic.getOrRegisterRobot(living);
-                        if (robot != null && robot.getData().isTamed()) {
-                            var data = robot.getData();
-                            if (data.getBatteryType() != null && !"none".equals(data.getBatteryType())) {
-                                int curE = data.getEnergy();
-                                int maxE = data.getMaxEnergy();
-                                if (curE < maxE && station.getFuelBuffer() > 0) {
-                                    // Nerfed: 20% of direct charger rate (5x slower)
-                                    int wirelessCycleCharge = Math.max(1, (chargeRate / 4) / 5);
-                                    int needed = maxE - curE;
-                                    int actualCharge = Math.min(wirelessCycleCharge, Math.min(needed, station.getFuelBuffer()));
-                                    if (actualCharge > 0) {
-                                        station.setFuelBuffer(station.getFuelBuffer() - actualCharge);
-                                        data.setEnergy(curE + actualCharge);
-                                        hasChargingActivity = true;
+            // Update 4-state visual display
+            updateStationDisplay(station);
 
-                                        // Electric arc between charger and robot
-                                        Location beamStart = loc.clone().add(0.5, 0.9, 0.5);
-                                        Location beamEnd = living.getLocation().add(0, 0.6, 0);
-                                        spawnBeamParticles(beamStart, beamEnd);
-                                    }
-                                }
-                            }
-                        }
+            // Ambient particles
+            switch (station.getCurrentState()) {
+                case YELLOW -> loc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc.clone().add(0.5, 0.7, 0.5), 3, 0.2, 0.2, 0.2, 0.05);
+                case BLUE -> {
+                    if (tickCounter % 20 == 0) {
+                        loc.getWorld().spawnParticle(Particle.WAX_ON, loc.clone().add(0.5, 0.6, 0.5), 2, 0.2, 0.2, 0.2, 0.02);
+                    }
+                }
+                case CYAN -> {
+                    if (tickCounter % 10 == 0) {
+                        loc.getWorld().spawnParticle(Particle.WAX_OFF, loc.clone().add(0.5, 0.6, 0.5), 3, 0.25, 0.25, 0.25, 0.02);
+                    }
+                }
+                case RED -> {
+                    if (tickCounter % 40 == 0) {
+                        loc.getWorld().spawnParticle(Particle.SMOKE, loc.clone().add(0.5, 0.7, 0.5), 1, 0.05, 0.05, 0.05, 0.01);
                     }
                 }
             }
+        }
+    }
 
-            // Charging ambient particles
-            if (hasChargingActivity) {
-                loc.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, loc.clone().add(0.5, 0.7, 0.5), 3, 0.2, 0.2, 0.2, 0.05);
+    public void updateStationDisplay(BatteryChargerStation station) {
+        if (station == null) return;
+        BatteryChargerStation.ChargerState targetState;
+
+        if (station.getDockedRobotUuid() != null) {
+            targetState = BatteryChargerStation.ChargerState.YELLOW;
+        } else if (station.getCyanDisplayTicks() > 0) {
+            targetState = BatteryChargerStation.ChargerState.CYAN;
+        } else if (station.getFuelBuffer() > 0) {
+            targetState = BatteryChargerStation.ChargerState.BLUE;
+        } else {
+            targetState = BatteryChargerStation.ChargerState.RED;
+        }
+
+        if (station.getCurrentState() != targetState) {
+            station.setCurrentState(targetState);
+        }
+
+        if (station.getDisplayEntityUuid() != null) {
+            Entity ent = Bukkit.getEntity(station.getDisplayEntityUuid());
+            if (ent instanceof ItemDisplay display && display.isValid()) {
+                ItemStack modelStack = createDisplayItemStack(targetState.getCustomItemId());
+                if (modelStack != null) {
+                    display.setItemStack(modelStack);
+                }
             }
         }
     }
@@ -373,8 +383,8 @@ public class BatteryChargerMechanic implements Listener {
             entity.setGravity(false);
             entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
 
-            var itemFactory = HaoHanItemCore.get().getItemFactory();
-            ItemStack modelStack = itemFactory.create("haohan:battery_charger", 1);
+            String itemId = station.getCurrentState() != null ? station.getCurrentState().getCustomItemId() : "haohan:robot_charger_red";
+            ItemStack modelStack = createDisplayItemStack(itemId);
             if (modelStack != null) {
                 entity.setItemStack(modelStack);
             }
@@ -382,6 +392,30 @@ public class BatteryChargerMechanic implements Listener {
             entity.getPersistentDataContainer().set(chargerKey, PersistentDataType.STRING, station.getKey());
         });
         station.setDisplayEntityUuid(display.getUniqueId());
+    }
+
+    public static ItemStack createDisplayItemStack(String customItemId) {
+        ItemStack stack = new ItemStack(Material.WHITE_STAINED_GLASS);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            try {
+                meta.setItemModel(NamespacedKey.fromString(customItemId));
+            } catch (Throwable ignored) {}
+
+            int cmd = switch (customItemId) {
+                case "haohan:robot_charger_red" -> 6207;
+                case "haohan:robot_charger_yellow" -> 6208;
+                case "haohan:robot_charger_cyan" -> 6209;
+                case "haohan:robot_charger_blue" -> 6210;
+                default -> 6206;
+            };
+            try {
+                meta.setCustomModelData(cmd);
+            } catch (Throwable ignored) {}
+
+            stack.setItemMeta(meta);
+        }
+        return stack;
     }
 
     private void cleanupNearbyDisplayEntities(Location loc, String key) {
@@ -396,18 +430,6 @@ public class BatteryChargerMechanic implements Listener {
         }
     }
 
-    private void spawnBeamParticles(Location start, Location end) {
-        World w = start.getWorld();
-        if (w == null) return;
-        int points = 5;
-        double dx = (end.getX() - start.getX()) / points;
-        double dy = (end.getY() - start.getY()) / points;
-        double dz = (end.getZ() - start.getZ()) / points;
-        for (int i = 1; i <= points; i++) {
-            w.spawnParticle(Particle.WAX_OFF, start.getX() + dx * i, start.getY() + dy * i, start.getZ() + dz * i, 1, 0.02, 0.02, 0.02, 0.0);
-        }
-    }
-
     public boolean isChargerBlock(Block block) {
         if (block == null || block.getType() != Material.BARRIER) return false;
         return stations.containsKey(formatKey(block.getLocation()));
@@ -417,10 +439,29 @@ public class BatteryChargerMechanic implements Listener {
         if (item == null || !item.hasItemMeta()) return false;
         try {
             String id = HaoHanItemCore.get().getItemService().getId(item);
-            return "haohan:battery_charger".equals(id);
+            if (id == null) return false;
+            return id.equals("haohan:robot_charger")
+                    || id.equals("haohan:robot_charger_blue");
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public static boolean isRawAnorthosite(ItemStack item) {
+        if (item == null || !item.hasItemMeta()) return false;
+        try {
+            String id = HaoHanItemCore.get().getItemService().getId(item);
+            return "haohan:raw_anorthosite".equals(id);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static int getFuelValue(ItemStack item) {
+        if (isRawAnorthosite(item)) {
+            return 3500;
+        }
+        return 0;
     }
 
     public String formatKey(Location loc) {
@@ -443,12 +484,6 @@ public class BatteryChargerMechanic implements Listener {
             map.put("fuelBuffer", st.getFuelBuffer());
             if (st.getOwnerUuid() != null) {
                 map.put("owner", st.getOwnerUuid().toString());
-            }
-            if (st.getBatteryItem() != null && st.getBatteryItem().getType() != Material.AIR) {
-                map.put("battery", st.getBatteryItem());
-            }
-            if (st.getFuelItem() != null && st.getFuelItem().getType() != Material.AIR) {
-                map.put("fuelItem", st.getFuelItem());
             }
             list.add(map);
         }
@@ -488,20 +523,7 @@ public class BatteryChargerMechanic implements Listener {
                 Location loc = new Location(w, x, y, z);
                 BatteryChargerStation st = new BatteryChargerStation(loc, null, owner, yaw);
                 st.setFuelBuffer(fuel);
-
-                if (map.containsKey("battery")) {
-                    Object batObj = map.get("battery");
-                    if (batObj instanceof ItemStack is) {
-                        st.setBatteryItem(is);
-                    }
-                }
-
-                if (map.containsKey("fuelItem")) {
-                    Object fuelObj = map.get("fuelItem");
-                    if (fuelObj instanceof ItemStack is) {
-                        st.setFuelItem(is);
-                    }
-                }
+                st.setCurrentState(fuel > 0 ? BatteryChargerStation.ChargerState.BLUE : BatteryChargerStation.ChargerState.RED);
 
                 stations.put(formatKey(loc), st);
             } catch (Exception e) {
@@ -511,129 +533,13 @@ public class BatteryChargerMechanic implements Listener {
     }
 
     public void cleanupOnDisable() {
-        for (BatteryChargerUi ui : new ArrayList<>(activeUis)) {
-            ui.getPlayer().closeInventory();
-        }
         saveAll();
-        // Remove all non-persistent ItemDisplays spawned for stations
         for (BatteryChargerStation st : stations.values()) {
             if (st.getDisplayEntityUuid() != null) {
                 Entity ent = Bukkit.getEntity(st.getDisplayEntityUuid());
                 if (ent != null) ent.remove();
             }
             cleanupNearbyDisplayEntities(st.getLocation(), st.getKey());
-        }
-        activeUis.clear();
-    }
-
-    public static double calculateConditionMultiplier(boolean isLunar, int y, boolean skyAccess, boolean hasConductive) {
-        double multiplier = 1.0;
-        if (isLunar) multiplier += 0.25;
-        if (y >= 90) multiplier += 0.25;
-        if (skyAccess) multiplier += 0.25;
-        if (hasConductive) multiplier += 0.25;
-        return Math.round(multiplier * 100.0) / 100.0;
-    }
-
-    public static double calculateConditionMultiplier(Location loc) {
-        if (loc == null || loc.getWorld() == null) return 1.0;
-        World world = loc.getWorld();
-        boolean isLunar = HaoHanLunarPlugin.isLunarWorld(world);
-        int y = loc.getBlockY();
-        boolean skyAccess = false;
-        try {
-            skyAccess = world.getHighestBlockYAt(loc.getBlockX(), loc.getBlockZ()) <= loc.getBlockY()
-                    || loc.getBlock().getLightFromSky() >= 14;
-        } catch (Throwable ignored) {}
-
-        boolean hasConductive = false;
-        try {
-            hasConductive = hasAdjacentConductiveBlock(loc);
-        } catch (Throwable ignored) {}
-
-        return calculateConditionMultiplier(isLunar, y, skyAccess, hasConductive);
-    }
-
-    public static boolean hasAdjacentConductiveBlock(Location loc) {
-        if (loc == null || loc.getWorld() == null) return false;
-        try {
-            Block center = loc.getBlock();
-            for (int dx = -2; dx <= 2; dx++) {
-                for (int dy = -2; dy <= 2; dy++) {
-                    for (int dz = -2; dz <= 2; dz++) {
-                        if (dx == 0 && dy == 0 && dz == 0) continue;
-                        Material mat = center.getRelative(dx, dy, dz).getType();
-                        if (mat == Material.LIGHTNING_ROD || mat == Material.COPPER_BLOCK ||
-                                mat == Material.EXPOSED_COPPER || mat == Material.WEATHERED_COPPER ||
-                                mat == Material.OXIDIZED_COPPER || mat == Material.WAXED_COPPER_BLOCK ||
-                                mat == Material.REDSTONE_BLOCK) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } catch (Throwable ignored) {}
-        return false;
-    }
-
-    public static int calculateChargeRate(double multiplier) {
-        if (multiplier <= 1.0) return 450;
-        if (multiplier <= 1.25) {
-            double progress = (multiplier - 1.0) / 0.25;
-            return (int) Math.round(450 + progress * 270);
-        }
-        if (multiplier <= 1.50) {
-            double progress = (multiplier - 1.25) / 0.25;
-            return (int) Math.round(720 + progress * 200);
-        }
-        if (multiplier <= 1.75) {
-            double progress = (multiplier - 1.50) / 0.25;
-            return (int) Math.round(920 + progress * 50);
-        }
-        if (multiplier <= 2.0) {
-            double progress = (multiplier - 1.75) / 0.25;
-            return (int) Math.round(970 + progress * 30);
-        }
-        // Multiplier > 2.0 (extreme/overclocked ideal conditions): asymptotically approach 1720 EU/s
-        double excess = multiplier - 2.0;
-        double bonus = 720.0 * (1.0 - Math.exp(-excess));
-        return (int) Math.round(Math.min(1720, 1000 + bonus));
-    }
-
-    public static int getFuelValue(ItemStack item) {
-        if (item == null) return 0;
-        Material mat = item.getType();
-        if (mat == Material.REDSTONE) return 500;
-        if (mat == Material.REDSTONE_BLOCK) return 4500;
-        if (mat == Material.COAL || mat == Material.CHARCOAL) return 200;
-        if (mat == Material.COAL_BLOCK) return 1800;
-        if (mat == Material.GLOWSTONE_DUST) return 600;
-
-        if (item.hasItemMeta()) {
-            try {
-                String id = HaoHanItemCore.get().getItemService().getId(item);
-                if (id != null) {
-                    if (id.equals("haohan:kreep_dust")) return 2000;
-                    if (id.equals("haohan:raw_ilmenite") || id.equals("haohan:ilmenite_ingot")) return 3000;
-                    if (id.equals("haohan:aero_compound")) return 5000;
-                }
-            } catch (Exception ignored) {}
-        }
-        return 0;
-    }
-
-    public static void replenishStationFuel(BatteryChargerStation station) {
-        if (station == null) return;
-        ItemStack fuel = station.getFuelItem();
-        if (fuel == null || fuel.getType() == Material.AIR) return;
-
-        int value = getFuelValue(fuel);
-        if (value > 0) {
-            station.addFuelBuffer(value);
-            fuel.subtract(1);
-            if (fuel.getAmount() <= 0) {
-                station.setFuelItem(null);
-            }
         }
     }
 }

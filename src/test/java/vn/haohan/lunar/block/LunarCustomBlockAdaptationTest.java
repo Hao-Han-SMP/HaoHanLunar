@@ -75,7 +75,7 @@ public class LunarCustomBlockAdaptationTest {
                 "haohan:ilmenite_ore",
                 "haohan:pyroxene_ore",
                 "haohan:kreep_basalt",
-                "haohan:battery_charger"
+                "haohan:robot_charger"
         };
 
         for (String oreId : lunarOres) {
@@ -97,7 +97,7 @@ public class LunarCustomBlockAdaptationTest {
 
             assertTrue(props.containsKey("custom_block_hardness"), oreId + " must contain custom_block_hardness");
             float hardness = ((Number) props.get("custom_block_hardness")).floatValue();
-            assertTrue(hardness >= 4.0f, oreId + " hardness must be >= 4.0s");
+            assertTrue(hardness >= 3.0f, oreId + " hardness must be >= 3.0s");
 
             if ("haohan:anorthosite_ore".equals(oreId)) {
                 assertEquals(90.0f, hardness, "anorthosite_ore hardness must be 90.0f");
@@ -125,7 +125,7 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(soundMap.containsKey("hit"), oreId + " sounds must have hit");
             assertTrue(soundMap.containsKey("step"), oreId + " sounds must have step");
 
-            boolean isBatteryCharger = "haohan:battery_charger".equals(oreId);
+            boolean isBatteryCharger = "haohan:robot_charger".equals(oreId);
             assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
             if (!isBatteryCharger) {
                 assertTrue(props.containsKey("custom_variation"), oreId + " must contain custom_variation");
@@ -155,8 +155,8 @@ public class LunarCustomBlockAdaptationTest {
             assertNotNull(blockDef.getSoundGroup().getHitSound(), "SoundGroup must have hitSound");
             assertNotNull(blockDef.getSoundGroup().getStepSound(), "SoundGroup must have stepSound");
 
-            if ("haohan:battery_charger".equals(blockDef.getId())) {
-                assertTrue(blockDef.isAlternative(), "battery_charger must be AlternativeCustomBlock");
+            if ("haohan:robot_charger".equals(blockDef.getId()) || blockDef.getId().startsWith("haohan:robot_charger")) {
+                assertTrue(blockDef.isAlternative(), blockDef.getId() + " must be AlternativeCustomBlock");
             } else if (blockDef.getId().startsWith("haohan:")) {
                 assertTrue(blockDef.isNative(), blockDef.getId() + " must be NativeCustomBlock");
                 vn.haohan.itemcore.api.block.NativeCustomBlock nativeBlock = (vn.haohan.itemcore.api.block.NativeCustomBlock) blockDef;

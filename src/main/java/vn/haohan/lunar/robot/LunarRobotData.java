@@ -17,9 +17,12 @@ public class LunarRobotData {
     private double health = 60.0;
     private double maxHealth = 60.0;
 
-    private int energy = 5000;
-    private int maxEnergy = 5000;
-    private String batteryType = "small"; // "none", "small", "medium", "large"
+    private int energy = 35000;
+    private int maxEnergy = 35000;
+    private String batteryType = "small"; // "none" or "small" (standard)
+    private double batteryHealth = 100.0; // 0.0 - 100.0%
+    private int chargeCycles = 0;
+    private boolean isDockedCharging = false;
 
     private String module1Id = null;
     private double module1Efficiency = 100.0;
@@ -131,23 +134,48 @@ public class LunarRobotData {
     }
 
     public void setBatteryType(String batteryType) {
-        this.batteryType = batteryType;
-        switch (batteryType) {
-            case "large" -> {
-                this.maxEnergy = 30000;
-            }
-            case "medium" -> {
-                this.maxEnergy = 15000;
-            }
-            case "small" -> {
-                this.maxEnergy = 5000;
-            }
-            default -> {
-                this.batteryType = "none";
-                this.maxEnergy = 0;
-            }
+        if (batteryType == null || "none".equalsIgnoreCase(batteryType)) {
+            this.batteryType = "none";
+            this.maxEnergy = 0;
+            this.energy = 0;
+            return;
         }
+        this.batteryType = "small";
+        this.maxEnergy = vn.haohan.lunar.robot.battery.RobotBatteryUtil.calculateEffectiveCapacity(this.batteryHealth);
         this.energy = Math.min(this.energy, this.maxEnergy);
+    }
+
+    public double getBatteryHealth() {
+        return batteryHealth;
+    }
+
+    public void setBatteryHealth(double batteryHealth) {
+        this.batteryHealth = Math.max(0.0, Math.min(100.0, batteryHealth));
+        if (!"none".equalsIgnoreCase(this.batteryType)) {
+            this.maxEnergy = vn.haohan.lunar.robot.battery.RobotBatteryUtil.calculateEffectiveCapacity(this.batteryHealth);
+            this.energy = Math.min(this.energy, this.maxEnergy);
+        }
+    }
+
+    public int getChargeCycles() {
+        return chargeCycles;
+    }
+
+    public void setChargeCycles(int chargeCycles) {
+        this.chargeCycles = Math.max(0, chargeCycles);
+    }
+
+    public void incrementChargeCycles() {
+        this.chargeCycles++;
+        setBatteryHealth(this.batteryHealth - 0.5);
+    }
+
+    public boolean isDockedCharging() {
+        return isDockedCharging;
+    }
+
+    public void setDockedCharging(boolean dockedCharging) {
+        this.isDockedCharging = dockedCharging;
     }
 
     public String getModule1Id() {
@@ -415,6 +443,8 @@ public class LunarRobotData {
         pdc.set(new NamespacedKey(plugin, "robot_energy"), PersistentDataType.INTEGER, energy);
         pdc.set(new NamespacedKey(plugin, "robot_max_energy"), PersistentDataType.INTEGER, maxEnergy);
         pdc.set(new NamespacedKey(plugin, "robot_battery_type"), PersistentDataType.STRING, batteryType != null ? batteryType : "none");
+        pdc.set(new NamespacedKey(plugin, "robot_battery_health"), PersistentDataType.DOUBLE, batteryHealth);
+        pdc.set(new NamespacedKey(plugin, "robot_charge_cycles"), PersistentDataType.INTEGER, chargeCycles);
 
         if (module1Id != null) {
             pdc.set(new NamespacedKey(plugin, "robot_mod1_id"), PersistentDataType.STRING, module1Id);
@@ -488,6 +518,12 @@ public class LunarRobotData {
 
         Double h = pdc.get(new NamespacedKey(plugin, "robot_health"), PersistentDataType.DOUBLE);
         if (h != null) data.setHealth(h);
+
+        Double bh = pdc.get(new NamespacedKey(plugin, "robot_battery_health"), PersistentDataType.DOUBLE);
+        if (bh != null) data.setBatteryHealth(bh);
+
+        Integer cc = pdc.get(new NamespacedKey(plugin, "robot_charge_cycles"), PersistentDataType.INTEGER);
+        if (cc != null) data.setChargeCycles(cc);
 
         String bt = pdc.get(new NamespacedKey(plugin, "robot_battery_type"), PersistentDataType.STRING);
         if (bt != null) data.setBatteryType(bt);

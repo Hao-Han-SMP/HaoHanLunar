@@ -658,9 +658,24 @@ public class LunarRobotDashboardUi {
             if (RobotBatteryUtil.isBatteryItem(handItem)) {
                 // Player is holding a battery -> Install or Swap
                 String newType = RobotBatteryUtil.getBatteryType(handItem);
+                double newHealth = RobotBatteryUtil.getBatteryHealth(handItem);
+                int newCycles = RobotBatteryUtil.getBatteryCycles(handItem);
                 int newEnergy = RobotBatteryUtil.getBatteryEnergy(handItem);
 
+                // Return old battery to player if present before overwriting data
+                if (hasOldBattery) {
+                    ItemStack oldBatItem = RobotBatteryUtil.createBattery("small", oldEnergy);
+                    if (oldBatItem != null) {
+                        RobotBatteryUtil.setBatteryHealth(oldBatItem, data.getBatteryHealth());
+                        RobotBatteryUtil.setBatteryCycles(oldBatItem, data.getChargeCycles());
+                        RobotBatteryUtil.setBatteryEnergy(oldBatItem, oldEnergy);
+                    }
+                    giveItemToPlayer(oldBatItem);
+                }
+
                 // Install new battery
+                data.setBatteryHealth(newHealth);
+                data.setChargeCycles(newCycles);
                 data.setBatteryType(newType);
                 data.setEnergy(newEnergy);
 
@@ -671,22 +686,24 @@ public class LunarRobotDashboardUi {
                     player.getInventory().setItemInMainHand(null);
                 }
 
-                // Return old battery to player if present
-                if (hasOldBattery) {
-                    giveItemToPlayer(RobotBatteryUtil.createBattery(oldType, oldEnergy));
-                }
-
                 player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 0.8f, 1.4f);
-                player.sendMessage("§a§l[Robot] §eĐã nạp Pin §a(" + formatBatteryName(newType) + ") §evào Robot! Năng lượng: §a" + String.format("%,d", newEnergy) + "§7/§f" + String.format("%,d", data.getMaxEnergy()) + " EU");
+                player.sendMessage("§a§l[Robot] §eĐã nạp §b" + formatBatteryName(newType) + " §evào Robot! Năng lượng: §a" + String.format("%,d", newEnergy) + "§7/§f" + String.format("%,d", data.getMaxEnergy()) + " EU §7(Sức khỏe: " + String.format("%.1f", newHealth) + "%)");
                 robot.updateCustomName();
                 updateUi();
             } else {
                 // Player hand is empty or not holding a battery -> Remove if occupied
                 if (hasOldBattery) {
+                    ItemStack oldBatItem = RobotBatteryUtil.createBattery("small", oldEnergy);
+                    if (oldBatItem != null) {
+                        RobotBatteryUtil.setBatteryHealth(oldBatItem, data.getBatteryHealth());
+                        RobotBatteryUtil.setBatteryCycles(oldBatItem, data.getChargeCycles());
+                        RobotBatteryUtil.setBatteryEnergy(oldBatItem, oldEnergy);
+                    }
+
                     data.setBatteryType("none");
                     data.setEnergy(0);
 
-                    giveItemToPlayer(RobotBatteryUtil.createBattery(oldType, oldEnergy));
+                    giveItemToPlayer(oldBatItem);
 
                     player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_IRON, 0.7f, 1.2f);
                     player.sendMessage("§e§l[Robot] §cĐã tháo: §f" + formatBatteryName(oldType) + " §ctừ Ô 3 (Pin)");
@@ -1813,8 +1830,8 @@ public class LunarRobotDashboardUi {
                 .origin(UiAnchorPoint.TOP_LEFT)
                 .offset(s3x, slotY + 19.0f)
                 .size(slotW, 4.5f)
-                .text(Component.text(bName, hasBattery ? NamedTextColor.WHITE : NamedTextColor.GRAY, TextDecoration.BOLD))
-                .fontSize(3.0f)
+                .text(Component.text(hasBattery ? ("Pin Robot (" + String.format("%.1f", data.getBatteryHealth()) + "%)") : "Trống", hasBattery ? NamedTextColor.WHITE : NamedTextColor.GRAY, TextDecoration.BOLD))
+                .fontSize(2.7f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)
                 .build());
@@ -1823,7 +1840,7 @@ public class LunarRobotDashboardUi {
                 ? (int) Math.round(((double) data.getEnergy() / data.getMaxEnergy()) * 100.0)
                 : 0;
         Component energyText = hasBattery
-                ? Component.text(energyPct + "%", NamedTextColor.GREEN, TextDecoration.BOLD)
+                ? Component.text(energyPct + "% (" + data.getChargeCycles() + " CK)", NamedTextColor.GREEN, TextDecoration.BOLD)
                 : Component.empty();
         body.addComponent(TextComponent.builder("slot_2_l3")
                 .anchor(UiAnchorPoint.TOP_LEFT)
@@ -1904,7 +1921,7 @@ public class LunarRobotDashboardUi {
     }
 
     private Container buildAccordionHealthBodyContainer(float cardW, Color cardBg, Color accent, Color buttonBg) {
-        float bodyH = 44.0f;
+        float bodyH = 45.0f;
         Container body = Container.builder("card_health_body")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
@@ -1934,10 +1951,10 @@ public class LunarRobotDashboardUi {
         body.addComponent(TextComponent.builder("health_detail_title")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(8.0f, 2.5f)
-                .size(cardW - 16.0f, 5.5f)
+                .offset(8.0f, 2.0f)
+                .size(cardW - 16.0f, 5.0f)
                 .text(Component.text("THÔNG TIN HOẠT ĐỘNG CHI TIẾT", NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(3.5f)
+                .fontSize(3.3f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
@@ -1946,10 +1963,11 @@ public class LunarRobotDashboardUi {
         float col1X = 8.0f;
         float col2X = 8.0f + colW + 4.0f;
 
-        float row1Y = 9.0f;
-        float row2Y = 17.5f;
-        float row3Y = 26.0f;
-        float row4Y = 34.5f;
+        float row1Y = 7.5f;
+        float row2Y = 15.0f;
+        float row3Y = 22.5f;
+        float row4Y = 30.0f;
+        float row5Y = 37.5f;
 
         buildStatItemContainer(body, "stat_owner", col1X, row1Y, colW, "Chủ sở hữu:", owner, buttonBg);
         buildStatItemContainer(body, "stat_espent", col2X, row1Y, colW, "Năng lượng tiêu hao:", data.getEnergySpent() + " EU", buttonBg);
@@ -1963,6 +1981,9 @@ public class LunarRobotDashboardUi {
         buildStatItemContainer(body, "stat_steps", col1X, row4Y, colW, "Số bước chạy:", String.valueOf(data.getTotalSteps()), buttonBg);
         buildStatItemContainer(body, "stat_maxe", col2X, row4Y, colW, "Pin tối đa:", data.getMaxEnergy() + " EU", buttonBg);
 
+        buildStatItemContainer(body, "stat_cycles", col1X, row5Y, colW, "Chu kỳ sạc:", data.getChargeCycles() + " lần", buttonBg);
+        buildStatItemContainer(body, "stat_health", col2X, row5Y, colW, "Sức khỏe pin:", String.format("%.1f", data.getBatteryHealth()) + "%", buttonBg);
+
         return body;
     }
 
@@ -1971,7 +1992,7 @@ public class LunarRobotDashboardUi {
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
                 .offset(x, y)
-                .size(w, 7.5f)
+                .size(w, 6.5f)
                 .factory((bx, by, bw, bh, depth, scale) -> UiShapeNode.builder("rounded_rect", bx, by, bw, bh)
                         .color(pillBg)
                         .cornerRadius(2.0f * scale)
@@ -1982,10 +2003,10 @@ public class LunarRobotDashboardUi {
         parent.addComponent(TextComponent.builder(id + "_lbl")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(x + 3.0f, y + 1.0f)
-                .size(w * 0.60f, 5.5f)
+                .offset(x + 3.0f, y + 0.8f)
+                .size(w * 0.60f, 4.8f)
                 .text(Component.text(label, NamedTextColor.DARK_GRAY, TextDecoration.BOLD))
-                .fontSize(2.9f)
+                .fontSize(2.7f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
                 .build());
@@ -1993,10 +2014,10 @@ public class LunarRobotDashboardUi {
         parent.addComponent(TextComponent.builder(id + "_val")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
-                .offset(x + w * 0.45f, y + 1.0f)
-                .size(w * 0.55f - 3.0f, 5.5f)
+                .offset(x + w * 0.45f, y + 0.8f)
+                .size(w * 0.55f - 3.0f, 4.8f)
                 .text(Component.text(value, NamedTextColor.DARK_BLUE, TextDecoration.BOLD))
-                .fontSize(2.9f)
+                .fontSize(2.7f)
                 .alignment(UiTextAlignment.RIGHT)
                 .shadow(false)
                 .build());
@@ -2447,11 +2468,6 @@ public class LunarRobotDashboardUi {
 
     private String formatBatteryName(String type) {
         if (type == null || type.isBlank() || type.equalsIgnoreCase("none")) return "Trống";
-        return switch (type.toLowerCase()) {
-            case "small" -> "Pin Nhỏ";
-            case "medium" -> "Pin Trung";
-            case "large" -> "Pin Lớn";
-            default -> "Pin (" + type + ")";
-        };
+        return "Pin Robot";
     }
 }
