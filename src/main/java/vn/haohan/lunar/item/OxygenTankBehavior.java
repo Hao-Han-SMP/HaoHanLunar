@@ -2,19 +2,39 @@ package vn.haohan.lunar.item;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import vn.haohan.itemcore.api.item.ItemBehavior;
 import vn.haohan.itemcore.api.item.ItemContext;
 import vn.haohan.lunar.HaoHanLunarPlugin;
 import vn.haohan.engine.api.system.data.PlayerLunarData;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class OxygenTankBehavior implements ItemBehavior {
+
+    public static final String TANK_UUID_KEY = "tank_uuid";
+
+    public static String getOrAssignTankUuid(ItemStack item, HaoHanLunarPlugin plugin) {
+        if (item == null || !item.hasItemMeta()) return null;
+        var meta = item.getItemMeta();
+        NamespacedKey key = new NamespacedKey(plugin, TANK_UUID_KEY);
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        String uuid = pdc.get(key, PersistentDataType.STRING);
+        if (uuid == null) {
+            uuid = UUID.randomUUID().toString();
+            pdc.set(key, PersistentDataType.STRING, uuid);
+            item.setItemMeta(meta);
+        }
+        return uuid;
+    }
 
     @Override
     public void onUse(ItemContext context) {
@@ -30,7 +50,30 @@ public class OxygenTankBehavior implements ItemBehavior {
         HaoHanLunarPlugin plugin = HaoHanLunarPlugin.getInstance();
         PlayerLunarData data = plugin.getLunarDataManager().get(player);
 
-        // 2. Must wear full spacesuit
+        // Ensure item has a unique tank UUID
+        String tankUuid = getOrAssignTankUuid(item, plugin);
+
+        // Check if player is clicking the currently active tank -> Toggle OFF
+        if (data.isTankActive() && tankUuid != null && tankUuid.equals(data.getActiveTankUuid())) {
+            // Flush any accumulated damage before toggling off
+            int accum = data.getTankDamageAccumulator();
+            if (accum > 0 && item.getItemMeta() instanceof Damageable damageable) {
+                damageable.setDamage(damageable.getDamage() + accum);
+                item.setItemMeta(damageable);
+                data.setTankDamageAccumulator(0);
+            }
+
+            data.setTankActive(false);
+            data.setActiveTankUuid(null);
+            data.setActiveTankSlot(-1);
+            player.removeScoreboardTag("hh_o2tank_active");
+
+            player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, SoundCategory.PLAYERS, 1.0f, 1.0f);
+            player.sendActionBar(Component.text("⏸ Đã tắt bình oxy dưỡng khí.", NamedTextColor.YELLOW));
+            return;
+        }
+
+        // 2. Must wear full spacesuit to toggle ON
         if (!plugin.getGravityMechanic().wearsSpacesuit(player)) {
             player.showTitle(net.kyori.adventure.title.Title.title(
                 Component.text("⚠"),
@@ -41,7 +84,7 @@ public class OxygenTankBehavior implements ItemBehavior {
             return;
         }
 
-        // 3. Must not be in safe zones
+        // 3. Must not be in safe zones to toggle ON
         if (plugin.getOxygenMechanic().isInSafeZone(player.getLocation())) {
             return;
         }
@@ -57,43 +100,33 @@ public class OxygenTankBehavior implements ItemBehavior {
 
         if (tier == 0 || capacity == 0) return;
 
-        // Read current damage/durability
+        // Check durability
         int damage = 0;
         if (item.getItemMeta() instanceof Damageable damageable) {
             damage = damageable.getDamage();
         }
 
-        int remaining = capacity - damage;
-        int emptyThreshold = (int) (capacity * 0.15); // under 15% is empty
-
-        if (remaining <= emptyThreshold) {
-            // Already empty
+        if (damage >= capacity) {
+            player.sendActionBar(Component.text("⚠ Bình oxy đã cạn kiệt!", NamedTextColor.RED));
             return;
         }
 
-        // Set hand item to fully damaged (empty)
-        if (item.getItemMeta() instanceof Damageable damageable) {
-            damageable.setDamage(capacity);
-            item.setItemMeta(damageable);
-        }
-
-        // Apply state
-        boolean wasActive = data.isTankActive() && data.getTankO2() > 0;
-        data.setTankO2(remaining);
+        // Toggle ON
+        data.setActiveTankUuid(tankUuid);
+        data.setActiveTankSlot(player.getInventory().getHeldItemSlot());
         data.setTankTier(tier);
         data.setTankActive(true);
+        data.setTankDamageAccumulator(0);
+        data.setBreathSoundTick(0);
 
         player.addScoreboardTag("hh_o2tank_active");
 
-        // Sounds & messages
         player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_GENERIC, SoundCategory.PLAYERS, 1.0f, 1.0f);
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_BREATH, SoundCategory.PLAYERS, 1.0f, 1.0f);
 
-        if (!wasActive) {
-            player.showTitle(net.kyori.adventure.title.Title.title(
-                Component.empty(),
-                Component.text("⚡ Kích hoạt bình dưỡng khí!", NamedTextColor.GREEN)
-            ));
-        }
+        player.showTitle(net.kyori.adventure.title.Title.title(
+            Component.empty(),
+            Component.text("⚡ Kích hoạt bình dưỡng khí!", NamedTextColor.GREEN)
+        ));
     }
 }
