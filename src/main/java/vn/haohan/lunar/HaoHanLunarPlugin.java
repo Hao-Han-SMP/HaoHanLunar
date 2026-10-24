@@ -3,6 +3,7 @@ package vn.haohan.lunar;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
@@ -79,6 +80,30 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         return Bukkit.getWorld(LUNAR_WORLD_KEY);
     }
 
+    /**
+     * Retrieves the loaded Lunar dimension world, or attempts to load/create it if not loaded.
+     *
+     * @return lunar world instance or null if failed
+     */
+    public static World getOrLoadLunarWorld() {
+        World world = Bukkit.getWorld(LUNAR_WORLD_KEY);
+        if (world != null) {
+            return world;
+        }
+        try {
+            WorldCreator creator = WorldCreator.ofKey(LUNAR_WORLD_KEY);
+            world = Bukkit.createWorld(creator);
+            if (world != null && instance != null) {
+                instance.getLogger().info("Successfully loaded Lunar dimension world (" + LUNAR_WORLD_KEY + ")");
+            }
+        } catch (Exception e) {
+            if (instance != null) {
+                instance.getLogger().warning("Failed to load Lunar dimension world: " + e.getMessage());
+            }
+        }
+        return world;
+    }
+
     @Override
     public void onLoad() {
         try {
@@ -141,7 +166,6 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         pm.registerEvents(modelEngineDeathListener, this);
         pm.registerEvents(batteryChargerMechanic, this);
         pm.registerEvents(moonGazingMechanic, this);
-        pm.registerEvents(new vn.haohan.lunar.features.LunarOrePopulatorListener(this), this);
 
         // Register robot commands
         Bukkit.getCommandMap().register("haohan", new BukkitCommand("spawnrobot") {
@@ -174,7 +198,6 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
             try {
                 gravityMechanic.tick();
                 oxygenMechanic.tick();
-                miningMechanic.tick();
                 visualMechanic.tick();
                 beaconShieldMechanic.tick();
                 lunarSurfaceSpreadMechanic.tick();
@@ -198,6 +221,9 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
         // Scan and restore loaded in-world robots after restart
         lunarRobotMechanic.scanLoadedEntities();
+
+        // Ensure Lunar dimension world is loaded
+        getOrLoadLunarWorld();
 
         getLogger().info("HaoHanLunar plugin successfully enabled and hooks registered!");
     }

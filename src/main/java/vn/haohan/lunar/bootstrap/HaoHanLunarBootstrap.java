@@ -26,7 +26,7 @@ public final class HaoHanLunarBootstrap implements PluginBootstrap {
                 }
 
                 URI uri = resource.toURI();
-                event.registrar().discoverPack(uri, "provided", configurer -> configurer.autoEnableOnServerStart(false));
+                event.registrar().discoverPack(uri, "provided", configurer -> configurer.autoEnableOnServerStart(true));
                 context.getLogger().info("Successfully discovered bundled datapack: {}/provided", context.getConfiguration().getName());
             } catch (URISyntaxException | IOException e) {
                 context.getLogger().error("Failed to register bundled datapack from plugin jar", e);

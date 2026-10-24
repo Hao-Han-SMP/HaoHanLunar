@@ -38,7 +38,7 @@ public class TeleportCommand implements ICommand {
             return true;
         }
 
-        World lunarWorld = (plugin != null) ? plugin.getLunarWorld() : null;
+        World lunarWorld = HaoHanLunarPlugin.getOrLoadLunarWorld();
         if (lunarWorld == null) {
             sender.sendMessage("§cThế giới Lunar hiện chưa được load hoặc không tồn tại!");
             return true;
