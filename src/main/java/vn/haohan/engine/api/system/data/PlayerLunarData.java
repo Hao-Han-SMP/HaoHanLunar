@@ -17,6 +17,10 @@ public class PlayerLunarData {
     private int tankTier = 0;
     private int tankCharge = 0;
     private boolean tankActive = false;
+    private String activeTankUuid = null;
+    private int activeTankSlot = -1;
+    private int tankDamageAccumulator = 0;
+    private int breathSoundTick = 0;
 
     private static volatile Keys cachedKeys;
 
@@ -28,7 +32,9 @@ public class PlayerLunarData {
         NamespacedKey tankO2,
         NamespacedKey tankTier,
         NamespacedKey tankCharge,
-        NamespacedKey tankActive
+        NamespacedKey tankActive,
+        NamespacedKey activeTankUuid,
+        NamespacedKey activeTankSlot
     ) {
         static Keys of(Plugin plugin) {
             return new Keys(
@@ -39,7 +45,9 @@ public class PlayerLunarData {
                 new NamespacedKey(plugin, "tank_o2"),
                 new NamespacedKey(plugin, "tank_tier"),
                 new NamespacedKey(plugin, "tank_charge"),
-                new NamespacedKey(plugin, "tank_active")
+                new NamespacedKey(plugin, "tank_active"),
+                new NamespacedKey(plugin, "active_tank_uuid"),
+                new NamespacedKey(plugin, "active_tank_slot")
             );
         }
     }
@@ -82,6 +90,14 @@ public class PlayerLunarData {
     public void setTankCharge(int tankCharge) { this.tankCharge = tankCharge; }
     public boolean isTankActive() { return tankActive; }
     public void setTankActive(boolean tankActive) { this.tankActive = tankActive; }
+    public String getActiveTankUuid() { return activeTankUuid; }
+    public void setActiveTankUuid(String activeTankUuid) { this.activeTankUuid = activeTankUuid; }
+    public int getActiveTankSlot() { return activeTankSlot; }
+    public void setActiveTankSlot(int activeTankSlot) { this.activeTankSlot = activeTankSlot; }
+    public int getTankDamageAccumulator() { return tankDamageAccumulator; }
+    public void setTankDamageAccumulator(int tankDamageAccumulator) { this.tankDamageAccumulator = tankDamageAccumulator; }
+    public int getBreathSoundTick() { return breathSoundTick; }
+    public void setBreathSoundTick(int breathSoundTick) { this.breathSoundTick = breathSoundTick; }
 
     public void load(Plugin plugin) {
         Keys k = getKeys(plugin);
@@ -93,6 +109,8 @@ public class PlayerLunarData {
         tankO2 = pdc.getOrDefault(k.tankO2(), PersistentDataType.INTEGER, 0);
         tankTier = pdc.getOrDefault(k.tankTier(), PersistentDataType.INTEGER, 0);
         tankCharge = pdc.getOrDefault(k.tankCharge(), PersistentDataType.INTEGER, 0);
+        activeTankUuid = pdc.get(k.activeTankUuid(), PersistentDataType.STRING);
+        activeTankSlot = pdc.getOrDefault(k.activeTankSlot(), PersistentDataType.INTEGER, -1);
         
         Byte active = pdc.get(k.tankActive(), PersistentDataType.BYTE);
         tankActive = active != null && active == 1;
@@ -109,5 +127,11 @@ public class PlayerLunarData {
         pdc.set(k.tankTier(), PersistentDataType.INTEGER, tankTier);
         pdc.set(k.tankCharge(), PersistentDataType.INTEGER, tankCharge);
         pdc.set(k.tankActive(), PersistentDataType.BYTE, (byte) (tankActive ? 1 : 0));
+        if (activeTankUuid != null) {
+            pdc.set(k.activeTankUuid(), PersistentDataType.STRING, activeTankUuid);
+        } else {
+            pdc.remove(k.activeTankUuid());
+        }
+        pdc.set(k.activeTankSlot(), PersistentDataType.INTEGER, activeTankSlot);
     }
 }

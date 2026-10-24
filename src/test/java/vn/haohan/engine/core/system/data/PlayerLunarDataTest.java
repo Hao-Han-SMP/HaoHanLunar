@@ -26,9 +26,17 @@ class PlayerLunarDataTest {
         data.setTankTier(3);
         data.setTankO2(6800);
         data.setTankActive(true);
+        data.setActiveTankUuid("test-uuid-1234");
+        data.setActiveTankSlot(4);
+        data.setTankDamageAccumulator(5);
+        data.setBreathSoundTick(40);
 
         assertEquals(3, data.getTankTier());
         assertEquals(6800, data.getTankO2());
         assertTrue(data.isTankActive());
+        assertEquals("test-uuid-1234", data.getActiveTankUuid());
+        assertEquals(4, data.getActiveTankSlot());
+        assertEquals(5, data.getTankDamageAccumulator());
+        assertEquals(40, data.getBreathSoundTick());
     }
 }
