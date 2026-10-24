@@ -21,3 +21,6 @@ dependencies:
     HaoHanMetallurgy:
       load: BEFORE
       required: false
+    HaoHanSMP-Datapack:
+      load: BEFORE
+      required: false

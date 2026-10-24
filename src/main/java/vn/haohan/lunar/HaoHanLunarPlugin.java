@@ -104,20 +104,6 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         return world;
     }
 
-    @Override
-    public void onLoad() {
-        try {
-            var datapackManager = getServer().getDatapackManager();
-            var pack = datapackManager.getPack(getPluginMeta().getName() + "/provided");
-            if (pack != null && pack.isEnabled()) {
-                getSLF4JLogger().info("Bundled datapack loaded and enabled successfully: {}/provided", getPluginMeta().getName());
-            } else if (pack != null) {
-                getSLF4JLogger().info("Bundled datapack discovered: {}/provided (enabled={})", getPluginMeta().getName(), pack.isEnabled());
-            }
-        } catch (Exception e) {
-            getSLF4JLogger().debug("Datapack check during onLoad: {}", e.getMessage());
-        }
-    }
 
     @Override
     public void onEnable() {
