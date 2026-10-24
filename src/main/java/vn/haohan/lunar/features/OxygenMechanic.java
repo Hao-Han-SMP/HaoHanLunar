@@ -13,8 +13,10 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.BoundingBox;
 import vn.haohan.lunar.HaoHanLunarPlugin;
+import vn.haohan.lunar.item.OxygenTankBehavior;
 import vn.haohan.engine.core.service.IService;
 import vn.haohan.engine.api.system.data.PlayerLunarData;
 
@@ -25,6 +27,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class OxygenMechanic implements Listener, IService {
+
+    public static final int LUNAR_MAX_AIR = 600;
+    public static final int VANILLA_DEFAULT_AIR = 300;
+    private static final int BATCH_DURABILITY_TICKS = 10;
+    private static final int BREATH_SOUND_INTERVAL_TICKS = 90;
 
     private final HaoHanLunarPlugin plugin;
     private final Map<ChunkKey, SafeZoneCacheEntry> safeZoneCache = new ConcurrentHashMap<>();
@@ -77,17 +84,22 @@ public class OxygenMechanic implements Listener, IService {
     }
 
     private void tickPlayerOxygen(Player player) {
+        if (player.getMaximumAir() != LUNAR_MAX_AIR) {
+            player.setMaximumAir(LUNAR_MAX_AIR);
+        }
+
         GameMode mode = player.getGameMode();
         if (mode == GameMode.CREATIVE || mode == GameMode.SPECTATOR) {
             PlayerLunarData data = plugin.getLunarDataManager().get(player);
-            data.setOxygen(600);
+            data.setOxygen(LUNAR_MAX_AIR);
             data.setOxygenDmg(0);
+            player.setRemainingAir(LUNAR_MAX_AIR);
             return;
         }
 
         PlayerLunarData data = plugin.getLunarDataManager().get(player);
         if (!player.getScoreboardTags().contains("hh_lunar_oxygen")) {
-            data.setOxygen(600);
+            data.setOxygen(LUNAR_MAX_AIR);
             data.setOxygenDmg(0);
             player.addScoreboardTag("hh_lunar_oxygen");
         }
@@ -101,10 +113,10 @@ public class OxygenMechanic implements Listener, IService {
         boolean inSafeZone = inRestBase || inSpaceStation || inBeaconShield;
 
         if (inSafeZone) {
-            // Reset active tank values inside safe regen areas
-            data.setTankO2(0);
-            data.setTankTier(0);
-            data.setTankActive(false);
+            // Safe zone: Deactivate any active tank and flush its accumulated damage
+            if (data.isTankActive()) {
+                deactivateAndFlushTank(player, data, false);
+            }
 
             // Refill logic
             if (inRestBase) {
@@ -127,12 +139,13 @@ public class OxygenMechanic implements Listener, IService {
                 data.setRbRegen(0);
                 data.setSsRegen(0);
                 data.setOxygenDmg(0);
-                data.setOxygen(Math.min(600, data.getOxygen() + 1));
+                data.setOxygen(Math.min(LUNAR_MAX_AIR, data.getOxygen() + 1));
             }
 
             // Charge held oxygen tank in safe structures
             boolean isCharging = chargeHeldOxygenTank(player, data);
             if (isCharging) {
+                syncVanillaAir(player, data);
                 return;
             }
         } else {
@@ -141,27 +154,9 @@ public class OxygenMechanic implements Listener, IService {
             data.setSsRegen(0);
             data.setTankCharge(0);
 
-            // Oxygen consumption
-            if (data.isTankActive() && data.getTankO2() > 0) {
-                // Subtract 1 from active tank oxygen
-                data.setTankO2(data.getTankO2() - 1);
-
-                // Transfer from tank to base oxygen if needed (hh_oxygen < 600)
-                if (data.getOxygen() < 600) {
-                    int needed = 600 - data.getOxygen();
-                    int transfer = Math.min(needed, Math.min(10, data.getTankO2()));
-                    data.setOxygen(data.getOxygen() + transfer);
-                    data.setTankO2(data.getTankO2() - transfer);
-                }
-
-                data.setOxygenDmg(0);
-
-                // If tank is empty after this tick, play break sound and deactivate
-                if (data.getTankO2() <= 0) {
-                    data.setTankActive(false);
-                    player.removeScoreboardTag("hh_o2tank_active");
-                    player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BREAK, SoundCategory.PLAYERS, 1.0f, 1.0f);
-                }
+            // Oxygen consumption: Check active tank first
+            if (data.isTankActive() && data.getActiveTankUuid() != null) {
+                tickActiveOxygenTank(player, data);
             } else {
                 // Base oxygen decay (when no active tank)
                 data.setOxygen(data.getOxygen() - 1);
@@ -182,8 +177,163 @@ public class OxygenMechanic implements Listener, IService {
             }
         }
 
-        // Display oxygen and tank status via action bar
-        displayOxygen(player, data);
+        // Synchronize vanilla oxygen bar (remaining air)
+        syncVanillaAir(player, data);
+    }
+
+    private void tickActiveOxygenTank(Player player, PlayerLunarData data) {
+        // Astronaut breathing sound loop
+        data.setBreathSoundTick(data.getBreathSoundTick() + 1);
+        if (data.getBreathSoundTick() >= BREATH_SOUND_INTERVAL_TICKS) {
+            data.setBreathSoundTick(0);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_BREATH, SoundCategory.PLAYERS, 0.8f, 0.95f);
+        }
+
+        // Locate tank item: fast O(1) slot cache with inventory scan fallback
+        int slot = data.getActiveTankSlot();
+        ItemStack item = null;
+        if (slot >= 0 && slot < player.getInventory().getSize()) {
+            ItemStack candidate = player.getInventory().getItem(slot);
+            if (isMatchingTank(candidate, data.getActiveTankUuid())) {
+                item = candidate;
+            }
+        }
+
+        if (item == null) {
+            // Fallback scan across inventory
+            slot = findTankSlot(player, data.getActiveTankUuid());
+            if (slot != -1) {
+                item = player.getInventory().getItem(slot);
+                data.setActiveTankSlot(slot);
+            }
+        }
+
+        // If tank item is no longer in inventory (dropped or moved into chest)
+        if (item == null || !(item.getItemMeta() instanceof Damageable damageable)) {
+            data.setTankActive(false);
+            data.setActiveTankUuid(null);
+            data.setActiveTankSlot(-1);
+            data.setTankDamageAccumulator(0);
+            player.removeScoreboardTag("hh_o2tank_active");
+            return;
+        }
+
+        // Get tank capacity
+        String customId = vn.haohan.itemcore.api.HaoHanItemCore.get().getItemService().getId(item);
+        var def = customId != null ? vn.haohan.itemcore.api.HaoHanItemCore.get().getItemRegistry().get(customId) : null;
+        int capacity = 0;
+        if (def != null && def.getProperties() != null) {
+            capacity = ((Number) def.getProperties().getOrDefault("oxygen_tank_capacity", 0)).intValue();
+        }
+        if (capacity <= 0) {
+            capacity = switch (data.getTankTier()) {
+                case 1 -> 1500;
+                case 2 -> 3000;
+                case 3 -> 6800;
+                default -> 1500;
+            };
+        }
+
+        // Increment tick damage accumulator
+        int accum = data.getTankDamageAccumulator() + 1;
+        int currentDamage = damageable.getDamage();
+        int totalProjectedDamage = currentDamage + accum;
+
+        // Check if tank completely broke
+        if (totalProjectedDamage >= capacity) {
+            // Tank breaks!
+            data.setTankDamageAccumulator(0);
+            data.setTankActive(false);
+            data.setActiveTankUuid(null);
+            data.setActiveTankSlot(-1);
+            player.removeScoreboardTag("hh_o2tank_active");
+
+            // Consume/break item
+            int amount = item.getAmount();
+            if (amount <= 1) {
+                player.getInventory().setItem(slot, null);
+            } else {
+                item.setAmount(amount - 1);
+                damageable.setDamage(0);
+                item.setItemMeta(damageable);
+                player.getInventory().setItem(slot, item);
+            }
+
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, SoundCategory.PLAYERS, 1.0f, 0.8f);
+            player.playSound(player.getLocation(), Sound.ITEM_SHIELD_BREAK, SoundCategory.PLAYERS, 1.2f, 1.0f);
+            player.showTitle(net.kyori.adventure.title.Title.title(
+                Component.text("💥", NamedTextColor.RED),
+                Component.text("Bình oxy đã cạn kiệt và bị vỡ!", NamedTextColor.RED)
+            ));
+            return;
+        }
+
+        // Batch update durability to disk/NBT every BATCH_DURABILITY_TICKS
+        if (accum >= BATCH_DURABILITY_TICKS) {
+            damageable.setDamage(currentDamage + accum);
+            item.setItemMeta(damageable);
+            data.setTankDamageAccumulator(0);
+        } else {
+            data.setTankDamageAccumulator(accum);
+        }
+
+        // While active tank supplies oxygen, maintain full player oxygen
+        data.setOxygen(LUNAR_MAX_AIR);
+        data.setOxygenDmg(0);
+    }
+
+    private boolean isMatchingTank(ItemStack item, String targetUuid) {
+        if (item == null || targetUuid == null || !item.hasItemMeta()) return false;
+        NamespacedKey key = new NamespacedKey(plugin, OxygenTankBehavior.TANK_UUID_KEY);
+        String uuid = item.getItemMeta().getPersistentDataContainer().get(key, PersistentDataType.STRING);
+        return targetUuid.equals(uuid);
+    }
+
+    private int findTankSlot(Player player, String targetUuid) {
+        if (targetUuid == null) return -1;
+        ItemStack[] contents = player.getInventory().getContents();
+        for (int i = 0; i < contents.length; i++) {
+            if (isMatchingTank(contents[i], targetUuid)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void deactivateAndFlushTank(Player player, PlayerLunarData data, boolean playSound) {
+        if (!data.isTankActive()) return;
+
+        int accum = data.getTankDamageAccumulator();
+        String uuid = data.getActiveTankUuid();
+        if (accum > 0 && uuid != null) {
+            int slot = data.getActiveTankSlot();
+            ItemStack item = (slot >= 0 && slot < player.getInventory().getSize()) ? player.getInventory().getItem(slot) : null;
+            if (item == null || !isMatchingTank(item, uuid)) {
+                slot = findTankSlot(player, uuid);
+                item = (slot != -1) ? player.getInventory().getItem(slot) : null;
+            }
+            if (item != null && item.getItemMeta() instanceof Damageable damageable) {
+                damageable.setDamage(damageable.getDamage() + accum);
+                item.setItemMeta(damageable);
+            }
+        }
+
+        data.setTankActive(false);
+        data.setActiveTankUuid(null);
+        data.setActiveTankSlot(-1);
+        data.setTankDamageAccumulator(0);
+        player.removeScoreboardTag("hh_o2tank_active");
+
+        if (playSound) {
+            player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_LEATHER, SoundCategory.PLAYERS, 1.0f, 1.0f);
+        }
+    }
+
+    private void syncVanillaAir(Player player, PlayerLunarData data) {
+        int oxygen = data.getOxygen();
+        if (player.getRemainingAir() != oxygen) {
+            player.setRemainingAir(oxygen);
+        }
     }
 
     private boolean chargeHeldOxygenTank(Player player, PlayerLunarData data) {
@@ -301,16 +451,23 @@ public class OxygenMechanic implements Listener, IService {
 
     public void resetPlayerOxygen(Player player) {
         PlayerLunarData data = plugin.getLunarDataManager().get(player);
-        data.setOxygen(600);
+        if (data.isTankActive()) {
+            deactivateAndFlushTank(player, data, false);
+        }
+        data.setOxygen(LUNAR_MAX_AIR);
         data.setOxygenDmg(0);
         data.setRbRegen(0);
         data.setSsRegen(0);
         data.setTankO2(0);
         data.setTankTier(0);
-        data.setTankActive(false);
         data.setTankCharge(0);
+        data.setBreathSoundTick(0);
         player.removeScoreboardTag("hh_lunar_oxygen");
         player.removeScoreboardTag("hh_o2tank_active");
+
+        // Restore vanilla defaults
+        player.setMaximumAir(VANILLA_DEFAULT_AIR);
+        player.setRemainingAir(VANILLA_DEFAULT_AIR);
     }
 
     @EventHandler
