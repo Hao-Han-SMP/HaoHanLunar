@@ -22,5 +22,19 @@ class OxygenMechanicTest {
     void maxAirConstantsMatchSpecifications() {
         assertEquals(600, OxygenMechanic.LUNAR_MAX_AIR);
         assertEquals(300, OxygenMechanic.VANILLA_DEFAULT_AIR);
+        assertEquals(300, OxygenMechanic.VANILLA_HUD_MAX_AIR);
+    }
+
+    @Test
+    void calculateHudAirAlwaysKeepsBubblesVisibleOnLand() {
+        // Full oxygen (600) maps to 299 (< 300) so client renders all 10 bubbles
+        assertEquals(299, OxygenMechanic.calculateHudAir(600));
+
+        // Half oxygen (300) maps proportionally
+        assertEquals(150, OxygenMechanic.calculateHudAir(300));
+
+        // Empty oxygen (0) maps to 0
+        assertEquals(0, OxygenMechanic.calculateHudAir(0));
+        assertEquals(0, OxygenMechanic.calculateHudAir(-5));
     }
 }

@@ -30,6 +30,7 @@ public class OxygenMechanic implements Listener, IService {
 
     public static final int LUNAR_MAX_AIR = 600;
     public static final int VANILLA_DEFAULT_AIR = 300;
+    public static final int VANILLA_HUD_MAX_AIR = 300;
     private static final int BATCH_DURABILITY_TICKS = 10;
     private static final int BREATH_SOUND_INTERVAL_TICKS = 90;
 
@@ -84,8 +85,8 @@ public class OxygenMechanic implements Listener, IService {
     }
 
     private void tickPlayerOxygen(Player player) {
-        if (player.getMaximumAir() != LUNAR_MAX_AIR) {
-            player.setMaximumAir(LUNAR_MAX_AIR);
+        if (player.getMaximumAir() != VANILLA_HUD_MAX_AIR) {
+            player.setMaximumAir(VANILLA_HUD_MAX_AIR);
         }
 
         GameMode mode = player.getGameMode();
@@ -93,7 +94,7 @@ public class OxygenMechanic implements Listener, IService {
             PlayerLunarData data = plugin.getLunarDataManager().get(player);
             data.setOxygen(LUNAR_MAX_AIR);
             data.setOxygenDmg(0);
-            player.setRemainingAir(LUNAR_MAX_AIR);
+            player.setRemainingAir(VANILLA_HUD_MAX_AIR);
             return;
         }
 
@@ -329,10 +330,17 @@ public class OxygenMechanic implements Listener, IService {
         }
     }
 
+    public static int calculateHudAir(int oxygen) {
+        if (oxygen <= 0) return 0;
+        if (oxygen >= LUNAR_MAX_AIR) return VANILLA_HUD_MAX_AIR - 1; // 299 keeps all 10 bubbles visible on land
+        // Scale 1..599 -> 1..298
+        return Math.max(1, (int) Math.round(((double) oxygen / (double) LUNAR_MAX_AIR) * (VANILLA_HUD_MAX_AIR - 1)));
+    }
+
     private void syncVanillaAir(Player player, PlayerLunarData data) {
-        int oxygen = data.getOxygen();
-        if (player.getRemainingAir() != oxygen) {
-            player.setRemainingAir(oxygen);
+        int targetAir = calculateHudAir(data.getOxygen());
+        if (player.getRemainingAir() != targetAir) {
+            player.setRemainingAir(targetAir);
         }
     }
 
