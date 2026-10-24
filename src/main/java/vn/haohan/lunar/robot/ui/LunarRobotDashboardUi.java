@@ -1,7 +1,16 @@
 package vn.haohan.lunar.robot.ui;
 
+import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.dialog.DialogResponseView;
+import io.papermc.paper.registry.data.dialog.ActionButton;
+import io.papermc.paper.registry.data.dialog.DialogBase;
+import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
@@ -12,12 +21,6 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -188,7 +191,6 @@ public class LunarRobotDashboardUi {
     private UiState state = UiState.SPLASH;
     private Tab currentTab = Tab.OVERVIEW;
     private SettingsCard expandedSettingsCard = SettingsCard.COLLAPSED;
-    private boolean isAwaitingRename = false;
     private final UiDebugState debugState = new UiDebugState();
 
     private UiHandle handle;
@@ -197,8 +199,6 @@ public class LunarRobotDashboardUi {
     private int ticketX;
     private int ticketZ;
     private Location origin;
-    private Listener renameListener;
-    private BukkitTask renameTimeoutTask;
     private BukkitTask splashTask;
     private long lastClickTime = 0L;
 
@@ -509,9 +509,16 @@ public class LunarRobotDashboardUi {
                 }
             }
             case "mode_follow" -> {
-                data.setFollowOwner(!data.isFollowOwner());
+                boolean newFollow = !data.isFollowOwner();
+                data.setFollowOwner(newFollow);
+                if (!newFollow && robot != null) {
+                    robot.stopAutonomousNavigation();
+                }
+                if (robot != null && robot.getEntity() != null) {
+                    data.saveTo(robot.getEntity(), plugin);
+                }
                 playClickSound(1.2f);
-                player.sendMessage("§b§l[Robot] §7Theo chủ: " + (data.isFollowOwner() ? "§aBẬT" : "§cTẮT"));
+                player.sendMessage("§b§l[Robot] §7Theo chủ: " + (newFollow ? "§aBẬT" : "§cTẮT"));
                 updateUi();
             }
 
@@ -541,7 +548,8 @@ public class LunarRobotDashboardUi {
                 updateUi();
             }
             case "action_rename_robot" -> {
-                startRenamePrompt();
+                playClickSound(1.2f);
+                openRenameDialog();
             }
 
             // Unbind Actions
@@ -771,70 +779,75 @@ public class LunarRobotDashboardUi {
         return eff != null ? eff : 100.0;
     }
 
-    private void startRenamePrompt() {
-        isAwaitingRename = true;
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 0.8f, 1.5f);
-        player.sendMessage(" ");
-        player.sendMessage("§b§l[Robot] §eHãy nhập tên mới cho robot vào khung chat!");
-        player.sendMessage("§7(Gõ §c'cancel'§7 hoặc chờ 30 giây để hủy bỏ)");
-        player.sendMessage(" ");
-        updateUi();
+    private void openRenameDialog() {
+        if (player == null || !player.isOnline()) return;
 
-        renameListener = new Listener() {
-            @EventHandler(priority = EventPriority.LOWEST)
-            public void onChat(AsyncPlayerChatEvent event) {
-                if (!event.getPlayer().getUniqueId().equals(player.getUniqueId())) return;
-                event.setCancelled(true);
+        Dialog dialog = Dialog.create(factory -> {
+            var b = factory.empty();
+            b.base(DialogBase.builder(Component.text("Đổi tên Robot", NamedTextColor.GOLD, TextDecoration.BOLD))
+                    .body(List.of(
+                            DialogBody.plainMessage(Component.text("Nhập tên mới cho robot của bạn (tối đa 24 ký tự):", NamedTextColor.GRAY))
+                    ))
+                    .inputs(List.of(
+                            DialogInput.text("robot_name", Component.text("Tên mới"))
+                                    .initial(data.getName() != null ? data.getName() : "")
+                                    .maxLength(24)
+                                    .build()
+                    ))
+                    .canCloseWithEscape(true)
+                    .build());
 
-                String msg = event.getMessage().trim();
-                plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    cleanupRenamePrompt();
-                    isAwaitingRename = false;
-                    if (msg.equalsIgnoreCase("cancel")) {
-                        player.sendMessage("§c§l[Robot] §7Đã hủy đổi tên robot.");
-                        updateUi();
-                        return;
-                    }
-                    if (msg.length() > 24) {
-                        player.sendMessage("§c§l[Robot] §cTên quá dài! Tối đa 24 ký tự.");
-                        updateUi();
-                        return;
-                    }
-                    data.setName(msg);
-                    robot.updateCustomName();
-                    player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.6f);
-                    player.sendMessage("§a§l[Robot] §eĐã đổi tên robot thành: §b" + msg);
-                    updateUi();
-                });
-            }
+            b.type(DialogType.confirmation(
+                    ActionButton.create(
+                            Component.text("Lưu", NamedTextColor.GREEN, TextDecoration.BOLD),
+                            Component.text("Xác nhận đổi tên"),
+                            100,
+                            DialogAction.customClick((response, audience) -> {
+                                String newName = response.getText("robot_name");
+                                if (plugin != null && plugin.isEnabled()) {
+                                    plugin.getServer().getScheduler().runTask(plugin, () -> applyRobotName(newName));
+                                } else {
+                                    applyRobotName(newName);
+                                }
+                            }, ClickCallback.Options.builder().build())
+                    ),
+                    ActionButton.create(
+                            Component.text("Hủy", NamedTextColor.RED),
+                            Component.text("Hủy bỏ đổi tên"),
+                            100,
+                            null
+                    )
+            ));
+        });
 
-            @EventHandler
-            public void onQuit(PlayerQuitEvent event) {
-                if (event.getPlayer().getUniqueId().equals(player.getUniqueId())) {
-                    cleanupRenamePrompt();
-                }
-            }
-        };
-
-        plugin.getServer().getPluginManager().registerEvents(renameListener, plugin);
-        renameTimeoutTask = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            cleanupRenamePrompt();
-            isAwaitingRename = false;
-            player.sendMessage("§c§l[Robot] §7Hết thời gian nhập tên robot.");
-            updateUi();
-        }, 600L); // 30s
+        player.showDialog(dialog);
     }
 
-    private void cleanupRenamePrompt() {
-        if (renameListener != null) {
-            HandlerList.unregisterAll(renameListener);
-            renameListener = null;
+    private void applyRobotName(String newName) {
+        if (newName == null || newName.isBlank()) {
+            if (player != null) {
+                player.sendMessage("§c§l[Robot] §cTên không hợp lệ hoặc để trống!");
+            }
+            return;
         }
-        if (renameTimeoutTask != null) {
-            renameTimeoutTask.cancel();
-            renameTimeoutTask = null;
+
+        String trimmed = newName.trim();
+        if (trimmed.length() > 24) {
+            if (player != null) {
+                player.sendMessage("§c§l[Robot] §cTên quá dài! Tối đa 24 ký tự.");
+            }
+            return;
         }
-        isAwaitingRename = false;
+
+        data.setName(trimmed);
+        if (robot != null) {
+            robot.updateCustomName();
+        }
+        if (player != null && player.isOnline()) {
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.6f);
+            player.sendMessage("§a§l[Robot] §eĐã đổi tên robot thành: §b" + trimmed);
+        }
+        updateUi();
     }
 
     private void playClickSound(float pitch) {
@@ -878,7 +891,6 @@ public class LunarRobotDashboardUi {
             splashTask.cancel();
             splashTask = null;
         }
-        cleanupRenamePrompt();
         if (handle != null && handle.isValid() && player.isOnline()) {
             handle.animate(createClosingAnimation());
             player.playSound(player.getLocation(), Sound.BLOCK_BEACON_DEACTIVATE, 0.7f, 1.6f);
@@ -889,7 +901,6 @@ public class LunarRobotDashboardUi {
     }
 
     public void closeImmediate() {
-        cleanupRenamePrompt();
         if (splashTask != null) {
             splashTask.cancel();
             splashTask = null;
@@ -2200,13 +2211,13 @@ public class LunarRobotDashboardUi {
                 .shadow(false)
                 .build());
 
-        String nameHint = isAwaitingRename ? "§cNhập tên vào chat..." : ("Hiện tại: " + data.getName());
+        String nameHint = "Hiện tại: " + data.getName();
         body.addComponent(TextComponent.builder("row2_t2")
                 .anchor(UiAnchorPoint.TOP_LEFT)
                 .origin(UiAnchorPoint.TOP_LEFT)
                 .offset(rowX + 4.0f, r2Y + 6.5f)
                 .size(rowW - btnW - 6.0f, 5.0f)
-                .text(Component.text(nameHint, isAwaitingRename ? NamedTextColor.RED : NamedTextColor.DARK_BLUE))
+                .text(Component.text(nameHint, NamedTextColor.DARK_BLUE))
                 .fontSize(3.0f)
                 .alignment(UiTextAlignment.LEFT)
                 .shadow(false)
@@ -2230,7 +2241,7 @@ public class LunarRobotDashboardUi {
                 .origin(UiAnchorPoint.TOP_LEFT)
                 .offset(b2X, b2Y + 2.0f)
                 .size(btnW, 6.0f)
-                .text(Component.text(isAwaitingRename ? "HỦY" : "ĐỔI TÊN", NamedTextColor.WHITE, TextDecoration.BOLD))
+                .text(Component.text("ĐỔI TÊN", NamedTextColor.WHITE, TextDecoration.BOLD))
                 .fontSize(3.2f)
                 .alignment(UiTextAlignment.CENTER)
                 .shadow(false)

@@ -1,5 +1,7 @@
 package vn.haohan.lunar.robot;
 
+import com.destroystokyo.paper.entity.ai.MobGoals;
+import com.destroystokyo.paper.entity.ai.VanillaGoal;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -142,10 +144,36 @@ public class LunarRobotEntity {
                     wolf.setOwner(null);
                 }
             } catch (Throwable ignored) {}
+            stripVanillaConflictingGoals();
         }
 
         if (entity != null) {
             syncGravityAttributes(plugin, entity, entity.getWorld());
+        }
+    }
+
+    public void stripVanillaConflictingGoals() {
+        if (entity instanceof Mob mob) {
+            try {
+                MobGoals mobGoals = Bukkit.getMobGoals();
+                if (mobGoals != null) {
+                    if (entity instanceof org.bukkit.entity.Tameable tameable) {
+                        mobGoals.removeGoal(tameable, VanillaGoal.FOLLOW_OWNER);
+                        mobGoals.removeGoal(tameable, VanillaGoal.SIT_WHEN_ORDERED_TO);
+                    }
+                }
+            } catch (Throwable ignored) {}
+        }
+    }
+
+    public void stopAutonomousNavigation() {
+        if (entity instanceof Mob mob) {
+            try {
+                mob.getPathfinder().stopPathfinding();
+            } catch (Throwable ignored) {}
+        }
+        if (!isAttackAnimationPlaying() && !data.isSitting()) {
+            playAnimation("idle", 0.2, 0.2, 1.0, true);
         }
     }
 
@@ -485,6 +513,9 @@ public class LunarRobotEntity {
         Vector vel = entity.getVelocity();
         double horizVelSq = vel.getX() * vel.getX() + vel.getZ() * vel.getZ();
         if (owner == null || !data.isFollowOwner() || data.isSitting()) {
+            if (entity instanceof Mob mob && mob.getPathfinder().hasPath()) {
+                mob.getPathfinder().stopPathfinding();
+            }
             if (horizVelSq < 0.005) {
                 if (!isAttackAnimationPlaying()) {
                     if (data.isSitting()) {

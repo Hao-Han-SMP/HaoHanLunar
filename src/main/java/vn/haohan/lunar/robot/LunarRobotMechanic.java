@@ -454,6 +454,7 @@ public class LunarRobotMechanic implements Listener {
         data.saveTo(wolf, plugin);
 
         LunarRobotEntity robot = new LunarRobotEntity(plugin, wolf, data);
+        robot.stripVanillaConflictingGoals();
         activeRobots.put(wolf.getUniqueId(), robot);
         return robot;
     }
@@ -1062,6 +1063,7 @@ public class LunarRobotMechanic implements Listener {
             wolf.setOwner(player);
             wolf.setTamed(true);
             wolf.setSitting(false);
+            robot.stripVanillaConflictingGoals();
         }
 
         data.saveTo(robot.getEntity(), plugin);
