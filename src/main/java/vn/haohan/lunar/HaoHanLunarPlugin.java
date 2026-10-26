@@ -68,7 +68,23 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
      * @return true if world matches the Lunar dimension key
      */
     public static boolean isLunarWorld(World world) {
-        return world != null && LUNAR_WORLD_KEY.equals(world.getKey());
+        if (world == null) return false;
+        try {
+            if (world.getKey() != null) {
+                if (LUNAR_WORLD_KEY.equals(world.getKey())) return true;
+                String keyStr = world.getKey().toString();
+                if (keyStr.equalsIgnoreCase("haohan:lunar") || keyStr.endsWith(":haohan_lunar") || keyStr.endsWith(":lunar")) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {}
+        try {
+            String name = world.getName();
+            if (name != null) {
+                return name.equalsIgnoreCase("haohan:lunar") || name.equalsIgnoreCase("haohan_lunar") || name.equalsIgnoreCase("lunar");
+            }
+        } catch (Throwable ignored) {}
+        return false;
     }
 
     /**
@@ -77,7 +93,13 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
      * @return lunar world instance or null
      */
     public static World getLunarWorld() {
-        return Bukkit.getWorld(LUNAR_WORLD_KEY);
+        World world = Bukkit.getWorld(LUNAR_WORLD_KEY);
+        if (world != null) return world;
+        world = Bukkit.getWorld("haohan:lunar");
+        if (world != null) return world;
+        world = Bukkit.getWorld("haohan_lunar");
+        if (world != null) return world;
+        return Bukkit.getWorld("lunar");
     }
 
     /**
@@ -86,15 +108,26 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
      * @return lunar world instance or null if failed
      */
     public static World getOrLoadLunarWorld() {
-        World world = Bukkit.getWorld(LUNAR_WORLD_KEY);
+        World world = getLunarWorld();
         if (world != null) {
             return world;
         }
         try {
             WorldCreator creator = WorldCreator.ofKey(LUNAR_WORLD_KEY);
+            org.bukkit.plugin.Plugin worldGenPlugin = Bukkit.getPluginManager().getPlugin("HaoHan-WorldGen");
+            if (worldGenPlugin != null && worldGenPlugin.isEnabled()) {
+                try {
+                    creator.generator(worldGenPlugin.getDefaultWorldGenerator("haohan:lunar", ""));
+                } catch (Throwable ignored) {}
+            }
+            creator.environment(World.Environment.NORMAL);
             world = Bukkit.createWorld(creator);
-            if (world != null && instance != null) {
-                instance.getLogger().info("Successfully loaded Lunar dimension world (" + LUNAR_WORLD_KEY + ")");
+            if (world != null) {
+                world.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
+                world.setGameRule(org.bukkit.GameRule.DO_WEATHER_CYCLE, false);
+                if (instance != null) {
+                    instance.getLogger().info("Successfully loaded Lunar dimension world (" + LUNAR_WORLD_KEY + ")");
+                }
             }
         } catch (Exception e) {
             if (instance != null) {
@@ -109,6 +142,12 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
+
+        // Eagerly pre-load critical mechanic classes and records
+        try {
+            Class.forName("vn.haohan.lunar.util.MoonUtil");
+            Class.forName("vn.haohan.lunar.features.OxygenMechanic$ChunkKey");
+        } catch (Throwable ignored) {}
 
         // Initialize managers
         lunarDataManager = new PlayerDataManager(this);
@@ -208,8 +247,66 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
         // Scan and restore loaded in-world robots after restart
         lunarRobotMechanic.scanLoadedEntities();
 
+        // Prevent Ender Dragon, Endermen, and unwanted natural mob spawning in Lunar (The End base)
+        Bukkit.getPluginManager().registerEvents(new org.bukkit.event.Listener() {
+            @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST, ignoreCancelled = true)
+            public void onCreatureSpawn(org.bukkit.event.entity.CreatureSpawnEvent event) {
+                if (!isLunarWorld(event.getLocation().getWorld())) return;
+
+                org.bukkit.entity.EntityType type = event.getEntityType();
+                if (type == org.bukkit.entity.EntityType.ENDER_DRAGON || type == org.bukkit.entity.EntityType.ENDERMAN) {
+                    event.setCancelled(true);
+                    return;
+                }
+
+                org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason reason = event.getSpawnReason();
+                if (reason == org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.NATURAL
+                        || reason == org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.CHUNK_GEN
+                        || reason == org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.DEFAULT
+                        || reason == org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.PATROL
+                        || reason == org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.REINFORCEMENTS
+                        || reason == org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason.RAID) {
+                    event.setCancelled(true);
+                }
+            }
+
+            @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST)
+            public void onEntitySpawn(org.bukkit.event.entity.EntitySpawnEvent event) {
+                if (!isLunarWorld(event.getLocation().getWorld())) return;
+
+                org.bukkit.entity.EntityType type = event.getEntityType();
+                if (type == org.bukkit.entity.EntityType.ENDER_DRAGON
+                        || type == org.bukkit.entity.EntityType.ENDERMAN
+                        || type == org.bukkit.entity.EntityType.END_CRYSTAL) {
+                    event.setCancelled(true);
+                    event.getEntity().remove();
+                }
+            }
+
+            @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
+            public void onPlayerChangeWorld(org.bukkit.event.player.PlayerChangedWorldEvent event) {
+                org.bukkit.entity.Player p = event.getPlayer();
+                if (isLunarWorld(p.getWorld())) {
+                    suppressDragonBattle(p.getWorld());
+                }
+            }
+
+            @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+            public void onPlayerTeleport(org.bukkit.event.player.PlayerTeleportEvent event) {
+                if (event.getTo() != null && isLunarWorld(event.getTo().getWorld())) {
+                    suppressDragonBattle(event.getTo().getWorld());
+                }
+            }
+        }, this);
+
         // Ensure Lunar dimension world is loaded
-        getOrLoadLunarWorld();
+        World lunarWorld = getOrLoadLunarWorld();
+        if (lunarWorld != null) {
+            lunarWorld.setGameRule(org.bukkit.GameRule.DO_MOB_SPAWNING, false);
+            lunarWorld.setGameRule(org.bukkit.GameRule.DO_DAYLIGHT_CYCLE, false);
+            lunarWorld.setTime(18000L);
+            suppressDragonBattle(lunarWorld);
+        }
 
         getLogger().info("HaoHanLunar plugin successfully enabled and hooks registered!");
     }
@@ -315,5 +412,32 @@ public final class HaoHanLunarPlugin extends JavaPlugin {
 
     public BatteryChargerMechanic getBatteryChargerMechanic() {
         return batteryChargerMechanic;
+    }
+
+    public static void suppressDragonBattle(World world) {
+        if (world == null || !isLunarWorld(world)) return;
+        try {
+            org.bukkit.boss.DragonBattle battle = world.getEnderDragonBattle();
+            if (battle != null) {
+                battle.setPreviouslyKilled(true);
+                battle.setRespawnPhase(org.bukkit.boss.DragonBattle.RespawnPhase.NONE);
+                if (battle.getBossBar() != null) {
+                    battle.getBossBar().setVisible(false);
+                    battle.getBossBar().removeAll();
+                }
+                if (battle.getEnderDragon() != null) {
+                    battle.getEnderDragon().remove();
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        for (org.bukkit.entity.Entity entity : world.getEntities()) {
+            org.bukkit.entity.EntityType type = entity.getType();
+            if (type == org.bukkit.entity.EntityType.ENDER_DRAGON
+                    || type == org.bukkit.entity.EntityType.ENDERMAN
+                    || type == org.bukkit.entity.EntityType.END_CRYSTAL) {
+                entity.remove();
+            }
+        }
     }
 }

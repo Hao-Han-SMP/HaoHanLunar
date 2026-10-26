@@ -18,7 +18,7 @@ public class TeleportCommand implements ICommand {
 
     @Override
     public List<String> aliases() {
-        return List.of("teleport", "lunar", "dimension", "tplunar");
+        return List.of("teleport");
     }
 
     @Override

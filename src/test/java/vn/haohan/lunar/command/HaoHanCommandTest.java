@@ -43,9 +43,9 @@ class HaoHanCommandTest {
         assertTrue(handled);
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Chỉ có người chơi")));
 
-        // 5. Test alias shortcut /tplunar directly
+        // 5. Test alias /hhl teleport directly
         sender.messages.clear();
-        handled = cmd.execute(null, sender.proxy, "tplunar", new String[]{});
+        handled = cmd.execute(null, sender.proxy, "hhl", new String[]{"teleport"});
         assertTrue(handled);
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Chỉ có người chơi")));
 
@@ -55,11 +55,11 @@ class HaoHanCommandTest {
         assertTrue(handled);
         assertTrue(sender.messages.stream().anyMatch(m -> m.contains("chưa sẵn sàng") || m.contains("người chơi")));
 
-        // 7. Test warden alias /spawnwarden shortcut
+        // 7. Test root alias haohanlunar tp
         sender.messages.clear();
-        handled = cmd.execute(null, sender.proxy, "spawnwarden", new String[]{});
+        handled = cmd.execute(null, sender.proxy, "haohanlunar", new String[]{"tp"});
         assertTrue(handled);
-        assertTrue(sender.messages.stream().anyMatch(m -> m.contains("chưa sẵn sàng") || m.contains("người chơi")));
+        assertTrue(sender.messages.stream().anyMatch(m -> m.contains("Chỉ có người chơi")));
 
         // 8. Test bgm list
         sender.messages.clear();

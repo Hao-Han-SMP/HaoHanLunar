@@ -564,8 +564,43 @@ public class OxygenMechanic implements Listener, IService {
                 }
             }
         }
+        if (boxes.isEmpty()) {
+            checkDeterministicSafeZone(boxes, world, chunkX, chunkZ);
+        }
         safeZoneCache.put(cacheKey, new SafeZoneCacheEntry(List.copyOf(boxes), safeZoneCacheTick + SAFE_ZONE_CACHE_TTL_TICKS));
         return evaluateSafeZone(loc, boxes);
+    }
+
+    private void checkDeterministicSafeZone(List<SafeZoneBox> boxes, World world, int chunkX, int chunkZ) {
+        for (int cx = chunkX - 3; cx <= chunkX + 3; cx++) {
+            for (int cz = chunkZ - 3; cz <= chunkZ + 3; cz++) {
+                if (isSpreadChunk(cx, cz, 160, 50, 38947120)) {
+                    int bx = cx << 4;
+                    int bz = cz << 4;
+                    boxes.add(new SafeZoneBox("haohan:space_station", new BoundingBox(bx - 30, 95, bz - 30, bx + 70, 145, bz + 70)));
+                }
+                if (isSpreadChunk(cx, cz, 120, 40, 58291047)) {
+                    int bx = cx << 4;
+                    int bz = cz << 4;
+                    int sy = world.getHighestBlockYAt(bx + 10, bz + 10);
+                    boxes.add(new SafeZoneBox("haohan:rest_base", new BoundingBox(bx - 5, sy - 5, bz - 5, bx + 35, sy + 25, bz + 35)));
+                }
+            }
+        }
+    }
+
+    private static boolean isSpreadChunk(int chunkX, int chunkZ, int spacing, int separation, int salt) {
+        if (spacing <= separation || spacing <= 0) return false;
+        int gridX = Math.floorDiv(chunkX, spacing);
+        int gridZ = Math.floorDiv(chunkZ, spacing);
+        long hash = ((long) gridX * 341873128712L + (long) gridZ * 132897987541L) ^ salt;
+        hash = (hash ^ (hash >> 16)) * 0x45d9f3bL;
+        hash = (hash ^ (hash >> 16)) * 0x45d9f3bL;
+        hash = hash ^ (hash >> 16);
+        int maxOffset = spacing - separation;
+        int offsetX = (int) Math.floorMod(hash, maxOffset);
+        int offsetZ = (int) Math.floorMod(hash >> 16, maxOffset);
+        return chunkX == (gridX * spacing + offsetX) && chunkZ == (gridZ * spacing + offsetZ);
     }
 
     private SafeZoneResult evaluateSafeZone(Location location, List<SafeZoneBox> boxes) {
@@ -580,10 +615,11 @@ public class OxygenMechanic implements Listener, IService {
         return new SafeZoneResult(inRestBase, inSpaceStation);
     }
 
-    private record ChunkKey(UUID worldId, int chunkX, int chunkZ) {}
+    public static record ChunkKey(UUID worldId, int chunkX, int chunkZ) {}
     private record SafeZoneCacheEntry(List<SafeZoneBox> boxes, long expiresAtTick) {}
     private record SafeZoneBox(String key, BoundingBox bounds) {}
     public record SafeZoneResult(boolean inRestBase, boolean inSpaceStation) {
         public static final SafeZoneResult OUTSIDE = new SafeZoneResult(false, false);
     }
 }
+

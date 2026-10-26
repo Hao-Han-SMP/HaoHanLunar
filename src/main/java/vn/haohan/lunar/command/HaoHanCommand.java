@@ -37,6 +37,7 @@ public class HaoHanCommand implements ICommand {
         registerCommand(new ValidateCommand());
         registerCommand(new TraceCommand());
         registerCommand(new MetricsCommand());
+        registerCommand(new RobotCommand());
     }
 
     public void registerCommand(ICommand command) {
@@ -90,19 +91,7 @@ public class HaoHanCommand implements ICommand {
 
     @Override
     public List<String> aliases() {
-        List<String> list = new ArrayList<>();
-        list.add("haohanlunar");
-        list.add("mob");
-        list.add("lunarmob");
-        list.add("lmob");
-        for (ICommand cmd : commands.values()) {
-            for (String alias : cmd.aliases()) {
-                if (!list.contains(alias)) {
-                    list.add(alias);
-                }
-            }
-        }
-        return Collections.unmodifiableList(list);
+        return List.of("haohanlunar");
     }
 
     @Override
