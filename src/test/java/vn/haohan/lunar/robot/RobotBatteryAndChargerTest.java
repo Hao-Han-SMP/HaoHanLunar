@@ -128,4 +128,45 @@ public class RobotBatteryAndChargerTest {
             assertEquals(0.0f, snap % 90.0f, "Snapped yaw should be a multiple of 90 degrees");
         }
     }
+
+    @Test
+    public void testChargerPickaxeTierRequirement() {
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(null));
+
+        org.bukkit.inventory.ItemStack air = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(air.getType()).thenReturn(org.bukkit.Material.AIR);
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(air));
+
+        org.bukkit.inventory.ItemStack woodPick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(woodPick.getType()).thenReturn(org.bukkit.Material.WOODEN_PICKAXE);
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(woodPick));
+
+        org.bukkit.inventory.ItemStack stonePick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(stonePick.getType()).thenReturn(org.bukkit.Material.STONE_PICKAXE);
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(stonePick));
+
+        org.bukkit.inventory.ItemStack ironPick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(ironPick.getType()).thenReturn(org.bukkit.Material.IRON_PICKAXE);
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(ironPick));
+
+        org.bukkit.inventory.ItemStack goldPick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(goldPick.getType()).thenReturn(org.bukkit.Material.GOLDEN_PICKAXE);
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(goldPick));
+
+        org.bukkit.inventory.ItemStack diamondSword = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(diamondSword.getType()).thenReturn(org.bukkit.Material.DIAMOND_SWORD);
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(diamondSword));
+
+        org.bukkit.inventory.ItemStack netheriteAxe = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(netheriteAxe.getType()).thenReturn(org.bukkit.Material.NETHERITE_AXE);
+        assertFalse(BatteryChargerMechanic.isAllowedChargerPickaxe(netheriteAxe));
+
+        org.bukkit.inventory.ItemStack diamondPick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(diamondPick.getType()).thenReturn(org.bukkit.Material.DIAMOND_PICKAXE);
+        assertTrue(BatteryChargerMechanic.isAllowedChargerPickaxe(diamondPick));
+
+        org.bukkit.inventory.ItemStack netheritePick = org.mockito.Mockito.mock(org.bukkit.inventory.ItemStack.class);
+        org.mockito.Mockito.when(netheritePick.getType()).thenReturn(org.bukkit.Material.NETHERITE_PICKAXE);
+        assertTrue(BatteryChargerMechanic.isAllowedChargerPickaxe(netheritePick));
+    }
 }

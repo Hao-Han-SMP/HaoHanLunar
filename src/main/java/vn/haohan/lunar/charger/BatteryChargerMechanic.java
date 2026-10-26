@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -46,6 +47,55 @@ public class BatteryChargerMechanic implements Listener {
         return stations;
     }
 
+    /**
+     * Checks if the held tool satisfies the Diamond tier pickaxe requirement for mining Battery Charger Stations.
+     * Supports both custom metallurgy pickaxes resolved via ToolTierRegistry and vanilla Diamond/Netherite pickaxes.
+     */
+    public static boolean isAllowedChargerPickaxe(ItemStack tool) {
+        if (tool == null || tool.getType() == Material.AIR) {
+            return false;
+        }
+
+        try {
+            var core = HaoHanItemCore.get();
+            if (core != null) {
+                // Check ToolType
+                vn.haohan.itemcore.api.block.ToolType toolType = null;
+                if (core.getItemService() != null) {
+                    String id = core.getItemService().getId(tool);
+                    if (id != null) {
+                        var def = core.getItemService().getDefinition(id);
+                        if (def != null && def.getProperties() != null) {
+                            Object tt = def.getProperties().get("tool_type");
+                            if (tt instanceof String s) {
+                                toolType = vn.haohan.itemcore.api.block.ToolType.valueOf(s.toUpperCase(Locale.ROOT));
+                            }
+                        }
+                    }
+                }
+                if (toolType == null) {
+                    toolType = vn.haohan.itemcore.api.block.ToolType.fromMaterial(tool.getType());
+                }
+                if (toolType != vn.haohan.itemcore.api.block.ToolType.PICKAXE) {
+                    return false;
+                }
+
+                // Check ToolTier
+                if (core.getToolTierRegistry() != null) {
+                    var tierRegistry = core.getToolTierRegistry();
+                    var toolTier = tierRegistry.findTier(tool);
+                    if (toolTier != null) {
+                        var diamondTier = tierRegistry.get("diamond").orElse(vn.haohan.itemcore.api.block.ToolTier.DIAMOND);
+                        return toolTier.level() >= diamondTier.level();
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        Material mat = tool.getType();
+        return mat == Material.DIAMOND_PICKAXE || mat == Material.NETHERITE_PICKAXE;
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) return;
@@ -63,6 +113,11 @@ public class BatteryChargerMechanic implements Listener {
 
                 // LEFT CLICK -> Break / Retrieve Station
                 if (action == Action.LEFT_CLICK_BLOCK) {
+                    if (player.getGameMode() != GameMode.CREATIVE && !isAllowedChargerPickaxe(player.getInventory().getItemInMainHand())) {
+                        player.sendMessage("§c§l[Trạm Sạc] §cBạn cần cúp từ cấp độ §bKim Cương§c trở lên để đào Trạm Sạc!");
+                        player.playSound(clickedBlock.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.5f);
+                        return;
+                    }
                     breakStation(player, clickedBlock, station);
                     return;
                 }
@@ -142,6 +197,26 @@ public class BatteryChargerMechanic implements Listener {
                 }
 
                 placeStation(player, targetBlock, itemInHand);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockBreak(BlockBreakEvent event) {
+        Block block = event.getBlock();
+        if (isChargerBlock(block)) {
+            String key = formatKey(block.getLocation());
+            BatteryChargerStation station = stations.get(key);
+            if (station != null) {
+                Player player = event.getPlayer();
+                if (player.getGameMode() != GameMode.CREATIVE && !isAllowedChargerPickaxe(player.getInventory().getItemInMainHand())) {
+                    event.setCancelled(true);
+                    player.sendMessage("§c§l[Trạm Sạc] §cBạn cần cúp từ cấp độ §bKim Cương§c trở lên để đào Trạm Sạc!");
+                    player.playSound(block.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.5f);
+                    return;
+                }
+                event.setCancelled(true);
+                breakStation(player, block, station);
             }
         }
     }
