@@ -402,41 +402,12 @@ public class LunarItems {
 
                 // 10. Robot Crafting & Maintenance Recipes
                 registerRobotRecipes();
-
-                // Ensure robot_charger is registered into CustomBlockService after its ItemDefinition exists
-                if (customBlockService != null) {
-                        vn.haohan.itemcore.api.block.ToolTier ironTier = vn.haohan.itemcore.api.block.ToolTier.IRON;
-                        try {
-                                if (HaoHanItemCore.get().getToolTierRegistry() != null) {
-                                        ironTier = HaoHanItemCore.get().getToolTierRegistry().get("iron").orElse(ironTier);
-                                }
-                        } catch (Throwable ignored) {}
-                        Map<String, String> projectorSounds = Map.of(
-                                        "place", "minecraft:block.iron_door.close",
-                                        "break", "minecraft:block.glass.break",
-                                        "hit", "minecraft:block.glass.hit",
-                                        "step", "minecraft:block.glass.step",
-                                        "fall", "minecraft:block.glass.fall"
-                        );
-                        for (String projId : List.of(
-                                        "haohan:robot_charger",
-                                        "haohan:robot_charger_blue",
-                                        "haohan:robot_charger_red",
-                                        "haohan:robot_charger_yellow",
-                                        "haohan:robot_charger_cyan")) {
-                                registerCustomBlockDefinition(customBlockService, projId,
-                                                "haohan:robot_charger",
-                                                3.0f, ironTier,
-                                                buildSoundGroup(projectorSounds),
-                                                null);
-                        }
-                }
         }
 
         private static void registerChargerItem(vn.haohan.itemcore.api.item.ItemRegistry registry,
                                               String id, String displayName, int customModelData) {
                 registry.register(ItemDefinition.builder(id)
-                                .material(Material.BARRIER)
+                                .material(Material.PAPER)
                                 .displayName(displayName)
                                 .lore(List.of(
                                                 "§7Trạm sạc không dây cho Robot 4 Chân.",
@@ -444,21 +415,7 @@ public class LunarItems {
                                                 "§e▪ Nhiên liệu: §fRaw Anorthosite (+3,500 EU / 4s)",
                                                 "§8Chuột phải lên mặt đất để đặt Trạm Sạc."))
                                 .customModelData(customModelData)
-                                .type(ItemType.BLOCK)
-                                .properties(Map.of(
-                                                "custom_block_id", id,
-                                                "custom_block_model", id,
-                                                "custom_block_drop", "haohan:robot_charger",
-                                                "custom_block_hardness", 3.0f,
-                                                "custom_block_tool_type", "PICKAXE",
-                                                "custom_block_sounds", Map.of(
-                                                                "place", "minecraft:block.iron_door.close",
-                                                                "break", "minecraft:block.glass.break",
-                                                                "hit", "minecraft:block.glass.hit",
-                                                                "step", "minecraft:block.glass.step",
-                                                                "fall", "minecraft:block.glass.fall"
-                                                ),
-                                                "hide_additional_tooltip", true))
+                                .type(ItemType.MACHINE_COMPONENT)
                                 .maxStackSize(16)
                                 .build());
         }
@@ -769,18 +726,7 @@ public class LunarItems {
                         var cbRegistry = service.getRegistry();
                         if (cbRegistry != null && !cbRegistry.has(id)) {
                                 org.bukkit.inventory.ItemStack itemStack = null;
-                                if (id != null && (id.equals("haohan:robot_charger") || id.startsWith("haohan:robot_charger_"))) {
-                                        try {
-                                                itemStack = new org.bukkit.inventory.ItemStack(Material.WHITE_STAINED_GLASS);
-                                                var meta = itemStack.getItemMeta();
-                                                if (meta != null) {
-                                                        try {
-                                                                meta.setItemModel(org.bukkit.NamespacedKey.fromString(id));
-                                                        } catch (Throwable ignored) {}
-                                                        itemStack.setItemMeta(meta);
-                                                }
-                                        } catch (Throwable ignored) {}
-                                } else if (HaoHanItemCore.get() != null && HaoHanItemCore.get().getItemFactory() != null) {
+                                if (HaoHanItemCore.get() != null && HaoHanItemCore.get().getItemFactory() != null) {
                                         try {
                                                 itemStack = HaoHanItemCore.get().getItemFactory().create(id);
                                         } catch (Throwable ignored) {}

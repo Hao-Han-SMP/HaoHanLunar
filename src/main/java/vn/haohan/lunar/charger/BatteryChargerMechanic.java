@@ -39,7 +39,7 @@ public class BatteryChargerMechanic implements Listener {
 
     public BatteryChargerMechanic(HaoHanLunarPlugin plugin) {
         this.plugin = plugin;
-        this.chargerKey = new NamespacedKey(plugin, "battery_charger_station");
+        this.chargerKey = new NamespacedKey("haohan", "battery_charger_station");
         loadAll();
     }
 
@@ -280,6 +280,13 @@ public class BatteryChargerMechanic implements Listener {
         Location loc = block.getLocation();
         String key = formatKey(loc);
 
+        // 0. Defense-in-depth: Clear any residual custom block storage entry from ItemCore if previously registered
+        try {
+            if (HaoHanItemCore.get() != null && HaoHanItemCore.get().getCustomBlockService() != null) {
+                HaoHanItemCore.get().getCustomBlockService().removeCustomBlock(loc);
+            }
+        } catch (Throwable ignored) {}
+
         // 1. Place Barrier Block
         block.setType(Material.BARRIER);
 
@@ -318,9 +325,13 @@ public class BatteryChargerMechanic implements Listener {
         }
 
         // 6. Effects
-        loc.getWorld().playSound(loc, Sound.BLOCK_ANVIL_PLACE, 0.8f, 1.4f);
-        loc.getWorld().spawnParticle(Particle.WAX_ON, loc.clone().add(0.5, 0.6, 0.5), 15, 0.3, 0.3, 0.3, 0.05);
-        player.sendMessage("§9§l[Trạm Sạc] §aĐã đặt Trạm Sạc thành công! Hãy nạp Raw Anorthosite để kích hoạt.");
+        try {
+            loc.getWorld().playSound(loc, Sound.BLOCK_ANVIL_PLACE, 0.8f, 1.4f);
+            loc.getWorld().spawnParticle(Particle.WAX_ON, loc.clone().add(0.5, 0.6, 0.5), 15, 0.3, 0.3, 0.3, 0.05);
+        } catch (Throwable ignored) {}
+        if (player != null) {
+            player.sendMessage("§9§l[Trạm Sạc] §aĐã đặt Trạm Sạc thành công! Hãy nạp Raw Anorthosite để kích hoạt.");
+        }
     }
 
     public void breakStation(Player player, Block block, BatteryChargerStation station) {
@@ -341,6 +352,13 @@ public class BatteryChargerMechanic implements Listener {
         // 3. Restore block to air
         block.setType(Material.AIR);
 
+        // Defense-in-depth: Ensure any residual custom block storage entry from ItemCore is purged
+        try {
+            if (HaoHanItemCore.get() != null && HaoHanItemCore.get().getCustomBlockService() != null) {
+                HaoHanItemCore.get().getCustomBlockService().removeCustomBlock(loc);
+            }
+        } catch (Throwable ignored) {}
+
         // 4. Drop Station Item (Always drop base blue robot_charger)
         var itemFactory = HaoHanItemCore.get().getItemFactory();
         ItemStack dropCharger = itemFactory.create("haohan:robot_charger", 1);
@@ -358,9 +376,13 @@ public class BatteryChargerMechanic implements Listener {
         }
 
         // 6. Effects
-        loc.getWorld().playSound(loc, Sound.BLOCK_ANVIL_BREAK, 0.8f, 1.2f);
-        loc.getWorld().spawnParticle(Particle.BLOCK, loc.clone().add(0.5, 0.5, 0.5), 25, 0.4, 0.4, 0.4, Material.IRON_BLOCK.createBlockData());
-        player.sendMessage("§9§l[Trạm Sạc] §cĐã thu hồi Trạm Sạc.");
+        try {
+            loc.getWorld().playSound(loc, Sound.BLOCK_ANVIL_BREAK, 0.8f, 1.2f);
+            loc.getWorld().spawnParticle(Particle.BLOCK, loc.clone().add(0.5, 0.5, 0.5), 25, 0.4, 0.4, 0.4, Material.IRON_BLOCK.createBlockData());
+        } catch (Throwable ignored) {}
+        if (player != null) {
+            player.sendMessage("§9§l[Trạm Sạc] §cĐã thu hồi Trạm Sạc.");
+        }
     }
 
     public void tick() {
@@ -470,7 +492,7 @@ public class BatteryChargerMechanic implements Listener {
     }
 
     public static ItemStack createDisplayItemStack(String customItemId) {
-        ItemStack stack = new ItemStack(Material.WHITE_STAINED_GLASS);
+        ItemStack stack = new ItemStack(Material.PAPER);
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             try {

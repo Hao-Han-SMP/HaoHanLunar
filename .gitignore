@@ -48,6 +48,9 @@ cache/
 ehthumbs.db
 Thumbs.db
 
+# Documentation / Internal specs
+docs/
+
 # Environment & Secrets
 .env
 *.local

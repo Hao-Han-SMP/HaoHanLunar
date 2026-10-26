@@ -169,4 +169,66 @@ public class RobotBatteryAndChargerTest {
         org.mockito.Mockito.when(netheritePick.getType()).thenReturn(org.bukkit.Material.NETHERITE_PICKAXE);
         assertTrue(BatteryChargerMechanic.isAllowedChargerPickaxe(netheritePick));
     }
+
+    @Test
+    public void testBreakStationDefenseInDepthCustomBlockPurge() throws Exception {
+        vn.haohan.itemcore.api.block.CustomBlockService cbService = org.mockito.Mockito.mock(vn.haohan.itemcore.api.block.CustomBlockService.class);
+        vn.haohan.itemcore.api.item.ItemFactory itemFactory = org.mockito.Mockito.mock(vn.haohan.itemcore.api.item.ItemFactory.class);
+        vn.haohan.itemcore.api.HaoHanItemCore core = new vn.haohan.itemcore.api.HaoHanItemCore(
+                null, itemFactory, null, null, null, null, cbService
+        );
+        vn.haohan.itemcore.api.HaoHanItemCore.setInstance(core);
+
+        org.bukkit.Server mockServer = org.mockito.Mockito.mock(org.bukkit.Server.class);
+        org.bukkit.block.data.BlockData mockBlockData = org.mockito.Mockito.mock(org.bukkit.block.data.BlockData.class);
+        org.mockito.Mockito.when(mockServer.createBlockData(org.bukkit.Material.IRON_BLOCK)).thenReturn(mockBlockData);
+        org.bukkit.inventory.ItemFactory bukkitItemFactory = org.mockito.Mockito.mock(org.bukkit.inventory.ItemFactory.class);
+        org.mockito.Mockito.when(mockServer.getItemFactory()).thenReturn(bukkitItemFactory);
+
+        java.lang.reflect.Field serverField = org.bukkit.Bukkit.class.getDeclaredField("server");
+        serverField.setAccessible(true);
+        serverField.set(null, mockServer);
+
+        try {
+            org.bukkit.Location loc = org.mockito.Mockito.mock(org.bukkit.Location.class);
+            org.bukkit.World world = org.mockito.Mockito.mock(org.bukkit.World.class);
+            org.mockito.Mockito.when(loc.getWorld()).thenReturn(world);
+            org.mockito.Mockito.when(loc.clone()).thenReturn(loc);
+            org.mockito.Mockito.when(loc.add(org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble())).thenReturn(loc);
+            org.mockito.Mockito.when(world.getName()).thenReturn("world");
+            org.mockito.Mockito.when(world.getEntitiesByClass(org.bukkit.entity.ItemDisplay.class)).thenReturn(java.util.Collections.emptyList());
+            org.mockito.Mockito.when(loc.getBlockX()).thenReturn(10);
+            org.mockito.Mockito.when(loc.getBlockY()).thenReturn(64);
+            org.mockito.Mockito.when(loc.getBlockZ()).thenReturn(20);
+
+            org.bukkit.block.Block block = org.mockito.Mockito.mock(org.bukkit.block.Block.class);
+            org.mockito.Mockito.when(block.getLocation()).thenReturn(loc);
+
+            org.bukkit.entity.Player player = org.mockito.Mockito.mock(org.bukkit.entity.Player.class);
+            org.mockito.Mockito.when(player.getGameMode()).thenReturn(org.bukkit.GameMode.SURVIVAL);
+
+            BatteryChargerStation station = new BatteryChargerStation(loc, null, UUID.randomUUID(), 0.0f);
+            station.setFuelBuffer(0);
+
+            vn.haohan.lunar.HaoHanLunarPlugin plugin = org.mockito.Mockito.mock(vn.haohan.lunar.HaoHanLunarPlugin.class);
+            org.mockito.Mockito.when(plugin.getName()).thenReturn("HaoHanLunar");
+            java.io.File tempFolder = new java.io.File(System.getProperty("java.io.tmpdir"), "lunar_test_" + UUID.randomUUID());
+            tempFolder.mkdirs();
+            tempFolder.deleteOnExit();
+            org.mockito.Mockito.when(plugin.getDataFolder()).thenReturn(tempFolder);
+
+            BatteryChargerMechanic mechanic = new BatteryChargerMechanic(plugin);
+            mechanic.getStations().put(mechanic.formatKey(loc), station);
+
+            mechanic.breakStation(player, block, station);
+
+            // Verify block set to AIR
+            org.mockito.Mockito.verify(block).setType(org.bukkit.Material.AIR);
+            // Verify defense-in-depth purged customBlockService
+            org.mockito.Mockito.verify(cbService).removeCustomBlock(loc);
+        } finally {
+            serverField.set(null, null);
+            vn.haohan.itemcore.api.HaoHanItemCore.setInstance(null);
+        }
+    }
 }

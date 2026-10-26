@@ -74,8 +74,7 @@ public class LunarCustomBlockAdaptationTest {
                 "haohan:anorthosite_ore",
                 "haohan:ilmenite_ore",
                 "haohan:pyroxene_ore",
-                "haohan:kreep_basalt",
-                "haohan:robot_charger"
+                "haohan:kreep_basalt"
         };
 
         for (String oreId : lunarOres) {
@@ -125,19 +124,16 @@ public class LunarCustomBlockAdaptationTest {
             assertTrue(soundMap.containsKey("hit"), oreId + " sounds must have hit");
             assertTrue(soundMap.containsKey("step"), oreId + " sounds must have step");
 
-            boolean isBatteryCharger = "haohan:robot_charger".equals(oreId);
             assertEquals(Material.BARRIER, def.getMaterial(), oreId + " must use Material.BARRIER");
-            if (!isBatteryCharger) {
-                assertTrue(props.containsKey("custom_variation"), oreId + " must contain custom_variation");
-                int expectedVariation = switch (oreId) {
-                    case "haohan:kreep_basalt" -> 771;
-                    case "haohan:pyroxene_ore" -> 772;
-                    case "haohan:ilmenite_ore" -> 773;
-                    case "haohan:anorthosite_ore" -> 774;
-                    default -> -1;
-                };
-                assertEquals(expectedVariation, ((Number) props.get("custom_variation")).intValue(), oreId + " variation must match");
-            }
+            assertTrue(props.containsKey("custom_variation"), oreId + " must contain custom_variation");
+            int expectedVariation = switch (oreId) {
+                case "haohan:kreep_basalt" -> 771;
+                case "haohan:pyroxene_ore" -> 772;
+                case "haohan:ilmenite_ore" -> 773;
+                case "haohan:anorthosite_ore" -> 774;
+                default -> -1;
+            };
+            assertEquals(expectedVariation, ((Number) props.get("custom_variation")).intValue(), oreId + " variation must match");
 
             assertEquals(vn.haohan.itemcore.api.item.ItemType.BLOCK, def.getType(), oreId + " must use ItemType.BLOCK");
             assertTrue(ItemCategory.CUSTOM_BLOCKS.matches(def), oreId + " must match ItemCategory.CUSTOM_BLOCKS");
@@ -147,7 +143,7 @@ public class LunarCustomBlockAdaptationTest {
         // Verify that custom block definition was registered with a valid SoundGroup
         org.mockito.ArgumentCaptor<vn.haohan.itemcore.api.block.CustomBlockDefinition> captor =
                 org.mockito.ArgumentCaptor.forClass(vn.haohan.itemcore.api.block.CustomBlockDefinition.class);
-        verify(customBlockRegistry, atLeast(5)).register(captor.capture());
+        verify(customBlockRegistry, atLeast(4)).register(captor.capture());
         for (vn.haohan.itemcore.api.block.CustomBlockDefinition blockDef : captor.getAllValues()) {
             assertNotNull(blockDef.getSoundGroup(), "Registered blockDef " + blockDef.getId() + " must have a SoundGroup");
             assertNotNull(blockDef.getSoundGroup().getPlaceSound(), "SoundGroup must have placeSound");
@@ -155,9 +151,7 @@ public class LunarCustomBlockAdaptationTest {
             assertNotNull(blockDef.getSoundGroup().getHitSound(), "SoundGroup must have hitSound");
             assertNotNull(blockDef.getSoundGroup().getStepSound(), "SoundGroup must have stepSound");
 
-            if ("haohan:robot_charger".equals(blockDef.getId()) || blockDef.getId().startsWith("haohan:robot_charger")) {
-                assertTrue(blockDef.isAlternative(), blockDef.getId() + " must be AlternativeCustomBlock");
-            } else if (blockDef.getId().startsWith("haohan:")) {
+            if (blockDef.getId().startsWith("haohan:")) {
                 assertTrue(blockDef.isNative(), blockDef.getId() + " must be NativeCustomBlock");
                 vn.haohan.itemcore.api.block.NativeCustomBlock nativeBlock = (vn.haohan.itemcore.api.block.NativeCustomBlock) blockDef;
                 int expectedVar = switch (blockDef.getId()) {
@@ -169,6 +163,32 @@ public class LunarCustomBlockAdaptationTest {
                 };
                 assertEquals(expectedVar, nativeBlock.getCustomVariation(), blockDef.getId() + " variation must match");
             }
+        }
+    }
+
+    @Test
+    @DisplayName("Robot Charger phải là Machine Item độc lập và không đăng ký vào CustomBlockService")
+    void testRobotChargerIsIndependentMachineItem() throws Exception {
+        Class<?> lunarItemsClass = Class.forName("vn.haohan.lunar.item.LunarItems");
+        Field regField = lunarItemsClass.getDeclaredField("registered");
+        regField.setAccessible(true);
+        regField.set(null, false);
+
+        Method regMethod = lunarItemsClass.getDeclaredMethod("register");
+        regMethod.invoke(null);
+
+        ItemDefinition def = itemRegistry.get("haohan:robot_charger");
+        assertNotNull(def, "Robot charger item must be registered");
+        assertEquals(vn.haohan.itemcore.api.item.ItemType.MACHINE_COMPONENT, def.getType());
+        assertEquals(Material.PAPER, def.getMaterial());
+        assertFalse(def.getProperties().containsKey("custom_block_id"), "Must not have custom_block_id");
+
+        // Verify CustomBlockRegistry never received robot_charger
+        org.mockito.ArgumentCaptor<vn.haohan.itemcore.api.block.CustomBlockDefinition> captor =
+                org.mockito.ArgumentCaptor.forClass(vn.haohan.itemcore.api.block.CustomBlockDefinition.class);
+        verify(customBlockRegistry, atLeast(4)).register(captor.capture());
+        for (vn.haohan.itemcore.api.block.CustomBlockDefinition blockDef : captor.getAllValues()) {
+            assertFalse(blockDef.getId().contains("robot_charger"), "CustomBlockService must not register robot_charger");
         }
     }
 
