@@ -259,7 +259,9 @@ public class VisualMechanic implements Listener, IService {
             boolean inLunar = HaoHanLunarPlugin.isLunarWorld(player.getWorld());
 
             if (!inLunar) {
-                clearSkybox(player);
+                if (activeSkyboxes.containsKey(uuid)) {
+                    clearSkybox(player);
+                }
                 continue;
             }
 
@@ -291,9 +293,37 @@ public class VisualMechanic implements Listener, IService {
             String targetSkybox = (defaultSkybox != null && !defaultSkybox.isEmpty()) ? defaultSkybox : "lunar_space";
 
             String currentSkybox = activeSkyboxes.get(uuid);
-            if (currentSkybox == null || !currentSkybox.equals(targetSkybox)) {
+            boolean needsReapply = (currentSkybox == null || !currentSkybox.equals(targetSkybox));
+            if (!needsReapply) {
+                needsReapply = !isSkyboxHealthy(player);
+            }
+            if (needsReapply) {
                 applySkybox(player, targetSkybox);
             }
+        }
+    }
+
+    private boolean isSkyboxHealthy(Player player) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) return true;
+        try {
+            Class<?> apiClass = Class.forName("de.vectorflare.skyboxengine.SkyboxAPI");
+            Object api = apiClass.getMethod("getAPI").invoke(null);
+            if (api == null) return false;
+            Object data = apiClass.getMethod("getSkyboxData", Player.class).invoke(api, player);
+            if (data == null) return false;
+            java.lang.reflect.Field renderedField = data.getClass().getDeclaredField("renderedPlayerSkybox");
+            renderedField.setAccessible(true);
+            Object rendered = renderedField.get(data);
+            if (rendered == null) return false;
+            java.lang.reflect.Field entityField = rendered.getClass().getDeclaredField("skyboxEntity");
+            entityField.setAccessible(true);
+            org.bukkit.entity.ItemDisplay entity = (org.bukkit.entity.ItemDisplay) entityField.get(rendered);
+            if (entity == null || !entity.isValid() || !entity.getWorld().equals(player.getWorld())) {
+                return false;
+            }
+            return true;
+        } catch (Throwable t) {
+            return false;
         }
     }
 
@@ -311,6 +341,8 @@ public class VisualMechanic implements Listener, IService {
             if (api == null) return;
 
             Object data = apiClass.getMethod("getSkyboxData", Player.class).invoke(api, player);
+            if (data == null) return;
+
             Object settings = null;
             try {
                 settings = apiClass.getMethod("getSkyboxSettings", String.class).invoke(api, skyboxId);
@@ -325,11 +357,22 @@ public class VisualMechanic implements Listener, IService {
                     } catch (Throwable ignored) {}
                 }
             }
-            if (data != null && settings != null) {
-                data.getClass().getMethod("clearActiveSkyboxes").invoke(data);
-                apiClass.getMethod("addSkyboxToPlayer", Player.class, settings.getClass()).invoke(api, player, settings);
-                activeSkyboxes.put(player.getUniqueId(), skyboxId);
-            }
+            if (settings == null) return;
+
+            // Force clean previous rendered skybox to avoid stale entity or skipped creation
+            try {
+                java.lang.reflect.Field renderedField = data.getClass().getDeclaredField("renderedPlayerSkybox");
+                renderedField.setAccessible(true);
+                Object rendered = renderedField.get(data);
+                if (rendered != null) {
+                    rendered.getClass().getMethod("removeSkybox", int.class).invoke(rendered, 0);
+                    renderedField.set(data, null);
+                }
+            } catch (Throwable ignored) {}
+
+            data.getClass().getMethod("clearActiveSkyboxes").invoke(data);
+            apiClass.getMethod("addSkyboxToPlayer", Player.class, settings.getClass()).invoke(api, player, settings);
+            activeSkyboxes.put(player.getUniqueId(), skyboxId);
         } catch (ClassNotFoundException e) {
             // SkyboxEngine API class not found
         } catch (Throwable t) {
@@ -378,10 +421,16 @@ public class VisualMechanic implements Listener, IService {
         }
 
         // Remove any orphaned SkyboxEngine ItemDisplay entities in non-lunar worlds
-        if (player.isOnline() && !player.getWorld().getKey().toString().equals(lunarWorldKey)) {
+        if (player.isOnline() && !HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
             for (org.bukkit.entity.Entity entity : player.getWorld().getNearbyEntities(player.getLocation(), 32.0, 32.0, 32.0)) {
-                if (entity instanceof org.bukkit.entity.ItemDisplay) {
-                    entity.remove();
+                if (entity instanceof org.bukkit.entity.ItemDisplay display) {
+                    if (display.isPersistent()) {
+                        continue;
+                    }
+                    org.bukkit.inventory.ItemStack stack = display.getItemStack();
+                    if (stack != null && stack.getType() == Material.LEATHER_HORSE_ARMOR) {
+                        display.remove();
+                    }
                 }
             }
         }
@@ -440,11 +489,13 @@ public class VisualMechanic implements Listener, IService {
         World world = player.getWorld();
 
         if (HaoHanLunarPlugin.isLunarWorld(world)) {
+            try {
+                player.setPlayerWeather(org.bukkit.WeatherType.CLEAR);
+            } catch (Throwable ignored) {}
             if (skyboxEnabled && Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    if (player.isOnline() && player.getWorld().getKey().toString().equals(lunarWorldKey)) {
-                        NamespacedKey biomeKey = player.getLocation().getBlock().getBiome().getKey();
-                        String targetSkybox = biomeSkyboxMap.getOrDefault(biomeKey.toString(), defaultSkybox);
+                    if (player.isOnline() && HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
+                        String targetSkybox = (defaultSkybox != null && !defaultSkybox.isEmpty()) ? defaultSkybox : "lunar_space";
                         applySkybox(player, targetSkybox);
                     }
                 }, 10L);
@@ -452,7 +503,7 @@ public class VisualMechanic implements Listener, IService {
         } else {
             if (Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) {
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    if (player.isOnline() && !player.getWorld().getKey().toString().equals(lunarWorldKey)) {
+                    if (player.isOnline() && !HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
                         clearSkybox(player);
                     }
                 }, 10L);
@@ -465,6 +516,9 @@ public class VisualMechanic implements Listener, IService {
         Player player = event.getPlayer();
         if (!HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
             clearSkybox(player);
+            try {
+                player.resetPlayerWeather();
+            } catch (Throwable ignored) {}
         }
     }
 
@@ -474,6 +528,9 @@ public class VisualMechanic implements Listener, IService {
         World toWorld = player.getWorld();
 
         if (HaoHanLunarPlugin.isLunarWorld(toWorld)) {
+            try {
+                player.setPlayerWeather(org.bukkit.WeatherType.CLEAR);
+            } catch (Throwable ignored) {}
             if (!player.getScoreboardTags().contains("lunar_visited")) {
                 player.addScoreboardTag("lunar_visited");
 
@@ -487,20 +544,27 @@ public class VisualMechanic implements Listener, IService {
                 player.playSound(player.getLocation(), Sound.ITEM_TRIDENT_THUNDER, SoundCategory.MASTER, 2.0f, 0.7f);
             }
 
-            // Immediately apply the appropriate skybox on entering Lunar dimension
+            // Invalidate cached skybox and re-apply cleanly after client finishes dimension switch
+            activeSkyboxes.remove(player.getUniqueId());
             if (skyboxEnabled && Bukkit.getPluginManager().isPluginEnabled("SkyboxEngine")) {
-                NamespacedKey biomeKey = player.getLocation().getBlock().getBiome().getKey();
-                String targetSkybox = biomeSkyboxMap.getOrDefault(biomeKey.toString(), defaultSkybox);
-                applySkybox(player, targetSkybox);
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (player.isOnline() && HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
+                        String targetSkybox = (defaultSkybox != null && !defaultSkybox.isEmpty()) ? defaultSkybox : "lunar_space";
+                        applySkybox(player, targetSkybox);
+                    }
+                }, 7L);
             }
         } else {
             player.removeScoreboardTag("lunar_visited");
             clearSkybox(player);
+            try {
+                player.resetPlayerWeather();
+            } catch (Throwable ignored) {}
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                if (player.isOnline() && !player.getWorld().getKey().toString().equals(lunarWorldKey)) {
+                if (player.isOnline() && !HaoHanLunarPlugin.isLunarWorld(player.getWorld())) {
                     clearSkybox(player);
                 }
-            }, 2L);
+            }, 5L);
         }
     }
 
