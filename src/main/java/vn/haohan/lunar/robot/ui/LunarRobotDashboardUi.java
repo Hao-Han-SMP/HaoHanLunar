@@ -591,7 +591,7 @@ public class LunarRobotDashboardUi {
                 playClickSound(1.2f);
             }
         }
-        updateUi();
+        updateUiWithAnimations();
     }
 
     private void handleModuleSlotInteraction(int slot) {
@@ -860,6 +860,19 @@ public class LunarRobotDashboardUi {
         if (handle != null && handle.isValid() && state == UiState.DASHBOARD) {
             currentDocument = renderDocument();
             handle.update(currentDocument);
+        }
+    }
+
+    private void updateUiWithAnimations() {
+        if (handle != null && handle.isValid() && state == UiState.DASHBOARD) {
+            LayerManager manager = buildDashboardLayerManager();
+            debugState.apply(manager);
+            UiDocumentBridge.CompiledUi compiled = UiDocumentBridge.compileWithAnimations(manager);
+            this.currentDocument = compiled.document();
+            handle.update(this.currentDocument);
+            if (compiled.hasAnimations()) {
+                handle.animateNodes(compiled.nodeAnimations());
+            }
         }
     }
 
@@ -1663,7 +1676,7 @@ public class LunarRobotDashboardUi {
                 .animationType(DropdownAnimationType.SLIDE_AND_FADE)
                 .animationDurationTicks(8)
                 .animationEasing(Easings.OutCubic)
-                .slideDistance(10.0f)
+                .slideDistance(8.0f)
                 .contentBackgroundColor(cardBg)
                 .contentBorderRound(CARD_CORNER_RADIUS)
                 .contentPadding(0.0f)
@@ -1896,7 +1909,7 @@ public class LunarRobotDashboardUi {
                 .animationType(DropdownAnimationType.SLIDE_AND_FADE)
                 .animationDurationTicks(8)
                 .animationEasing(Easings.OutCubic)
-                .slideDistance(10.0f)
+                .slideDistance(8.0f)
                 .contentBackgroundColor(cardBg)
                 .contentBorderRound(CARD_CORNER_RADIUS)
                 .contentPadding(0.0f)
@@ -2052,7 +2065,7 @@ public class LunarRobotDashboardUi {
                 .animationType(DropdownAnimationType.SLIDE_AND_FADE)
                 .animationDurationTicks(8)
                 .animationEasing(Easings.OutCubic)
-                .slideDistance(10.0f)
+                .slideDistance(8.0f)
                 .contentBackgroundColor(cardBg)
                 .contentBorderRound(CARD_CORNER_RADIUS)
                 .contentPadding(0.0f)
@@ -2268,7 +2281,7 @@ public class LunarRobotDashboardUi {
                 .animationType(DropdownAnimationType.SLIDE_AND_FADE)
                 .animationDurationTicks(8)
                 .animationEasing(Easings.OutCubic)
-                .slideDistance(10.0f)
+                .slideDistance(8.0f)
                 .contentBackgroundColor(LunarDashboardTheme.DANGER_BG)
                 .contentBorderRound(CARD_CORNER_RADIUS)
                 .contentPadding(0.0f)

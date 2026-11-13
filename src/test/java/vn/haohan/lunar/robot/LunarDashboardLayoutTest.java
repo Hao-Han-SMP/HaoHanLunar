@@ -851,5 +851,57 @@ public class LunarDashboardLayoutTest {
             assertEquals(4.2f, titleComp.fontSize(), 1e-4, cardId + " title font size should be 4.2f");
         }
     }
+
+    @Test
+    @DisplayName("31. Verify Settings Dropdown headers retain immutable indices and pass structural similarity across all card states")
+    public void testSettingsDropdownHeaderIndicesAndStructuralSimilarity() {
+        LunarRobotData data = new LunarRobotData(UUID.randomUUID());
+        data.setName("TestBot");
+        LunarRobotDashboardUi ui = new LunarRobotDashboardUi(data);
+        ui.setCurrentTab(LunarRobotDashboardUi.Tab.SETTINGS);
+
+        LunarRobotDashboardUi.SettingsCard[] cards = LunarRobotDashboardUi.SettingsCard.values();
+        java.util.Map<LunarRobotDashboardUi.SettingsCard, vn.haohan.displayui.api.UiDocument> docs = new java.util.EnumMap<>(LunarRobotDashboardUi.SettingsCard.class);
+        java.util.Map<LunarRobotDashboardUi.SettingsCard, int[]> headerIndicesMap = new java.util.EnumMap<>(LunarRobotDashboardUi.SettingsCard.class);
+
+        String[] expectedTitles = {"Thiết lập Robot", "Trạng thái sức khỏe", "Tùy chỉnh cá nhân", "Ngắt kết nối"};
+
+        for (LunarRobotDashboardUi.SettingsCard card : cards) {
+            ui.setExpandedSettingsCard(card);
+            vn.haohan.displayui.api.UiDocument doc = ui.renderDocument();
+            docs.put(card, doc);
+
+            int[] indices = new int[expectedTitles.length];
+            java.util.Arrays.fill(indices, -1);
+            for (int i = 0; i < doc.nodes().size(); i++) {
+                vn.haohan.displayui.api.node.UiNode node = doc.nodes().get(i);
+                if (node instanceof vn.haohan.displayui.api.node.AlignedTextNode atn) {
+                    String plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer.plainText().serialize(atn.text());
+                    for (int t = 0; t < expectedTitles.length; t++) {
+                        if (plain.equals(expectedTitles[t])) {
+                            indices[t] = i;
+                        }
+                    }
+                }
+            }
+            for (int t = 0; t < expectedTitles.length; t++) {
+                assertTrue(indices[t] >= 0, "Missing header title '" + expectedTitles[t] + "' in state " + card);
+            }
+            headerIndicesMap.put(card, indices);
+        }
+
+        int[] baselineIndices = headerIndicesMap.get(LunarRobotDashboardUi.SettingsCard.COLLAPSED);
+        for (LunarRobotDashboardUi.SettingsCard card : cards) {
+            assertArrayEquals(baselineIndices, headerIndicesMap.get(card),
+                    "Dropdown header indices must remain immutable in state " + card);
+        }
+
+        for (LunarRobotDashboardUi.SettingsCard a : cards) {
+            for (LunarRobotDashboardUi.SettingsCard b : cards) {
+                assertTrue(vn.haohan.displayui.runtime.scene.UiScene.isStructurallySimilar(docs.get(a), docs.get(b)),
+                        "UiScene.isStructurallySimilar must be true for transition " + a + " -> " + b);
+            }
+        }
+    }
 }
 
